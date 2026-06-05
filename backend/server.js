@@ -59,7 +59,7 @@ app.get('/', (req, res) => {
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const newsList = await News.find().sort({ createdAt: -1 });
-        const baseUrl = req.protocol + '://' + req.get('host');
+        const baseUrl = req.query.host || (req.protocol + '://' + req.get('host'));
 
         const staticPages = [
             '',
