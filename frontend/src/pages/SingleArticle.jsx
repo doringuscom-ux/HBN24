@@ -47,8 +47,8 @@ export default function SingleArticle() {
         return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#da0000]"></div></div>;
     }
 
-    if (!article) {
-        return <div className="text-center py-20 text-xl font-bold">Article not found</div>;
+    if (!article || article.message) {
+        return <div className="text-center py-20 text-xl font-bold text-red-600">Article not found (URL me shayad error hai)</div>;
     }
 
     const hasContent = article.content && article.content.trim() !== '' && article.content !== '<p><br></p>';

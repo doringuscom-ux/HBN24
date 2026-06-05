@@ -110,6 +110,7 @@ app.get('/api/news/article/:id', async (req, res) => {
 
 app.post('/api/news', authMiddleware, async (req, res) => {
     try {
+        if (req.body.slug) req.body.slug = req.body.slug.trim();
         const newNews = new News(req.body);
         const savedNews = await newNews.save();
         res.status(201).json(savedNews);
