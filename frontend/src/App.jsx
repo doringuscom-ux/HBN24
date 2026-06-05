@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard"
 import AdminLogin from "./pages/AdminLogin"
 import Footer from "./components/Footer"
 import Epaper from "./pages/Epaper"
+import NotFound from "./pages/NotFound"
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
@@ -64,6 +65,7 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!isAdmin && <Footer />}
     </div>
