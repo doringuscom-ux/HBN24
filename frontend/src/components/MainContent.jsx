@@ -5,14 +5,14 @@ import ShortVideos from './ShortVideos';
 import SidebarNews from './SidebarNews';
 import EntertainmentSection from './EntertainmentSection';
 
-export default function MainContent({ mixNews = [], entertainmentNews = [], videos = [], shorts = [], superfastNews = [] }) {
+export default function MainContent({ mixNews = [], entertainmentNews = [], videos = [], shorts = [], superfastNews = [], featuredNews = [] }) {
     return (
         <div className="w-full max-w-[1280px] mx-auto px-4 mt-8 mb-12 flex flex-col gap-8">
             {/* Upper Section: Featured + NewsGrid on left, Sidebar on right */}
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Left Column (70%) */}
                 <div className="w-full lg:w-[70%] flex flex-col gap-8">
-                    <FeaturedNews news={mixNews} />
+                    <FeaturedNews news={featuredNews} />
                     <div className="w-full h-[1px] bg-gray-200"></div>
                     <NewsGrid news={mixNews} />
                 </div>

@@ -43,7 +43,7 @@ export default function Home() {
         return itemCats.includes(cat);
     });
 
-    const specificCategories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast'];
+    const specificCategories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast', 'featured'];
     const mixNews = news.filter(n => {
         const itemCats = Array.isArray(n.category) ? n.category : (n.category ? [n.category] : []);
         return !itemCats.some(c => specificCategories.includes(c));
@@ -52,7 +52,7 @@ export default function Home() {
     return (
         <div className="bg-white">
             <BreakingNews news={news} />
-            <MainContent mixNews={mixNews} entertainmentNews={filterCategory('entertainment')} superfastNews={filterCategory('superfast')} videos={videos} shorts={shorts} />
+            <MainContent mixNews={mixNews} entertainmentNews={filterCategory('entertainment')} superfastNews={filterCategory('superfast')} featuredNews={filterCategory('featured')} videos={videos} shorts={shorts} />
             <VideoSection videos={videos} />
             <SportsSection news={filterCategory('sports')} />
             <ReligionSection news={filterCategory('religion')} />

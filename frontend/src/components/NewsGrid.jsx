@@ -3,8 +3,8 @@ import { Play, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function NewsGrid({ news = [] }) {
-    // Show 8 items starting from index 1 (since index 0 is featured)
-    const gridItems = news.slice(1, 9);
+    // Show top 8 items from mixNews
+    const gridItems = news.slice(0, 8);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
