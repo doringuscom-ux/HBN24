@@ -254,6 +254,7 @@ export default function AdminDashboard() {
 
     const categories = [
         { id: 'all', label: 'All' },
+        { id: 'superfast', label: 'सुपरफ़ास्ट' },
         { id: 'entertainment', label: 'मनोरंजन' },
         { id: 'sports', label: 'खेल' },
         { id: 'religion', label: 'धर्म' },

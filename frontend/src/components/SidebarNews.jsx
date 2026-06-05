@@ -3,7 +3,7 @@ import { Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function SidebarNews({ news = [] }) {
-    const displayNews = news.slice(9, 19); // Display next 10 items in sidebar to prevent repeating
+    const displayNews = news.slice(0, 10); // Display top 10 superfast news
 
     return (
         <div className="w-full">

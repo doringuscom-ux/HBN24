@@ -40,13 +40,13 @@ export default function Home() {
 
     const filterCategory = (cat) => news.filter(n => n.category === cat);
 
-    const specificCategories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment'];
+    const specificCategories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast'];
     const mixNews = news.filter(n => !specificCategories.includes(n.category));
 
     return (
         <div className="bg-white">
             <BreakingNews news={news} />
-            <MainContent mixNews={mixNews} entertainmentNews={filterCategory('entertainment')} videos={videos} shorts={shorts} />
+            <MainContent mixNews={mixNews} entertainmentNews={filterCategory('entertainment')} superfastNews={filterCategory('superfast')} videos={videos} shorts={shorts} />
             <VideoSection videos={videos} />
             <SportsSection news={filterCategory('sports')} />
             <ReligionSection news={filterCategory('religion')} />
