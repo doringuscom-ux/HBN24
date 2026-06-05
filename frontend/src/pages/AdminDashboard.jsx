@@ -43,7 +43,7 @@ export default function AdminDashboard() {
 
     const fetchRashifal = async () => {
         try {
-            const res = await fetch('/api/rashifal');
+            const res = await fetch(__API_URL__ + '/api/rashifal');
             const data = await res.json();
             if (data.signs) {
                 setRashifalData(data.signs);
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     const handleRashifalSave = async () => {
         const token = localStorage.getItem('adminToken');
         try {
-            const res = await fetch('/api/rashifal', {
+            const res = await fetch(__API_URL__ + '/api/rashifal', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
         formDataUpload.append('image', file);
 
         try {
-            const res = await fetch('/api/upload', {
+            const res = await fetch(__API_URL__ + '/api/upload', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formDataUpload

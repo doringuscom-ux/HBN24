@@ -14,11 +14,11 @@ export default function Entertainment() {
         const fetchNews = async () => {
             try {
                 // Fetch entertainment specific news
-                const entRes = await fetch('/api/news/entertainment');
+                const entRes = await fetch(__API_URL__ + '/api/news/entertainment');
                 const entData = await entRes.json();
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('/api/news');
+                const allRes = await fetch(__API_URL__ + '/api/news');
                 const allData = await allRes.json();
 
                 setNewsData(entData);

@@ -15,14 +15,14 @@ export default function Business() {
         const fetchNews = async () => {
             try {
                 // Fetch business specific news
-                const businessRes = await fetch('/api/news/business');
+                const businessRes = await fetch(__API_URL__ + '/api/news/business');
                 let businessData = [];
                 if (businessRes.ok) {
                     businessData = await businessRes.json();
                 }
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('/api/news');
+                const allRes = await fetch(__API_URL__ + '/api/news');
                 let allData = [];
                 if (allRes.ok) {
                     allData = await allRes.json();

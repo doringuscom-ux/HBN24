@@ -16,14 +16,14 @@ export default function Lifestyle() {
         const fetchNews = async () => {
             try {
                 // Fetch lifestyle specific news
-                const lifestyleRes = await fetch('/api/news/lifestyle');
+                const lifestyleRes = await fetch(__API_URL__ + '/api/news/lifestyle');
                 let lifestyleData = [];
                 if (lifestyleRes.ok) {
                     lifestyleData = await lifestyleRes.json();
                 }
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('/api/news');
+                const allRes = await fetch(__API_URL__ + '/api/news');
                 let allData = [];
                 if (allRes.ok) {
                     allData = await allRes.json();

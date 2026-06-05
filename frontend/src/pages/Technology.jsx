@@ -14,14 +14,14 @@ export default function Technology() {
         const fetchNews = async () => {
             try {
                 // Fetch technology specific news
-                const techRes = await fetch('/api/news/technology');
+                const techRes = await fetch(__API_URL__ + '/api/news/technology');
                 let techData = [];
                 if (techRes.ok) {
                     techData = await techRes.json();
                 }
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('/api/news');
+                const allRes = await fetch(__API_URL__ + '/api/news');
                 let allData = [];
                 if (allRes.ok) {
                     allData = await allRes.json();
