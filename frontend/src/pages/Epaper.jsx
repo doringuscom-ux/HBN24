@@ -285,13 +285,26 @@ export default function Epaper() {
                     {paginatedNews.map((item, idx) => {
                         const style = getStoryStyle(idx);
                         const plainText = stripHtml(item.content);
+                        let primaryCat = '';
+                        if (Array.isArray(item.category)) {
+                            const filtered = item.category.filter(c => c.toLowerCase() !== 'superfast' && c.toLowerCase() !== 'featured');
+                            primaryCat = filtered.length > 0 ? filtered[0] : (item.category[0] || '');
+                        } else if (typeof item.category === 'string') {
+                            primaryCat = item.category;
+                        }
+
                         const catHindi = {
                             politics: 'राजनीति',
                             sports: 'खेल',
                             entertainment: 'मनोरंजन',
                             business: 'अर्थ जगत',
                             tech: 'टेक्नोलॉजी',
-                        }[item.category] || item.category;
+                            technology: 'टेक्नोलॉजी',
+                            religion: 'धर्म',
+                            lifestyle: 'जीवनशैली',
+                            national: 'राष्ट्रीय',
+                            international: 'अंतर्राष्ट्रीय'
+                        }[primaryCat?.toLowerCase()] || primaryCat;
 
                         // Dynamic column spans
                         let colSpan = 'col-span-1';
@@ -321,7 +334,7 @@ export default function Epaper() {
 
                                     {/* Headline */}
                                     <h2
-                                        className={`font-black leading-tight mb-2 hover:text-red-700 transition ${style === 'headline'
+                                        className={`font-black leading-snug pb-1 mb-2 hover:text-red-700 transition ${style === 'headline'
                                                 ? 'text-4xl md:text-5xl'
                                                 : style === 'double-column'
                                                     ? 'text-2xl md:text-3xl'
@@ -342,7 +355,7 @@ export default function Epaper() {
                                             <img
                                                 src={item.image}
                                                 alt={item.title}
-                                                className="w-full h-auto transition duration-500 grayscale group-hover:grayscale-0"
+                                                className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
                                                 loading="lazy"
                                             />
                                             {style === 'headline' && (
@@ -354,13 +367,13 @@ export default function Epaper() {
                                     )}
 
                                     {/* Article text with real dropcap on headline */}
-                                    <div className={`text-gray-800 text-justify ${style !== 'double-column' ? 'flex-1' : 'mb-4'}`}>
+                                    <div className={`text-gray-800 text-justify flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
                                         <p
                                             className={`text-sm leading-relaxed ${style === 'headline'
-                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[20]'
+                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[25]'
                                                     : style === 'double-column'
-                                                    ? 'line-clamp-[12]'
-                                                    : 'line-clamp-[8]'
+                                                    ? 'line-clamp-[16]'
+                                                    : 'line-clamp-[14]'
                                                 }`}
                                         >
                                             {plainText}
@@ -369,17 +382,6 @@ export default function Epaper() {
 
                                     {/* Auto-filler Game for empty space on right side */}
                                     {style === 'double-column' && <NewspaperGame />}
-
-                                    {/* Read more + page reference (newspaper style) */}
-                                    <div className="mt-4 pt-2 border-t border-black/20 flex justify-between items-center text-[11px] font-mono">
-                                        <Link
-                                            to={`/news/${item.slug || item._id}`}
-                                            className="font-black uppercase tracking-wider text-black hover:text-red-700 flex items-center gap-1"
-                                        >
-                                            और पढ़ें <span className="text-base">→</span>
-                                        </Link>
-                                        <span className="text-gray-500">पेज {currentPage} • कॉलम {idx + 1}</span>
-                                    </div>
                                 </article>
                             </div>
                         );
