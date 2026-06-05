@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const API_URL = '/api/news';
+    const API_URL = __API_URL__ + '/api/news';
 
     useEffect(() => {
         fetchNews();
