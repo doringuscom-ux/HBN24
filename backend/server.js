@@ -21,6 +21,23 @@ const News = require('./models/News');
 const Parser = require('rss-parser');
 const parser = new Parser();
 
+// Serverless connection middleware
+app.use(async (req, res, next) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await mongoose.connect(MONGODB_URI, {
+                serverSelectionTimeoutMS: 5000,
+            });
+            console.log('Connected to MongoDB successfully (Serverless)');
+            await seedAdmin(); // Ensure default admin exists
+        }
+        next();
+    } catch (error) {
+        console.error('MongoDB connection error in middleware:', error);
+        res.status(500).json({ message: 'Database connection error' });
+    }
+});
+
 // Routes
 const epaperRoutes = require('./src/routes/epaperRoutes');
 const authRoutes = require('./src/routes/authRoutes');
@@ -63,12 +80,12 @@ app.get('/api/news/article/:id', async (req, res) => {
     try {
         const { id } = req.params;
         let article;
-        
+
         // Find by ObjectId or fallback to Slug
         if (mongoose.Types.ObjectId.isValid(id)) {
             article = await News.findById(id);
         }
-        
+
         // If not found by ID, try finding by slug
         if (!article) {
             article = await News.findOne({ slug: id });
@@ -83,7 +100,7 @@ app.get('/api/news/article/:id', async (req, res) => {
         }
 
         if (!article) return res.status(404).json({ message: 'News not found' });
-        
+
         res.json(article);
     } catch (error) {
         console.error('Error fetching single article:', error);
@@ -205,7 +222,7 @@ app.get('/api/youtube', async (req, res) => {
         };
 
         const [videos, shorts] = await Promise.all([fetchVideos(), fetchShorts()]);
-        
+
         res.json({ videos, shorts });
     } catch (error) {
         console.error('Error fetching YouTube Data:', error);
@@ -231,20 +248,20 @@ const seedAdmin = async () => {
     }
 };
 
-// Start Server
-mongoose.connect(MONGODB_URI)
-    .then(async () => {
-        console.log('Connected to MongoDB successfully');
-        await seedAdmin(); // Ensure default admin exists
-        if (process.env.NODE_ENV !== 'production') {
+// Start Server locally
+if (process.env.NODE_ENV !== 'production') {
+    mongoose.connect(MONGODB_URI)
+        .then(async () => {
+            console.log('Connected to MongoDB successfully (Local)');
+            await seedAdmin();
             app.listen(PORT, () => {
                 console.log(`Server is running on port ${PORT}`);
             });
-        }
-    })
-    .catch((error) => {
-        console.error('MongoDB connection error:', error);
-    });
+        })
+        .catch((error) => {
+            console.error('MongoDB connection error:', error);
+        });
+}
 
 // Required for Vercel serverless deployment
 module.exports = app;
