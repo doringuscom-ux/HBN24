@@ -24,6 +24,22 @@ export default function FeaturedNews({ news = [] }) {
         );
     }
 
+    let displayCategory = '';
+    if (Array.isArray(featured.category)) {
+        const filtered = featured.category.filter(c => c.toLowerCase() !== 'superfast' && c.toLowerCase() !== 'featured');
+        displayCategory = filtered.length > 0 ? filtered[0] : (featured.category[0] || '');
+    } else if (typeof featured.category === 'string') {
+        displayCategory = featured.category;
+    }
+
+    let displayDesc = featured.description;
+    if (!displayDesc && featured.content) {
+        displayDesc = featured.content.replace(/<[^>]+>/g, '').substring(0, 180) + '...';
+    }
+    if (!displayDesc) {
+        displayDesc = "देश और दुनिया की तमाम बड़ी खबरों के लिए हमारे साथ बने रहें।";
+    }
+
     return (
         <Link to={`/news/${featured.slug || featured._id}`} className="block w-full group cursor-pointer bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border border-gray-100">
             <div className="relative overflow-hidden">
@@ -32,9 +48,9 @@ export default function FeaturedNews({ news = [] }) {
                     alt="Featured" 
                     className="w-full h-[450px] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
-                {featured.category && (
+                {displayCategory && (
                     <div className="absolute top-4 left-4 bg-[#da0000] text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg capitalize">
-                        {featured.category}
+                        {displayCategory}
                     </div>
                 )}
             </div>
@@ -43,8 +59,8 @@ export default function FeaturedNews({ news = [] }) {
                     {featured.title}
                 </h1>
                 <div className="w-12 h-1.5 bg-[#da0000] mb-4 rounded-full"></div>
-                <p className="text-gray-600 text-[17px] leading-relaxed line-clamp-3">
-                    {featured.description || "देश और दुनिया की तमाम बड़ी खबरों के लिए हमारे साथ बने रहें।"}
+                <p className="text-gray-600 text-[17px] leading-relaxed line-clamp-2">
+                    {displayDesc}
                 </p>
             </div>
         </Link>
