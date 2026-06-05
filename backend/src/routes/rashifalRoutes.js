@@ -1,0 +1,67 @@
+const express = require('express');
+const router = express.Router();
+const Rashifal = require('../../models/Rashifal');
+const authMiddleware = require('../middleware/authMiddleware');
+
+const defaultZodiacs = [
+    { id: 0, sign: 'Aries', hindi: 'मेष राशि', desc: 'आज का दिन आपके लिए ऊर्जावान रहेगा। नए कार्यों की शुरुआत करने के लिए समय अनुकूल है। स्वास्थ्य पर ध्यान दें।' },
+    { id: 1, sign: 'Taurus', hindi: 'वृषभ राशि', desc: 'आर्थिक मामलों में सावधानी बरतें। किसी पुराने मित्र से मुलाकात हो सकती है। परिवार में शांति का माहौल रहेगा।' },
+    { id: 2, sign: 'Gemini', hindi: 'मिथुन राशि', desc: 'रचनात्मक कार्यों में आपकी रुचि बढ़ेगी। कार्यस्थल पर आपको नए मौके मिलेंगे। वाणी पर संयम रखें।' },
+    { id: 3, sign: 'Cancer', hindi: 'कर्क राशि', desc: 'आज आप भावनात्मक रूप से मजबूत रहेंगे। रुके हुए काम पूरे होने की संभावना है। सेहत में सुधार होगा।' },
+    { id: 4, sign: 'Leo', hindi: 'सिंह राशि', desc: 'आज आप आत्मविश्वास से भरे रहेंगे। करियर में नई ऊंचाइयों को छू सकते हैं। विवादों से दूर रहें।' },
+    { id: 5, sign: 'Virgo', hindi: 'कन्या राशि', desc: 'परिश्रम का फल मिलेगा। व्यापार में लाभ की संभावना है। जीवनसाथी के साथ समय बिताने का मौका मिलेगा।' },
+    { id: 6, sign: 'Libra', hindi: 'तुला राशि', desc: 'मानसिक शांति मिलेगी। किसी धार्मिक यात्रा पर जाने का प्लान बन सकता है। पैसों के लेन-देन में सावधानी बरतें।' },
+    { id: 7, sign: 'Scorpio', hindi: 'वृश्चिक राशि', desc: 'हर काम सावधानी से करें, भावनाओं में बह कर फैसला करने से बचें, काम करने का तरीका बदलें लाभ होगा, अचानक धन लाभ के अवसर मिलेंगे।' },
+    { id: 8, sign: 'Sagittarius', hindi: 'धनु राशि', desc: 'पारिवारिक जीवन में सुख-शांति रहेगी। आपके काम की प्रशंसा होगी। खान-पान पर ध्यान दें और क्रोध से बचें।' },
+    { id: 9, sign: 'Capricorn', hindi: 'मकर राशि', desc: 'मेहनत का सकारात्मक परिणाम मिलेगा। कोई शुभ समाचार प्राप्त हो सकता है। क्रोध पर नियंत्रण रखें।' },
+    { id: 10, sign: 'Aquarius', hindi: 'कुंभ राशि', desc: 'सामाजिक कार्यों में आपकी हिस्सेदारी बढ़ेगी। दोस्तों का सहयोग मिलेगा। स्वास्थ्य सामान्य रहेगा।' },
+    { id: 11, sign: 'Pisces', hindi: 'मीन राशि', desc: 'आज आपको मानसिक संतोष मिलेगा। कला और संगीत में रुचि बढ़ेगी। धन लाभ के योग बन रहे हैं।' }
+];
+
+// @route   GET /api/rashifal
+// @desc    Get the current rashifal data
+// @access  Public
+router.get('/', async (req, res) => {
+    try {
+        let rashifal = await Rashifal.findOne().sort({ date: -1 });
+        if (!rashifal) {
+            // Return defaults if none in DB
+            return res.json({ signs: defaultZodiacs });
+        }
+        res.json(rashifal);
+    } catch (error) {
+        console.error('Error fetching rashifal:', error);
+        res.status(500).json({ message: 'Server error fetching rashifal' });
+    }
+});
+
+// @route   POST /api/rashifal
+// @desc    Update or create rashifal data
+// @access  Private (Admin only)
+router.post('/', authMiddleware, async (req, res) => {
+    try {
+        const { signs } = req.body;
+        if (!signs || !Array.isArray(signs) || signs.length !== 12) {
+            return res.status(400).json({ message: 'Invalid signs data. Expected array of 12 signs.' });
+        }
+
+        // We only keep one document to serve the latest
+        let rashifal = await Rashifal.findOne();
+        
+        if (rashifal) {
+            rashifal.signs = signs;
+            rashifal.date = Date.now();
+            await rashifal.save();
+        } else {
+            rashifal = new Rashifal({ signs });
+            await rashifal.save();
+        }
+
+        res.json({ message: 'Rashifal updated successfully', data: rashifal });
+    } catch (error) {
+        console.error('Error updating rashifal:', error);
+        res.status(500).json({ message: 'Server error updating rashifal' });
+    }
+});
+
+module.exports = router;

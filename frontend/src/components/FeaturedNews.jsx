@@ -1,0 +1,52 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+export default function FeaturedNews({ news = [] }) {
+    const defaultNews = {
+        title: "Loading...",
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop",
+        description: "Please wait while we load the latest news...",
+        category: "NEWS"
+    };
+
+    const featured = news.length > 0 ? news[0] : defaultNews;
+
+    if (!featured._id) {
+        return (
+            <div className="w-full bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                <div className="relative overflow-hidden">
+                    <img src={featured.image} alt="Featured" className="w-full h-[450px] object-cover" />
+                </div>
+                <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
+                    <h1 className="text-[34px] font-black text-[#111] mb-4 leading-[1.25]">{featured.title}</h1>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <Link to={`/news/${featured.slug || featured._id}`} className="block w-full group cursor-pointer bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border border-gray-100">
+            <div className="relative overflow-hidden">
+                <img 
+                    src={featured.image} 
+                    alt="Featured" 
+                    className="w-full h-[450px] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                {featured.category && (
+                    <div className="absolute top-4 left-4 bg-[#da0000] text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg capitalize">
+                        {featured.category}
+                    </div>
+                )}
+            </div>
+            <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
+                <h1 className="text-[34px] font-black text-[#111] mb-4 group-hover:text-[#da0000] transition-colors leading-[1.25]">
+                    {featured.title}
+                </h1>
+                <div className="w-12 h-1.5 bg-[#da0000] mb-4 rounded-full"></div>
+                <p className="text-gray-600 text-[17px] leading-relaxed line-clamp-3">
+                    {featured.description || "देश और दुनिया की तमाम बड़ी खबरों के लिए हमारे साथ बने रहें।"}
+                </p>
+            </div>
+        </Link>
+    );
+}

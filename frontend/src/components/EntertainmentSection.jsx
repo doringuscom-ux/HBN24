@@ -1,0 +1,123 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Play } from 'lucide-react';
+import { entertainmentNews } from '../data/mockNews';
+
+export default function EntertainmentSection({ news = [] }) {
+    const safeNews = (index) => {
+        if (news[index]) return { image: news[index].image, title: news[index].title, id: news[index].slug || news[index]._id };
+        return { 
+            image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop", 
+            title: "Loading...", 
+            id: "loading" 
+        };
+    };
+
+    const main = safeNews(0);
+    const subMain = safeNews(1);
+    const list = [safeNews(2), safeNews(3), safeNews(4)];
+    const list2 = [safeNews(5), safeNews(6), safeNews(7)];
+
+    return (
+        <div className="w-full mt-8">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b-[2px] border-gray-200 pb-2 mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[8px] border-l-[#da0000] border-b-[6px] border-b-transparent transform rotate-45"></div>
+                    <h2 className="text-xl font-bold">मनोरंजन</h2>
+                </div>
+                <a href="#" className="flex items-center gap-1 text-[#da0000] font-medium text-sm hover:underline">
+                    और भी
+                    <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[5px] border-l-[#da0000] border-b-[4px] border-b-transparent"></div>
+                </a>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-6">
+                {/* Left Column (Main Feature + 1 small) */}
+                <div className="w-full md:w-1/3 flex flex-col gap-4">
+                    {/* Main Feature */}
+                    <Link to={main.id !== 'loading' && typeof main.id === 'string' ? `/news/${main.id}` : '#'} className="relative group cursor-pointer block">
+                        <div className="overflow-hidden bg-black rounded-[4px]">
+                            <img 
+                                src={main.image} 
+                                alt={main.title}
+                                className="w-full h-[272px] object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                            />
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent rounded-b-[4px]">
+                            <h3 className="text-white text-xl font-bold leading-snug group-hover:underline">
+                                {main.title}
+                            </h3>
+                        </div>
+                    </Link>
+
+                    {/* Secondary Left Feature */}
+                    <Link to={subMain.id !== 'loading' && typeof subMain.id === 'string' ? `/news/${subMain.id}` : '#'} className="flex gap-4 group cursor-pointer border-t border-gray-200 pt-4 block">
+                        <div className="w-1/2 overflow-hidden">
+                            <img 
+                                src={subMain.image} 
+                                alt={subMain.title}
+                                className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                        </div>
+                        <div className="w-1/2 flex items-center">
+                            <h3 className="text-[17px] font-bold leading-tight group-hover:text-[#da0000]">
+                                {subMain.title}
+                            </h3>
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Middle Column (List 1) */}
+                <div className="w-full md:w-1/3 flex flex-col gap-4">
+                    {list.map((item, index) => (
+                        <React.Fragment key={item.id}>
+                            <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
+                                <div className="w-1/2 overflow-hidden relative">
+                                    <img 
+                                        src={item.image} 
+                                        alt={item.title}
+                                        className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                </div>
+                                <div className="w-1/2 flex items-center">
+                                    <h3 className="text-[17px] font-bold leading-tight group-hover:text-[#da0000]">
+                                        {item.title}
+                                    </h3>
+                                </div>
+                            </Link>
+                            {index !== list.length - 1 && (
+                                <div className="w-full h-[1px] bg-gray-200"></div>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+
+                {/* Right Column (List 2) */}
+                <div className="w-full md:w-1/3 flex flex-col gap-4">
+                    {list2.map((item, index) => (
+                        <React.Fragment key={item.id}>
+                            <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
+                                <div className="w-1/2 overflow-hidden relative">
+                                    <img 
+                                        src={item.image} 
+                                        alt={item.title}
+                                        className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                </div>
+                                <div className="w-1/2 flex items-center">
+                                    <h3 className="text-[17px] font-bold leading-tight group-hover:text-[#da0000]">
+                                        {item.title}
+                                    </h3>
+                                </div>
+                            </Link>
+                            {index !== list2.length - 1 && (
+                                <div className="w-full h-[1px] bg-gray-200"></div>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
