@@ -18,16 +18,26 @@ const AdminLogin = () => {
                 body: JSON.stringify({ username, password })
             });
 
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.setItem('adminToken', data.token);
-                navigate('/admin');
-            } else {
-                setError(data.message || 'Login failed');
+            if (!res.ok) {
+                // If not OK, try to read as text first in case it's not JSON
+                const errorText = await res.text();
+                console.error("Server responded with error status:", res.status, errorText);
+                let errorMessage = 'Login failed';
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.message || errorMessage;
+                } catch(e) {}
+                setError(errorMessage);
+                return;
             }
+
+            const data = await res.json();
+            localStorage.setItem('adminToken', data.token);
+            navigate('/admin');
+
         } catch (err) {
-            setError('Server error. Please try again.');
+            console.error('Login fetch error details:', err);
+            setError('Server error. Please check console for details.');
         }
     };
 
