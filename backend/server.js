@@ -33,6 +33,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/rashifal', rashifalRoutes);
 
+// Add a root route so Vercel doesn't show "Cannot GET /"
+app.get('/', (req, res) => {
+    res.send('HBN24 Backend API is running successfully!');
+});
+
 app.get('/api/news', async (req, res) => {
     try {
         const newsList = await News.find().sort({ createdAt: -1 });
