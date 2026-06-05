@@ -49,16 +49,22 @@ export default function Home() {
         return !itemCats.some(c => specificCategories.includes(c));
     });
 
+    const fillNews = (categoryNews) => {
+        if (categoryNews.length >= 12) return categoryNews;
+        const borrowed = news.filter(n => !categoryNews.some(cn => cn._id === n._id));
+        return [...categoryNews, ...borrowed].slice(0, 12);
+    };
+
     return (
         <div className="bg-white">
             <BreakingNews news={news} />
-            <MainContent mixNews={mixNews} entertainmentNews={filterCategory('entertainment')} superfastNews={filterCategory('superfast')} featuredNews={filterCategory('featured')} videos={videos} shorts={shorts} />
+            <MainContent mixNews={fillNews(mixNews)} entertainmentNews={fillNews(filterCategory('entertainment'))} superfastNews={fillNews(filterCategory('superfast'))} featuredNews={fillNews(filterCategory('featured'))} videos={videos} shorts={shorts} />
             <VideoSection videos={videos} />
-            <SportsSection news={filterCategory('sports')} />
-            <ReligionSection news={filterCategory('religion')} />
-            <LifestyleSection news={filterCategory('lifestyle')} />
-            <TechnologySection news={filterCategory('technology')} />
-            <BusinessSection news={filterCategory('business')} />
+            <SportsSection news={fillNews(filterCategory('sports'))} />
+            <ReligionSection news={fillNews(filterCategory('religion'))} />
+            <LifestyleSection news={fillNews(filterCategory('lifestyle'))} />
+            <TechnologySection news={fillNews(filterCategory('technology'))} />
+            <BusinessSection news={fillNews(filterCategory('business'))} />
         </div>
     );
 }
