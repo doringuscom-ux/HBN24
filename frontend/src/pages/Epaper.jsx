@@ -182,8 +182,7 @@ export default function Epaper() {
                                             <img
                                                 src={item.image}
                                                 alt={item.title}
-                                                className={`w-full object-cover transition duration-500 grayscale group-hover:grayscale-0 ${style === 'headline' ? 'h-64' : 'h-40'
-                                                    }`}
+                                                className="w-full h-auto transition duration-500 grayscale group-hover:grayscale-0"
                                                 loading="lazy"
                                             />
                                             {style === 'headline' && (
