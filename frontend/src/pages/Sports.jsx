@@ -14,14 +14,14 @@ export default function Sports() {
         const fetchNews = async () => {
             try {
                 // Fetch sports specific news
-                const sportsRes = await fetch('http://localhost:5000/api/news/sports');
+                const sportsRes = await fetch('/api/news/sports');
                 let sportsData = [];
                 if (sportsRes.ok) {
                     sportsData = await sportsRes.json();
                 }
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('http://localhost:5000/api/news');
+                const allRes = await fetch('/api/news');
                 let allData = [];
                 if (allRes.ok) {
                     allData = await allRes.json();

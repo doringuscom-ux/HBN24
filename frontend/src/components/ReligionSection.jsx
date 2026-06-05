@@ -56,7 +56,7 @@ export default function ReligionSection({ news = [] }) {
     useEffect(() => {
         const fetchRashifal = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/rashifal');
+                const res = await fetch('/api/rashifal');
                 const data = await res.json();
                 if (data.signs) {
                     setFetchedRashifal(data.signs);

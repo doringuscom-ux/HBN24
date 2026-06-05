@@ -15,7 +15,7 @@ export default function SingleArticle() {
         const fetchData = async () => {
             try {
                 // Fetch specific article
-                const articleRes = await fetch(`http://localhost:5000/api/news/article/${id}`);
+                const articleRes = await fetch(`/api/news/article/${id}`);
                 const articleData = await articleRes.json();
                 
                 if (articleData.redirect) {
@@ -24,7 +24,7 @@ export default function SingleArticle() {
                 }
                 
                 // Fetch latest news for sidebar
-                const newsRes = await fetch(`http://localhost:5000/api/news`);
+                const newsRes = await fetch(`/api/news`);
                 const newsData = await newsRes.json();
                 
                 setArticle(articleData);

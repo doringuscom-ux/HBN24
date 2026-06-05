@@ -15,14 +15,14 @@ export default function Religion() {
         const fetchNews = async () => {
             try {
                 // Fetch religion specific news
-                const religionRes = await fetch('http://localhost:5000/api/news/religion');
+                const religionRes = await fetch('/api/news/religion');
                 let religionData = [];
                 if (religionRes.ok) {
                     religionData = await religionRes.json();
                 }
                 
                 // Fetch all news for the 'latest' sidebar across all fields
-                const allRes = await fetch('http://localhost:5000/api/news');
+                const allRes = await fetch('/api/news');
                 let allData = [];
                 if (allRes.ok) {
                     allData = await allRes.json();

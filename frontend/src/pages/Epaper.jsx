@@ -10,7 +10,7 @@ export default function Epaper() {
     useEffect(() => {
         const fetchEpaperNews = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/news');
+                const res = await fetch('/api/news');
                 if (res.ok) {
                     const data = await res.json();
                     

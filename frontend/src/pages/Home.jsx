@@ -18,8 +18,8 @@ export default function Home() {
         const fetchData = async () => {
             try {
                 const [newsRes, videoRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/news'),
-                    fetch('http://localhost:5000/api/youtube')
+                    fetch('/api/news'),
+                    fetch('/api/youtube')
                 ]);
                 const newsData = await newsRes.json();
                 const videoData = await videoRes.json();
