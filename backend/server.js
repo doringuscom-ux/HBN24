@@ -11,6 +11,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hbn24'
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.set('trust proxy', true);
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -53,6 +54,56 @@ app.use('/api/rashifal', rashifalRoutes);
 // Add a root route so Vercel doesn't show "Cannot GET /"
 app.get('/', (req, res) => {
     res.send('HBN24 Backend API is running successfully!');
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const newsList = await News.find().sort({ createdAt: -1 });
+        const baseUrl = req.protocol + '://' + req.get('host');
+
+        const staticPages = [
+            '',
+            '/entertainment',
+            '/religion',
+            '/sports',
+            '/lifestyle',
+            '/business',
+            '/technology',
+            '/epaper'
+        ];
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+        staticPages.forEach(page => {
+            xml += '  <url>\n';
+            xml += `    <loc>${baseUrl}${page}</loc>\n`;
+            xml += '    <changefreq>daily</changefreq>\n';
+            xml += '    <priority>0.8</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        newsList.forEach(news => {
+            const slug = news.slug || news._id;
+            xml += '  <url>\n';
+            xml += `    <loc>${baseUrl}/news/${slug}</loc>\n`;
+            const lastModDate = news.updatedAt || news.createdAt;
+            if (lastModDate) {
+                xml += `    <lastmod>${new Date(lastModDate).toISOString()}</lastmod>\n`;
+            }
+            xml += '    <changefreq>weekly</changefreq>\n';
+            xml += '    <priority>0.6</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        xml += '</urlset>';
+
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+    } catch (error) {
+        console.error('Error generating sitemap:', error);
+        res.status(500).send('Error generating sitemap');
+    }
 });
 
 app.get('/api/news', async (req, res) => {
