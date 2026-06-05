@@ -6,7 +6,7 @@ const newsSchema = new mongoose.Schema({
     previousSlugs: [{ type: String }],
     image: { type: String, required: true },
     imageAlt: { type: String, required: false },
-    category: { type: String, required: true },
+    category: { type: [String], required: true },
     content: { type: String, required: false },
     metaTitle: { type: String, required: false },
     metaDescription: { type: String, required: false },

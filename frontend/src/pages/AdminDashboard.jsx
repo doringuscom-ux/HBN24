@@ -110,6 +110,17 @@ export default function AdminDashboard() {
         setFormData(prev => ({ ...prev, content: value }));
     };
 
+    const handleCategoryCheckbox = (catId) => {
+        setFormData(prev => {
+            const currentCats = prev.category || [];
+            if (currentCats.includes(catId)) {
+                return { ...prev, category: currentCats.filter(id => id !== catId) };
+            } else {
+                return { ...prev, category: [...currentCats, catId] };
+            }
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('adminToken');
@@ -158,7 +169,7 @@ export default function AdminDashboard() {
             slug: item.slug || '',
             image: item.image || '',
             imageAlt: item.imageAlt || '',
-            category: item.category || 'entertainment',
+            category: Array.isArray(item.category) ? item.category : (item.category ? [item.category] : []),
             content: item.content || '',
             metaTitle: item.metaTitle || '',
             metaDescription: item.metaDescription || '',
@@ -191,7 +202,7 @@ export default function AdminDashboard() {
 
     const openCreateModal = () => {
         setEditingId(null);
-        setFormData({ title: '', slug: '', image: '', imageAlt: '', category: 'entertainment', content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false });
+        setFormData({ title: '', slug: '', image: '', imageAlt: '', category: [], content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false });
         setIsModalOpen(true);
     };
 
@@ -239,7 +250,8 @@ export default function AdminDashboard() {
     // Derived State
     const filteredNews = news.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+        const itemCats = Array.isArray(item.category) ? item.category : (item.category ? [item.category] : []);
+        const matchesCategory = filterCategory === 'all' || itemCats.includes(filterCategory);
         const matchesView = currentView === 'all' || (currentView === 'epaper' && item.isEpaper);
         return matchesSearch && matchesCategory && matchesView;
     });
@@ -420,7 +432,7 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100 capitalize">
-                                                        {item.category}
+                                                        {Array.isArray(item.category) ? item.category.join(', ') : item.category}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -525,12 +537,20 @@ export default function AdminDashboard() {
                                             <input type="text" name="slug" value={formData.slug} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-gray-50" placeholder="Auto-generated if empty" />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-                                            <select name="category" value={formData.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-white">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Categories (Select Multiple)</label>
+                                            <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg bg-white max-h-[100px] overflow-y-auto">
                                                 {categories.filter(c => c.id !== 'all').map(cat => (
-                                                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                                                    <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer bg-gray-50 px-2 py-1 rounded border border-gray-200 hover:bg-red-50 transition-colors">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={(formData.category || []).includes(cat.id)}
+                                                            onChange={() => handleCategoryCheckbox(cat.id)}
+                                                            className="w-3.5 h-3.5 text-red-600 focus:ring-red-500 rounded cursor-pointer"
+                                                        />
+                                                        <span className="text-xs font-medium text-gray-700">{cat.label}</span>
+                                                    </label>
                                                 ))}
-                                            </select>
+                                            </div>
                                         </div>
                                         <div className="col-span-2 flex items-center gap-2 mt-1 mb-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                                             <input type="checkbox" id="isEpaper" name="isEpaper" checked={formData.isEpaper} onChange={handleInputChange} className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded cursor-pointer" />

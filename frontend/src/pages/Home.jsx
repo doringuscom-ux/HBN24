@@ -38,10 +38,16 @@ export default function Home() {
 
     if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl">Loading...</div>;
 
-    const filterCategory = (cat) => news.filter(n => n.category === cat);
+    const filterCategory = (cat) => news.filter(n => {
+        const itemCats = Array.isArray(n.category) ? n.category : (n.category ? [n.category] : []);
+        return itemCats.includes(cat);
+    });
 
     const specificCategories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast'];
-    const mixNews = news.filter(n => !specificCategories.includes(n.category));
+    const mixNews = news.filter(n => {
+        const itemCats = Array.isArray(n.category) ? n.category : (n.category ? [n.category] : []);
+        return !itemCats.some(c => specificCategories.includes(c));
+    });
 
     return (
         <div className="bg-white">
