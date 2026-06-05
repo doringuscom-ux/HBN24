@@ -1,6 +1,166 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const SUDOKU_PUZZLES = [
+  "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
+  "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
+  "100489006730000040000001295007120600500703008006095700914600000020000037800512004"
+];
+
+const NewspaperGame = () => {
+    const [initialBoard, setInitialBoard] = useState([]);
+    const [board, setBoard] = useState([]);
+    const [solutionBoard, setSolutionBoard] = useState([]);
+    const [selectedCell, setSelectedCell] = useState(null);
+    const [isWon, setIsWon] = useState(false);
+
+    const isValidForSolve = (grid, r, c, n) => {
+        for(let i=0; i<9; i++) {
+            if(grid[r][i] === n) return false;
+            if(grid[i][c] === n) return false;
+            if(grid[3*Math.floor(r/3) + Math.floor(i/3)][3*Math.floor(c/3) + (i%3)] === n) return false;
+        }
+        return true;
+    };
+
+    const solveGrid = (grid) => {
+        for(let r=0; r<9; r++) {
+            for(let c=0; c<9; c++) {
+                if(grid[r][c] === null) {
+                    for(let n=1; n<=9; n++) {
+                        if(isValidForSolve(grid, r, c, n)) {
+                            grid[r][c] = n;
+                            if(solveGrid(grid)) return true;
+                            grid[r][c] = null;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    const initGame = () => {
+        const puzzle = SUDOKU_PUZZLES[Math.floor(Math.random() * SUDOKU_PUZZLES.length)];
+        const grid = [];
+        for (let r=0; r<9; r++) {
+            const row = [];
+            for (let c=0; c<9; c++) {
+                const char = puzzle[r*9 + c];
+                row.push(char === '0' ? null : parseInt(char));
+            }
+            grid.push(row);
+        }
+        setInitialBoard(grid);
+        setBoard(JSON.parse(JSON.stringify(grid)));
+        
+        // Generate solution for instant validation
+        const solved = JSON.parse(JSON.stringify(grid));
+        solveGrid(solved);
+        setSolutionBoard(solved);
+        
+        setSelectedCell(null);
+        setIsWon(false);
+    };
+
+    useEffect(() => { initGame(); }, []);
+
+    const handleCellClick = (r, c) => {
+        if (!initialBoard[r][c]) setSelectedCell({r, c});
+    };
+
+    const handleNumberClick = (num) => {
+        if (!selectedCell) return;
+        const newBoard = [...board];
+        newBoard[selectedCell.r][selectedCell.c] = num;
+        setBoard(newBoard);
+        
+        if (newBoard.every(row => row.every(cell => cell !== null))) {
+            let won = true;
+            for (let r=0; r<9; r++) {
+                for (let c=0; c<9; c++) {
+                    if (newBoard[r][c] !== solutionBoard[r][c]) won = false;
+                }
+            }
+            if (won) {
+                setIsWon(true);
+                setSelectedCell(null);
+            }
+        }
+    };
+
+    if (board.length === 0) return null;
+
+    return (
+        <div className="flex-1 w-full flex flex-col pt-4 pb-2">
+            <div className="w-full border-y border-dashed border-gray-400 py-3 px-2 sm:px-4 bg-[#fcf9f2]/40 flex flex-col items-center justify-center">
+                <span className="text-sm sm:text-base font-serif font-black text-gray-900 border-b-[1.5px] border-gray-900 pb-1 mb-3 w-full max-w-[350px] text-center tracking-widest uppercase">
+                    {isWon ? 'बधाई हो! हल हो गया 🎉' : 'सुडोकू'}
+                </span>
+                
+                <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full mb-3">
+                    <div className="border-[1.5px] border-gray-900 bg-gray-400 gap-px grid grid-cols-9 w-[180px] sm:w-[220px] aspect-square shadow-sm">
+                        {board.map((row, r) => (
+                            row.map((cell, c) => {
+                                const isInit = initialBoard[r][c] !== null;
+                                const isSelected = selectedCell?.r === r && selectedCell?.c === c;
+                                const isSameRowCol = selectedCell && (selectedCell.r === r || selectedCell.c === c);
+                                const isCorrect = !isInit && cell !== null && cell === solutionBoard[r][c];
+                                const isWrong = !isInit && cell !== null && cell !== solutionBoard[r][c];
+                                
+                                const borderRight = c % 3 === 2 && c !== 8 ? 'border-r-[1.5px] border-gray-900' : '';
+                                const borderBottom = r % 3 === 2 && r !== 8 ? 'border-b-[1.5px] border-gray-900' : '';
+                                
+                                let bgColor = 'bg-white';
+                                if (isSelected) bgColor = 'bg-yellow-300 ring-2 ring-yellow-500 z-10 relative shadow-sm';
+                                else if (isSameRowCol) bgColor = 'bg-yellow-50';
+                                
+                                let textColor = 'text-gray-900';
+                                if (!isInit) {
+                                    if (isCorrect) textColor = 'text-green-800 font-black text-[15px] sm:text-[18px] drop-shadow-sm';
+                                    else if (isWrong) textColor = 'text-red-700 font-black text-[15px] sm:text-[18px] drop-shadow-sm';
+                                }
+                                
+                                return (
+                                    <div 
+                                        key={`${r}-${c}`}
+                                        onClick={() => handleCellClick(r, c)}
+                                        className={`flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer transition-colors ${borderRight} ${borderBottom} ${bgColor} ${textColor}`}
+                                    >
+                                        {cell || ''}
+                                    </div>
+                                );
+                            })
+                        ))}
+                    </div>
+
+                    {!isWon && (
+                        <div className="flex flex-col items-center">
+                            <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 mb-1 border-b border-gray-300 pb-0.5 whitespace-nowrap">नंबर भरें 👇</span>
+                            <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                                {[1,2,3,4,5,6,7,8,9, 'X'].map((num, idx) => (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => num === 'X' ? handleNumberClick(null) : handleNumberClick(num)}
+                                        className={`font-bold py-1 px-3 rounded shadow-sm text-[10px] sm:text-xs transition-colors ${num === 'X' ? 'bg-red-100 hover:bg-red-200 text-red-800 border border-red-300' : 'bg-white hover:bg-gray-100 border border-gray-300 text-gray-800'}`}
+                                    >
+                                        {num}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-end w-full max-w-[350px]">
+                    <button onClick={initGame} className="text-[10px] font-bold text-gray-600 hover:text-gray-900 underline uppercase tracking-wider">नया खेल</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function Epaper() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -194,7 +354,7 @@ export default function Epaper() {
                                     )}
 
                                     {/* Article text with real dropcap on headline */}
-                                    <div className="text-gray-800 text-justify flex-1">
+                                    <div className={`text-gray-800 text-justify ${style !== 'double-column' ? 'flex-1' : 'mb-4'}`}>
                                         <p
                                             className={`text-sm leading-relaxed ${style === 'headline'
                                                     ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[20]'
@@ -206,6 +366,9 @@ export default function Epaper() {
                                             {plainText}
                                         </p>
                                     </div>
+
+                                    {/* Auto-filler Game for empty space on right side */}
+                                    {style === 'double-column' && <NewspaperGame />}
 
                                     {/* Read more + page reference (newspaper style) */}
                                     <div className="mt-4 pt-2 border-t border-black/20 flex justify-between items-center text-[11px] font-mono">
