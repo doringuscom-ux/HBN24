@@ -349,7 +349,8 @@ app.post('/api/news', authMiddleware, async (req, res) => {
             title: savedNews.title,
             body: savedNews.shortDescription || 'नयी खबर पढ़ें!',
             url: `https://hbnnews24.com/news/${savedNews.slug || savedNews._id}`,
-            icon: savedNews.image || 'https://hbnnews24.com/favicon.png'
+            icon: 'https://hbnnews24.com/favicon.png',
+            image: savedNews.image || null
         });
 
         subscriptions.forEach(sub => {
