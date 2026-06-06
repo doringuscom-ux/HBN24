@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ThumbsUp, MessageCircle, Share2, MoreVertical } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Share2, Bookmark, Pencil, Trash2 } from 'lucide-react';
 
 export default function SingleArticle() {
     const { id } = useParams();
@@ -9,6 +9,17 @@ export default function SingleArticle() {
     const [latestNews, setLatestNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
+    
+    // New states for interaction
+    const [likes, setLikes] = useState(0);
+    const [hasLiked, setHasLiked] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState({ name: '', text: '' });
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [myComments, setMyComments] = useState([]);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [editCommentText, setEditCommentText] = useState('');
+    const commentsRef = useRef(null);
 
     useEffect(() => {
         // Fetch article and latest news
@@ -28,8 +39,29 @@ export default function SingleArticle() {
                 const newsData = await newsRes.json();
                 
                 setArticle(articleData);
+                setLikes(articleData.likes || 0);
+                
+                // Check if user already liked
+                const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
+                if (likedArticles.includes(articleData._id)) {
+                    setHasLiked(true);
+                } else {
+                    setHasLiked(false);
+                }
+
+                const mySavedComments = JSON.parse(localStorage.getItem('myComments') || '[]');
+                setMyComments(mySavedComments);
+
                 // Filter out the current article from sidebar
-                setLatestNews(newsData.filter(n => n._id !== id).slice(0, 8));
+                setLatestNews(newsData.filter(n => n._id !== articleData._id).slice(0, 8));
+                
+                // Fetch comments
+                const commentsRes = await fetch(`${__API_URL__}/api/news/${articleData._id}/comments`);
+                if (commentsRes.ok) {
+                    const commentsData = await commentsRes.json();
+                    setComments(commentsData);
+                }
+                
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching article:", error);
@@ -42,6 +74,168 @@ export default function SingleArticle() {
         // Reset expanded state
         setIsExpanded(false);
     }, [id]);
+
+    const handleLike = async () => {
+        if (hasLiked || !article) return;
+        
+        // Optimistic UI
+        setLikes(prev => prev + 1);
+        setHasLiked(true);
+        const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
+        likedArticles.push(article._id);
+        localStorage.setItem('likedArticles', JSON.stringify(likedArticles));
+
+        try {
+            const res = await fetch(`${__API_URL__}/api/news/${article._id}/like`, { method: 'PUT' });
+            if (!res.ok) {
+                // Revert if failed
+                setLikes(prev => prev - 1);
+                setHasLiked(false);
+                const revertedLiked = likedArticles.filter(id => id !== article._id);
+                localStorage.setItem('likedArticles', JSON.stringify(revertedLiked));
+            }
+        } catch (error) {
+            console.error('Error liking article:', error);
+        }
+    };
+
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!newComment.name.trim() || !newComment.text.trim()) return;
+        
+        setIsSubmittingComment(true);
+        try {
+            const res = await fetch(`${__API_URL__}/api/news/${article._id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newComment)
+            });
+            if (res.ok) {
+                const addedComment = await res.json();
+                setComments([addedComment, ...comments]);
+                setNewComment({ name: '', text: '' });
+                
+                // Save to myComments
+                const updatedMyComments = [...myComments, addedComment._id];
+                setMyComments(updatedMyComments);
+                localStorage.setItem('myComments', JSON.stringify(updatedMyComments));
+            }
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        } finally {
+            setIsSubmittingComment(false);
+        }
+    };
+
+    const handleEditCommentSubmit = async (commentId) => {
+        if (!editCommentText.trim()) return;
+        try {
+            const res = await fetch(`${__API_URL__}/api/news/${article._id}/comments/${commentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: editCommentText })
+            });
+            if (res.ok) {
+                const updatedComment = await res.json();
+                setComments(comments.map(c => c._id === commentId ? updatedComment : c));
+                setEditingCommentId(null);
+                setEditCommentText('');
+            }
+        } catch (error) {
+            console.error('Error updating comment:', error);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm("Are you sure you want to delete this comment?")) return;
+        try {
+            const res = await fetch(`${__API_URL__}/api/news/${article._id}/comments/${commentId}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                setComments(comments.filter(c => c._id !== commentId));
+                const updatedMyComments = myComments.filter(id => id !== commentId);
+                setMyComments(updatedMyComments);
+                localStorage.setItem('myComments', JSON.stringify(updatedMyComments));
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: article?.title || 'HBN24 News',
+            text: article?.metaDescription || 'Read this news on HBN24',
+            url: window.location.href,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Link copied to clipboard!");
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
+    };
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+    };
+
+    const handleBookmark = () => {
+        alert("इस पेज को बुकमार्क करने के लिए कृपया अपने कीबोर्ड पर Ctrl+D (या Mac पर Cmd+D) दबाएं।");
+    };
+
+    const scrollToComments = () => {
+        commentsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        if (article) {
+            // Meta Title
+            document.title = article.metaTitle || article.title || 'HBN24 News';
+            
+            // Meta Description
+            let metaDesc = document.querySelector('meta[name="description"]');
+            if (!metaDesc) {
+                metaDesc = document.createElement('meta');
+                metaDesc.name = "description";
+                document.head.appendChild(metaDesc);
+            }
+            metaDesc.content = article.metaDescription || '';
+
+            // Meta Keywords
+            let metaKeywords = document.querySelector('meta[name="keywords"]');
+            if (!metaKeywords) {
+                metaKeywords = document.createElement('meta');
+                metaKeywords.name = "keywords";
+                document.head.appendChild(metaKeywords);
+            }
+            metaKeywords.content = article.metaKeywords || '';
+
+            // Robots Tag
+            let metaRobots = document.querySelector('meta[name="robots"]');
+            if (!metaRobots) {
+                metaRobots = document.createElement('meta');
+                metaRobots.name = "robots";
+                document.head.appendChild(metaRobots);
+            }
+            metaRobots.content = article.robots || 'index, follow';
+
+            // Canonical URL
+            let canonicalLink = document.querySelector('link[rel="canonical"]');
+            if (!canonicalLink) {
+                canonicalLink = document.createElement('link');
+                canonicalLink.rel = "canonical";
+                document.head.appendChild(canonicalLink);
+            }
+            canonicalLink.href = article.canonicalUrl || window.location.href;
+        }
+    }, [article]);
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#da0000]"></div></div>;
@@ -65,7 +259,7 @@ export default function SingleArticle() {
 
 
                 <div className="w-full bg-gray-100">
-                    <img src={article.image} alt={article.title} className="w-full h-auto max-h-[500px] object-cover" />
+                    <img src={article.image} alt={article.imageAlt || article.title} className="w-full h-auto max-h-[500px] object-cover" />
                     <p className="text-sm text-gray-500 py-2 px-1 border-b border-gray-200">
                         {article.imageAlt || `${article.title} (Photo)`}
                     </p>
@@ -86,13 +280,21 @@ export default function SingleArticle() {
                     </div>
 
                     <div className="flex items-center gap-4 text-gray-500">
-                        <button className="flex items-center gap-1 hover:text-[#da0000]"><ThumbsUp size={18} /> <span className="text-xs">38</span></button>
-                        <button className="hover:text-[#da0000]"><MessageCircle size={18} /></button>
-                        <button className="text-green-500 hover:text-green-600">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                        <button onClick={handleLike} className={`flex items-center gap-1 hover:text-[#da0000] transition-colors ${hasLiked ? 'text-[#da0000]' : ''}`}>
+                            <ThumbsUp size={18} className={hasLiked ? 'fill-current' : ''} /> 
+                            <span className="text-xs">{likes > 0 ? likes : ''}</span>
                         </button>
-                        <button className="hover:text-[#da0000]"><Share2 size={18} /></button>
-                        <button className="hover:text-[#da0000]"><MoreVertical size={18} /></button>
+                        <button onClick={scrollToComments} className="flex items-center gap-1 hover:text-[#da0000] transition-colors">
+                            <MessageCircle size={18} />
+                            <span className="text-xs">{comments.length > 0 ? comments.length : ''}</span>
+                        </button>
+                        <a href={`whatsapp://send?text=${article.title} - ${window.location.href}`} className="text-green-500 hover:text-green-600 transition-colors">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                        </a>
+                        <button onClick={handleShare} className="hover:text-[#da0000] transition-colors"><Share2 size={18} /></button>
+                        <button onClick={handleBookmark} className="flex items-center hover:text-[#da0000] transition-colors" title="Bookmark">
+                            <Bookmark size={18} />
+                        </button>
                     </div>
                 </div>
 
@@ -127,6 +329,112 @@ export default function SingleArticle() {
                         </div>
                     )
                 )}
+
+                {/* Comments Section */}
+                <div ref={commentsRef} className="mt-12 border-t border-gray-200 pt-8">
+                    <h3 className="text-2xl font-bold mb-6">Comments ({comments.length})</h3>
+                    
+                    {/* Comment Form */}
+                    <form onSubmit={handleCommentSubmit} className="mb-8 flex flex-col gap-4">
+                        <input 
+                            type="text" 
+                            placeholder="Your Name" 
+                            value={newComment.name}
+                            onChange={(e) => setNewComment({...newComment, name: e.target.value})}
+                            className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#da0000]"
+                            required
+                        />
+                        <textarea 
+                            placeholder="Write your comment here..."
+                            value={newComment.text}
+                            onChange={(e) => setNewComment({...newComment, text: e.target.value})}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#da0000]"
+                            rows="4"
+                            required
+                        ></textarea>
+                        <button 
+                            type="submit" 
+                            disabled={isSubmittingComment}
+                            className="self-start bg-[#da0000] text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
+                            {isSubmittingComment ? 'Posting...' : 'Post Comment'}
+                        </button>
+                    </form>
+
+                    {/* Comments List */}
+                    <div className="flex flex-col gap-6">
+                        {comments.length === 0 ? (
+                            <p className="text-gray-500 italic">No comments yet. Be the first to comment!</p>
+                        ) : (
+                            comments.map((comment) => (
+                                <div key={comment._id} className="bg-gray-50 p-4 rounded-lg group">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-gray-800">{comment.name}</span>
+                                            {myComments.includes(comment._id) && (
+                                                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">You</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(comment.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </span>
+                                            {myComments.includes(comment._id) && (
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setEditingCommentId(comment._id);
+                                                            setEditCommentText(comment.text);
+                                                        }} 
+                                                        className="text-gray-400 hover:text-blue-600"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteComment(comment._id)} 
+                                                        className="text-gray-400 hover:text-red-600"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {editingCommentId === comment._id ? (
+                                        <div className="mt-2 flex flex-col gap-2">
+                                            <textarea 
+                                                value={editCommentText}
+                                                onChange={(e) => setEditCommentText(e.target.value)}
+                                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                                                rows="3"
+                                            ></textarea>
+                                            <div className="flex gap-2 self-end">
+                                                <button 
+                                                    onClick={() => { setEditingCommentId(null); setEditCommentText(''); }}
+                                                    className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleEditCommentSubmit(comment._id)}
+                                                    className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
+                                                >
+                                                    Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-700">{comment.text}</p>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
             </div>
 
             {/* Right Column - Sidebar */}

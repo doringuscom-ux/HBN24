@@ -64,4 +64,78 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// @route   POST /api/rashifal/generate-ai
+// @desc    Auto-generate today's rashifal using AI
+// @access  Private (Admin only)
+router.post('/generate-ai', authMiddleware, async (req, res) => {
+    try {
+        const apiKey = process.env.OPENROUTER_API_KEY;
+        const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+
+        if (!apiKey) {
+            return res.status(500).json({ message: 'OpenRouter API Key missing' });
+        }
+
+        const dateStr = new Date().toLocaleDateString('hi-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        const promptText = `You are an expert Hindu astrologer. Generate the daily horoscope (Rashifal) for today (${dateStr}) in Hindi for all 12 zodiac signs.
+Return EXACTLY a valid JSON array of objects. Do not use any markdown formatting, code blocks, or extra text.
+The JSON array should have exactly 12 objects, ordered from Aries to Pisces.
+Each object must have this exact structure:
+{
+  "id": number (0 to 11, matching the traditional zodiac order where Aries=0, Taurus=1, etc.),
+  "sign": "English Sign Name",
+  "hindi": "Hindi Sign Name (e.g., मेष राशि)",
+  "desc": "Today's prediction in Hindi (around 20-30 words, make it sound authentic and based on daily planetary movements)."
+}`;
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [ { role: 'user', content: promptText } ]
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('AI Error:', errText);
+            return res.status(500).json({ message: 'Error from AI service' });
+        }
+
+        const data = await response.json();
+        let aiMessage = data.choices[0].message.content.trim();
+        
+        if (aiMessage.startsWith('```json')) aiMessage = aiMessage.replace(/^```json/, '').replace(/```$/, '').trim();
+        else if (aiMessage.startsWith('```')) aiMessage = aiMessage.replace(/^```/, '').replace(/```$/, '').trim();
+
+        const signs = JSON.parse(aiMessage);
+
+        if (!Array.isArray(signs) || signs.length !== 12) {
+            return res.status(500).json({ message: 'AI returned invalid format. Expected exactly 12 signs.' });
+        }
+
+        // Save to DB
+        let rashifal = await Rashifal.findOne();
+        if (rashifal) {
+            rashifal.signs = signs;
+            rashifal.date = Date.now();
+            await rashifal.save();
+        } else {
+            rashifal = new Rashifal({ signs });
+            await rashifal.save();
+        }
+
+        res.json({ message: 'Rashifal auto-generated successfully!', data: rashifal });
+
+    } catch (error) {
+        console.error('Error generating AI rashifal:', error);
+        res.status(500).json({ message: 'Server error generating AI rashifal' });
+    }
+});
+
 module.exports = router;

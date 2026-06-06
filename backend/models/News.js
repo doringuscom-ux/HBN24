@@ -12,6 +12,7 @@ const newsSchema = new mongoose.Schema({
     metaDescription: { type: String, required: false },
     metaKeywords: { type: String, required: false },
     robots: { type: String, default: 'index, follow' },
+    likes: { type: Number, default: 0 },
     canonicalUrl: { type: String, required: false },
     placement: { type: String, default: 'auto' }, // no longer required, placement is now automatic by index
     isEpaper: { type: Boolean, default: false },

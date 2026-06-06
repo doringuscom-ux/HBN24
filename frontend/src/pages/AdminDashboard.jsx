@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 
@@ -9,10 +9,34 @@ export default function AdminDashboard() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal'
+    const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
+    const [isGeneratingRashifal, setIsGeneratingRashifal] = useState(false);
+    const [bulkStatus, setBulkStatus] = useState({ isRunning: false, total: 0, processed: 0 });
+    const [missingSeoCount, setMissingSeoCount] = useState(0);
+
+    const staticPagesList = [
+        { url: '/', title: 'Home Page' },
+        { url: '/entertainment', title: 'Entertainment' },
+        { url: '/religion', title: 'Religion' },
+        { url: '/sports', title: 'Sports' },
+        { url: '/lifestyle', title: 'Lifestyle' },
+        { url: '/business', title: 'Business' },
+        { url: '/technology', title: 'Technology' },
+        { url: '/epaper', title: 'E-Paper' }
+    ];
+
+    const [pageSeoList, setPageSeoList] = useState([]);
+    const [selectedPageSeoUrl, setSelectedPageSeoUrl] = useState('');
+    const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
+
+    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo'
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
+    const [seoData, setSeoData] = useState({
+        googleAnalyticsId: ''
+    });
     const [formData, setFormData] = useState({
         title: '',
         slug: '',
@@ -39,7 +63,176 @@ export default function AdminDashboard() {
     useEffect(() => {
         fetchNews();
         fetchRashifal();
+        fetchSeo();
     }, []);
+
+    useEffect(() => {
+        const fetchMissingCount = async () => {
+            const token = localStorage.getItem('adminToken');
+            if(!token) return;
+            try {
+                const res = await fetch(__API_URL__ + '/api/seo/missing-count', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                setMissingSeoCount(data.missingCount);
+            } catch(e) {}
+        };
+        
+        const fetchBulkStatus = async () => {
+            const token = localStorage.getItem('adminToken');
+            if(!token) return;
+            try {
+                const res = await fetch(__API_URL__ + '/api/seo/bulk-status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                setBulkStatus(prev => {
+                    // If it was running and now it's not, it means it finished. Refresh data.
+                    if (prev.isRunning && !data.isRunning) {
+                        fetchMissingCount();
+                        fetchNews();
+                    }
+                    return data;
+                });
+            } catch(e) {}
+        };
+
+        fetchMissingCount();
+        fetchBulkStatus();
+        const intervalId = setInterval(fetchBulkStatus, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const fetchSeo = async () => {
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo');
+            const data = await res.json();
+            if (data) {
+                setSeoData({
+                    googleAnalyticsId: data.googleAnalyticsId || ''
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching global SEO:', error);
+        }
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + '/api/seo/pages', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setPageSeoList(data);
+            if (selectedPageSeoUrl) {
+                const homeSeo = data.find(p => p.pageUrl === selectedPageSeoUrl);
+                if (homeSeo) {
+                    setPageSeoData(homeSeo);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching page SEO:', error);
+        }
+    };
+
+    const handleSelectedPageChange = (e) => {
+        const url = e.target.value;
+        setSelectedPageSeoUrl(url);
+        const seo = pageSeoList.find(p => p.pageUrl === url);
+        if (seo) {
+            setPageSeoData({
+                metaTitle: seo.metaTitle || '',
+                metaDescription: seo.metaDescription || '',
+                metaKeywords: seo.metaKeywords || '',
+                robots: seo.robots || 'index, follow'
+            });
+        } else {
+            setPageSeoData({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
+        }
+    };
+
+    const handleEditStaticPage = (url) => {
+        setSelectedPageSeoUrl(url);
+        const seo = pageSeoList.find(p => p.pageUrl === url);
+        if (seo) {
+            setPageSeoData({
+                metaTitle: seo.metaTitle || '',
+                metaDescription: seo.metaDescription || '',
+                metaKeywords: seo.metaKeywords || '',
+                robots: seo.robots || 'index, follow'
+            });
+        } else {
+            setPageSeoData({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
+        }
+        document.getElementById('static-seo-form')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const handlePageSeoChange = (e) => {
+        const { name, value } = e.target;
+        setPageSeoData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handlePageSeoSave = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo/pages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ pageUrl: selectedPageSeoUrl, ...pageSeoData })
+            });
+            if (res.ok) {
+                alert('Page SEO saved successfully!');
+                fetchSeo();
+            }
+        } catch (err) {
+            alert('Error saving Page SEO');
+        }
+    };
+
+    const handleGenerateStaticSeo = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo/generate-static-pages', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setBulkStatus(data.status);
+                setIsSeoModalOpen(false);
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            alert('Error generating static SEO');
+        }
+    };
+
+    const handleSeoChange = (e) => {
+        const { name, value } = e.target;
+        setSeoData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSeoSave = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(seoData)
+            });
+            if (res.status === 401) {
+                navigate('/admin/login');
+                return;
+            }
+            alert('SEO settings saved successfully!');
+        } catch (error) {
+            console.error('Error saving SEO:', error);
+            alert('Error saving SEO settings');
+        }
+    };
 
     const fetchRashifal = async () => {
         try {
@@ -76,6 +269,30 @@ export default function AdminDashboard() {
         } catch (error) {
             console.error('Error saving rashifal:', error);
             alert('Error saving rashifal');
+        }
+    };
+
+    const handleGenerateRashifal = async () => {
+        setIsGeneratingRashifal(true);
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/rashifal/generate-ai', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Rashifal Generated Successfully!');
+                if (data.data && data.data.signs) {
+                    setRashifalData(data.data.signs);
+                }
+            } else {
+                alert(data.message || 'Failed to generate Rashifal');
+            }
+        } catch (err) {
+            alert('Error generating Rashifal');
+        } finally {
+            setIsGeneratingRashifal(false);
         }
     };
 
@@ -160,6 +377,72 @@ export default function AdminDashboard() {
             fetchNews();
         } catch (error) {
             console.error('Error saving news:', error);
+        }
+    };
+
+    const handleAIGenerate = async () => {
+        if (!formData.title && !formData.content) {
+            alert('Please enter a Title or Content first so the AI knows what the article is about.');
+            return;
+        }
+
+        setIsGeneratingSeo(true);
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo/generate-ai', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: formData.title,
+                    content: formData.content
+                })
+            });
+
+            if (res.status === 401) {
+                navigate('/admin/login');
+                return;
+            }
+
+            const data = await res.json();
+            
+            if (res.ok && data) {
+                setFormData(prev => ({
+                    ...prev,
+                    metaTitle: data.metaTitle || prev.metaTitle,
+                    metaDescription: data.metaDescription || prev.metaDescription,
+                    metaKeywords: data.metaKeywords || prev.metaKeywords
+                }));
+                alert('SEO generated successfully!');
+            } else {
+                alert(data.message || 'Error generating SEO.');
+            }
+        } catch (error) {
+            console.error('Error with AI generation:', error);
+            alert('Error connecting to AI service.');
+        } finally {
+            setIsGeneratingSeo(false);
+        }
+    };
+
+    const handleStartBulk = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/seo/start-bulk', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if(res.ok) {
+                setBulkStatus(data.status);
+                setIsSeoModalOpen(false);
+            } else {
+                alert(data.message);
+            }
+        } catch(e) {
+            alert('Failed to start background SEO process.');
         }
     };
 
@@ -305,6 +588,12 @@ export default function AdminDashboard() {
                     >
                         <Settings size={20} className={currentView === 'rashifal' ? 'text-red-500' : ''} /> Rashifal
                     </button>
+                    <button 
+                        onClick={() => setCurrentView('seo')}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'seo' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
+                    </button>
                     <a href="/" target="_blank" rel="noopener noreferrer" className="px-6 py-3 flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
                         <LayoutDashboard size={20} /> View Website
                     </a>
@@ -322,13 +611,19 @@ export default function AdminDashboard() {
                 <header className="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">
-                            {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : 'News Management'}
+                            {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : 'News Management'}
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">
-                            {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : 'Manage and publish news articles'}
+                            {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
+                        {bulkStatus.isRunning && (
+                            <div className="bg-purple-100 text-purple-800 px-4 py-1.5 rounded-full text-sm font-bold border border-purple-200 flex items-center gap-2 animate-pulse shadow-sm">
+                                <Sparkles size={16} />
+                                AI SEO: {bulkStatus.processed} / {bulkStatus.total}
+                            </div>
+                        )}
                         <div className="relative">
                             <input
                                 type="text"
@@ -348,15 +643,192 @@ export default function AdminDashboard() {
                     </div>
                 </header>
 
-                {/* Content area */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-8">
-                    {currentView === 'rashifal' ? (
+                    {currentView === 'seo' ? (
+                        <div className="flex flex-col gap-8 w-full">
+                            {/* Unified SEO Generator Header */}
+                            <div className="bg-purple-600 rounded-xl shadow-md p-6 text-white flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles /> Master SEO Auto-Generator</h2>
+                                    <p className="text-purple-100 mt-1">Automatically generate intelligent SEO for Static Pages or News Articles using AI.</p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsSeoModalOpen(true)}
+                                    className="bg-white text-purple-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-bold shadow-sm transition-colors text-lg"
+                                >
+                                    ✨ Auto-Generate AI
+                                </button>
+                            </div>
+
+                            {/* Page-Specific SEO Box */}
+                            <div id="static-seo-form" className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">Page-Specific SEO Settings</h2>
+                                    <button onClick={handlePageSeoSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                        Save Page SEO
+                                    </button>
+                                </div>
+                                
+                                <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <label className="block text-sm font-bold text-gray-800 mb-2">Select Page to Edit SEO:</label>
+                                    <select value={selectedPageSeoUrl} onChange={handleSelectedPageChange} className="w-full md:w-1/2 border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white font-medium">
+                                        <option value="" disabled>-- Select a Page --</option>
+                                        {staticPagesList.map(page => (
+                                            <option key={page.url} value={page.url}>{page.title} ({page.url})</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="flex flex-col gap-5">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Title</label>
+                                            <input type="text" name="metaTitle" value={pageSeoData.metaTitle} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="Page specific title..." />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Keywords</label>
+                                            <input type="text" name="metaKeywords" value={pageSeoData.metaKeywords} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="news, updates..." />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-5">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Description</label>
+                                            <textarea name="metaDescription" value={pageSeoData.metaDescription} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" rows="4" placeholder="Page specific description..."></textarea>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Robots Tag</label>
+                                            <select name="robots" value={pageSeoData.robots} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                                <option value="index, follow">index, follow (Default)</option>
+                                                <option value="noindex, follow">noindex, follow</option>
+                                                <option value="index, nofollow">index, nofollow</option>
+                                                <option value="noindex, nofollow">noindex, nofollow</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Static Pages Audit Table */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div className="flex justify-between items-center mb-4 border-b pb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">Static Pages SEO Overview</h2>
+                                    <p className="text-sm text-gray-500">Showing SEO for all main website URLs.</p>
+                                </div>
+                                <div className="overflow-x-auto border rounded-lg">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50/80">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Page URL</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Meta Title</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Meta Description</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Robots</th>
+                                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase w-20">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {staticPagesList.map(page => {
+                                                const seo = pageSeoList.find(p => p.pageUrl === page.url);
+                                                return (
+                                                    <tr key={page.url} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="px-4 py-3 text-sm font-semibold text-gray-800 max-w-[200px] truncate" title={page.title}>{page.url}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600 max-w-[200px] truncate" title={seo?.metaTitle}>{seo?.metaTitle || '-'}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600 max-w-[300px] truncate" title={seo?.metaDescription}>{seo?.metaDescription || '-'}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600">{seo?.robots || 'index, follow'}</td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <button onClick={() => handleEditStaticPage(page.url)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit SEO">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Global SEO Box */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">Global Website Settings</h2>
+                                    <button onClick={handleSeoSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                        Save Global Settings
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-5">
+                                    <div className="md:w-1/2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Google Analytics Tracking ID</label>
+                                        <input type="text" name="googleAnalyticsId" value={seoData.googleAnalyticsId} onChange={handleSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="G-XXXXXXXXXX" />
+                                        <p className="text-xs text-gray-500 mt-1">This ID will be applied across the entire website.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Audit Table Box */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <div className="flex justify-between items-center mb-4 border-b pb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">News Articles SEO Audit</h2>
+                                    <p className="text-sm text-gray-500">Showing articles with generated SEO.</p>
+                                </div>
+                                <div className="overflow-x-auto border rounded-lg">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50/80">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Page URL</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Article Title</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Meta Title</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Meta Description</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Robots</th>
+                                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase w-20">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {news.filter(item => item.metaDescription).map(item => (
+                                                <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-3 text-xs font-semibold text-blue-600 max-w-[150px] truncate" title={`/news/${item.slug || item._id}`}>
+                                                        <a href={`/news/${item.slug || item._id}`} target="_blank" rel="noopener noreferrer">/news/{item.slug || item._id}</a>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm font-semibold text-gray-800 max-w-[200px] truncate" title={item.title}>{item.title}</td>
+                                                    <td className="px-4 py-3 text-xs text-gray-600 max-w-[150px] truncate" title={item.metaTitle}>{item.metaTitle || '-'}</td>
+                                                    <td className="px-4 py-3 text-xs text-gray-600 max-w-[250px] truncate" title={item.metaDescription}>{item.metaDescription}</td>
+                                                    <td className="px-4 py-3 text-xs text-gray-600">{item.robots || 'index, follow'}</td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit SEO">
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {news.filter(item => item.metaDescription).length === 0 && (
+                                                <tr>
+                                                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500 text-sm">No SEO data found yet.</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    ) : currentView === 'rashifal' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div className="flex justify-between items-center mb-6 border-b pb-4">
-                                <h2 className="text-xl font-bold text-gray-800">Update Daily Rashifal</h2>
-                                <button onClick={handleRashifalSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
-                                    Save Rashifal
-                                </button>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-800">Update Daily Rashifal</h2>
+                                    <p className="text-sm text-gray-500 mt-1">Generate or edit today's horoscope for all 12 zodiac signs.</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={handleGenerateRashifal} 
+                                        disabled={isGeneratingRashifal}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        <Sparkles size={18} />
+                                        {isGeneratingRashifal ? "Generating..." : "✨ Auto-Generate AI"}
+                                    </button>
+                                    <button onClick={handleRashifalSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                        Save Rashifal
+                                    </button>
+                                </div>
                             </div>
                             {rashifalData.length === 0 ? (
                                 <div className="text-center py-10 text-gray-500">Loading Rashifal...</div>
@@ -577,7 +1049,18 @@ export default function AdminDashboard() {
 
                                 {/* Right Column: Media & SEO */}
                                 <div className="w-full lg:w-[380px] flex flex-col gap-5">
-                                    <h4 className="text-lg font-bold text-gray-800 border-b pb-2">Media & SEO</h4>
+                                    <div className="flex justify-between items-center border-b pb-2">
+                                        <h4 className="text-lg font-bold text-gray-800">Media & SEO</h4>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleAIGenerate} 
+                                            disabled={isGeneratingSeo}
+                                            className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50 border border-purple-200 shadow-sm"
+                                        >
+                                            {isGeneratingSeo ? <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-purple-700"></div> : <Sparkles size={14} />}
+                                            {isGeneratingSeo ? 'Generating...' : 'Auto-Generate AI'}
+                                        </button>
+                                    </div>
                                     
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Blog Image</label>
@@ -651,6 +1134,56 @@ export default function AdminDashboard() {
                                 <button type="submit" className="px-8 py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95">{editingId ? 'Save All Changes' : 'Publish Complete Article'}</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Master SEO Auto-Generator Modal */}
+            {isSeoModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Sparkles className="text-purple-600"/> Master Auto-Generate AI</h3>
+                            <button onClick={() => setIsSeoModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-8">
+                            <p className="text-gray-600 mb-6">What would you like the AI to generate SEO for?</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Option 1: Static Pages */}
+                                <div className="border-2 border-blue-100 hover:border-blue-300 rounded-xl p-6 transition-all cursor-pointer hover:shadow-md bg-white group flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <Globe size={32} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-gray-900 mb-2">Static Pages</h4>
+                                    <p className="text-sm text-gray-500 mb-6 flex-1">Generates unique, URL-based SEO for your main pages like Home, E-Paper, Sports, etc.</p>
+                                    <button 
+                                        onClick={handleGenerateStaticSeo}
+                                        disabled={bulkStatus.isRunning}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50"
+                                    >
+                                        {bulkStatus.isRunning && bulkStatus.type === 'static_pages' ? 'Processing...' : 'Generate Static Pages'}
+                                    </button>
+                                </div>
+
+                                {/* Option 2: News Articles */}
+                                <div className="border-2 border-purple-100 hover:border-purple-300 rounded-xl p-6 transition-all cursor-pointer hover:shadow-md bg-white group flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <FileText size={32} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-gray-900 mb-2">News Articles</h4>
+                                    <p className="text-sm text-gray-500 mb-6 flex-1">Background bulk processor for <strong className="text-purple-700">{missingSeoCount}</strong> news articles missing SEO based on their content.</p>
+                                    <button 
+                                        onClick={handleStartBulk}
+                                        disabled={bulkStatus.isRunning || missingSeoCount === 0}
+                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50"
+                                    >
+                                        {bulkStatus.isRunning ? 'Processing...' : 'Start Bulk Generator'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

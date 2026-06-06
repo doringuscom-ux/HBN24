@@ -18,6 +18,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Models
 const News = require('./models/News');
+const Comment = require('./models/Comment');
 
 const Parser = require('rss-parser');
 const parser = new Parser();
@@ -44,12 +45,14 @@ const epaperRoutes = require('./src/routes/epaperRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
 const rashifalRoutes = require('./src/routes/rashifalRoutes');
+const seoRoutes = require('./src/routes/seoRoutes');
 const authMiddleware = require('./src/middleware/authMiddleware');
 
 app.use('/api/epaper', epaperRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/rashifal', rashifalRoutes);
+app.use('/api/seo', seoRoutes);
 
 // Add a root route so Vercel doesn't show "Cannot GET /"
 app.get('/', (req, res) => {
@@ -155,6 +158,113 @@ app.get('/api/news/article/:id', async (req, res) => {
         res.json(article);
     } catch (error) {
         console.error('Error fetching single article:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Like an article
+app.put('/api/news/:id/like', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let article;
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            article = await News.findByIdAndUpdate(id, { $inc: { likes: 1 } }, { new: true });
+        }
+        if (!article) {
+            article = await News.findOneAndUpdate({ slug: id }, { $inc: { likes: 1 } }, { new: true });
+        }
+        if (!article) return res.status(404).json({ message: 'News not found' });
+        res.json({ likes: article.likes });
+    } catch (error) {
+        console.error('Error liking article:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get comments for an article
+app.get('/api/news/:id/comments', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let article;
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            article = await News.findById(id);
+        }
+        if (!article) {
+            article = await News.findOne({ slug: id });
+        }
+        if (!article) return res.status(404).json({ message: 'News not found' });
+
+        const comments = await Comment.find({ newsId: article._id }).sort({ createdAt: -1 });
+        res.json(comments);
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Post a comment
+app.post('/api/news/:id/comments', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, text } = req.body;
+        
+        if (!name || !text) {
+            return res.status(400).json({ message: 'Name and text are required' });
+        }
+
+        let article;
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            article = await News.findById(id);
+        }
+        if (!article) {
+            article = await News.findOne({ slug: id });
+        }
+        if (!article) return res.status(404).json({ message: 'News not found' });
+
+        const newComment = new Comment({
+            newsId: article._id,
+            name,
+            text
+        });
+        await newComment.save();
+        res.status(201).json(newComment);
+    } catch (error) {
+        console.error('Error posting comment:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update a comment
+app.put('/api/news/:newsId/comments/:commentId', async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const { text } = req.body;
+        
+        if (!text) {
+            return res.status(400).json({ message: 'Text is required' });
+        }
+
+        const updatedComment = await Comment.findByIdAndUpdate(commentId, { text }, { new: true });
+        if (!updatedComment) return res.status(404).json({ message: 'Comment not found' });
+        
+        res.json(updatedComment);
+    } catch (error) {
+        console.error('Error updating comment:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete a comment
+app.delete('/api/news/:newsId/comments/:commentId', async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const deletedComment = await Comment.findByIdAndDelete(commentId);
+        
+        if (!deletedComment) return res.status(404).json({ message: 'Comment not found' });
+        
+        res.json({ message: 'Comment deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting comment:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
