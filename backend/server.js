@@ -119,6 +119,49 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
+// Search route
+app.get('/api/news/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ message: 'Search query is required' });
+        }
+
+        let searchQueryText = q;
+
+        // Try to translate query to Hindi so English queries match Hindi content
+        try {
+            const { translate } = await import('@vitalets/google-translate-api');
+            const translation = await translate(q, { to: 'hi' });
+            searchQueryText = translation.text;
+        } catch (translateError) {
+            console.error('Translation failed, falling back to original query:', translateError);
+        }
+
+        // Search by regex in title, shortDescription, or content using BOTH original and translated queries
+        const originalRegex = new RegExp(q, 'i');
+        const translatedRegex = new RegExp(searchQueryText, 'i');
+
+        const searchResults = await News.find({
+            $or: [
+                { title: originalRegex },
+                { shortDescription: originalRegex },
+                { content: originalRegex },
+                { tags: originalRegex },
+                { title: translatedRegex },
+                { shortDescription: translatedRegex },
+                { content: translatedRegex },
+                { tags: translatedRegex }
+            ]
+        }).sort({ createdAt: -1 });
+
+        res.json(searchResults);
+    } catch (error) {
+        console.error('Error in search:', error);
+        res.status(500).json({ message: 'Server error during search' });
+    }
+});
+
 app.get('/api/news/:category', async (req, res) => {
     try {
         const { category } = req.params;

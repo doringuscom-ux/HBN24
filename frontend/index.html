@@ -8,7 +8,41 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <title>frontend</title>
+  <title>HBN24 News</title>
+  
+  <style>
+    /* Hide the Google Translate top banner */
+    .skiptranslate > iframe.skiptranslate { display: none !important; }
+    body { top: 0px !important; }
+    /* Customize the widget look */
+    .goog-te-gadget { 
+      font-size: 0px !important; 
+      color: transparent !important; 
+      display: flex;
+      align-items: center;
+    }
+    .goog-te-gadget img { 
+      display: none !important; 
+    }
+    .goog-te-gadget .goog-te-combo { 
+      color: white; 
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 6px 12px; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      font-size: 14px !important;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+    .goog-te-gadget .goog-te-combo option {
+      color: black;
+    }
+    #google_translate_element {
+      display: none !important;
+    }
+  </style>
+
 </head>
 
 <body>

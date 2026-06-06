@@ -14,6 +14,7 @@ import AdminLogin from "./pages/AdminLogin"
 import Footer from "./components/Footer"
 import Epaper from "./pages/Epaper"
 import NotFound from "./pages/NotFound"
+import Search from "./pages/Search"
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
@@ -130,6 +131,7 @@ function AppContent() {
         <Route path="/business" element={<Business />} />
         <Route path="/technology" element={<Technology />} />
         <Route path="/epaper" element={<Epaper />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/news/:id" element={<SingleArticle />} />
         <Route 
           path="/admin/login" 
