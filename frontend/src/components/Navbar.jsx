@@ -52,12 +52,17 @@ export default function AajTakNavbar() {
             document.body.appendChild(script);
         }
 
-        // Auto-prompt for notifications if not already asked
-        if ('Notification' in window && Notification.permission === 'default') {
-            // Slight delay so it doesn't block initial render
-            setTimeout(() => {
+        // Auto-prompt or re-verify notifications
+        if ('Notification' in window) {
+            if (Notification.permission === 'default') {
+                // Slight delay so it doesn't block initial render
+                setTimeout(() => {
+                    subscribeToNotifications(true);
+                }, 3000);
+            } else if (Notification.permission === 'granted') {
+                // If already granted, silently ensure backend has the subscription
                 subscribeToNotifications(true);
-            }, 3000);
+            }
         }
         // Fetch latest news for notifications
         const fetchLatestNews = async () => {
@@ -134,10 +139,25 @@ export default function AajTakNavbar() {
             const vapidPublicKey = 'BOz7JONpAMsXdBh8vUlJZX3L3QDfXQfQcBwJzWSIh200fd00a6yTGY3cJxaCKgYPrYUuUGPEum-A22OsXzixae4';
             const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: convertedVapidKey
-            });
+            let subscription;
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedVapidKey
+                });
+            } catch (subErr) {
+                // If subscription fails (e.g. due to old cached key), try unsubscribing first
+                const existingSub = await registration.pushManager.getSubscription();
+                if (existingSub) {
+                    await existingSub.unsubscribe();
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: convertedVapidKey
+                    });
+                } else {
+                    throw subErr;
+                }
+            }
 
             await fetch(__API_URL__ + '/api/notifications/subscribe', {
                 method: 'POST',
