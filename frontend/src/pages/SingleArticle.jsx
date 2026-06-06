@@ -9,7 +9,7 @@ export default function SingleArticle() {
     const [latestNews, setLatestNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
-    
+
     // New states for interaction
     const [likes, setLikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
@@ -29,19 +29,19 @@ export default function SingleArticle() {
                 // Fetch specific article
                 const articleRes = await fetch(`${__API_URL__}/api/news/article/${id}`);
                 const articleData = await articleRes.json();
-                
+
                 if (articleData.redirect) {
                     navigate(`/news/${articleData.newSlug}`, { replace: true });
                     return;
                 }
-                
+
                 // Fetch latest news for sidebar
                 const newsRes = await fetch(`${__API_URL__}/api/news`);
                 const newsData = await newsRes.json();
-                
+
                 setArticle(articleData);
                 setLikes(articleData.likes || 0);
-                
+
                 // Check if user already liked
                 const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
                 if (likedArticles.includes(articleData._id)) {
@@ -60,14 +60,14 @@ export default function SingleArticle() {
 
                 // Filter out the current article from sidebar
                 setLatestNews(newsData.filter(n => n._id !== articleData._id).slice(0, 8));
-                
+
                 // Fetch comments
                 const commentsRes = await fetch(`${__API_URL__}/api/news/${articleData._id}/comments`);
                 if (commentsRes.ok) {
                     const commentsData = await commentsRes.json();
                     setComments(commentsData);
                 }
-                
+
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching article:", error);
@@ -83,7 +83,7 @@ export default function SingleArticle() {
 
     const handleLike = async () => {
         if (hasLiked || !article) return;
-        
+
         // Optimistic UI
         setLikes(prev => prev + 1);
         setHasLiked(true);
@@ -108,7 +108,7 @@ export default function SingleArticle() {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!newComment.name.trim() || !newComment.text.trim()) return;
-        
+
         setIsSubmittingComment(true);
         try {
             const res = await fetch(`${__API_URL__}/api/news/${article._id}/comments`, {
@@ -120,7 +120,7 @@ export default function SingleArticle() {
                 const addedComment = await res.json();
                 setComments([addedComment, ...comments]);
                 setNewComment({ name: '', text: '' });
-                
+
                 // Save to myComments
                 const updatedMyComments = [...myComments, addedComment._id];
                 setMyComments(updatedMyComments);
@@ -204,7 +204,7 @@ export default function SingleArticle() {
         if (article) {
             // Meta Title
             document.title = article.metaTitle || article.title || 'HBN24 News';
-            
+
             // Meta Description
             let metaDesc = document.querySelector('meta[name="description"]');
             if (!metaDesc) {
@@ -255,13 +255,13 @@ export default function SingleArticle() {
 
     return (
         <div className="w-full max-w-[1280px] mx-auto px-4 py-8 flex flex-col md:flex-row gap-8 font-sans">
-            
+
             {/* Left Column - Main Article */}
             <div className="w-full md:w-3/4 flex flex-col gap-5">
                 <h1 className="text-3xl md:text-[38px] font-black text-[#111] leading-[1.3]">
                     {article.title}
                 </h1>
-                
+
 
 
                 <div className="w-full bg-gray-100">
@@ -287,7 +287,7 @@ export default function SingleArticle() {
 
                     <div className="flex items-center gap-4 text-gray-500">
                         <button onClick={handleLike} className={`flex items-center gap-1 hover:text-[#da0000] transition-colors ${hasLiked ? 'text-[#da0000]' : ''}`}>
-                            <ThumbsUp size={18} className={hasLiked ? 'fill-current' : ''} /> 
+                            <ThumbsUp size={18} className={hasLiked ? 'fill-current' : ''} />
                             <span className="text-xs">{likes > 0 ? likes : ''}</span>
                         </button>
                         <button onClick={scrollToComments} className="flex items-center gap-1 hover:text-[#da0000] transition-colors">
@@ -295,7 +295,7 @@ export default function SingleArticle() {
                             <span className="text-xs">{comments.length > 0 ? comments.length : ''}</span>
                         </button>
                         <a href="https://www.facebook.com/HBNNews24" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition-colors" title="Facebook">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                         </a>
                         <button onClick={handleShare} className="hover:text-[#da0000] transition-colors"><Share2 size={18} /></button>
                         <button onClick={handleBookmark} className="flex items-center hover:text-[#da0000] transition-colors" title="Bookmark">
@@ -307,8 +307,8 @@ export default function SingleArticle() {
                 {/* Article Body */}
                 {hasContent && (
                     <div className="relative">
-                        <div 
-                            className={`text-[18px] text-gray-800 leading-[1.8] font-serif overflow-hidden transition-all duration-500 ease-in-out [&>p]:mb-6 ${isExpanded ? 'max-h-none' : 'max-h-[300px]'}`}
+                        <div
+                            className={`force-article-font overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-none' : 'max-h-[300px]'}`}
                             dangerouslySetInnerHTML={{ __html: article.content }}
                         />
                         {!isExpanded && (
@@ -321,7 +321,7 @@ export default function SingleArticle() {
                 {hasContent && (
                     !isExpanded ? (
                         <div className="flex justify-center mt-4 relative z-10">
-                            <button 
+                            <button
                                 onClick={() => setIsExpanded(true)}
                                 className="bg-[#da0000] text-white px-8 py-2 rounded-full font-bold text-lg hover:bg-red-700 transition-colors shadow-md flex items-center gap-2"
                             >
@@ -339,27 +339,27 @@ export default function SingleArticle() {
                 {/* Comments Section */}
                 <div ref={commentsRef} className="mt-12 border-t border-gray-200 pt-8">
                     <h3 className="text-2xl font-bold mb-6">Comments ({comments.length})</h3>
-                    
+
                     {/* Comment Form */}
                     <form onSubmit={handleCommentSubmit} className="mb-8 flex flex-col gap-4">
-                        <input 
-                            type="text" 
-                            placeholder="Your Name" 
+                        <input
+                            type="text"
+                            placeholder="Your Name"
                             value={newComment.name}
-                            onChange={(e) => setNewComment({...newComment, name: e.target.value})}
+                            onChange={(e) => setNewComment({ ...newComment, name: e.target.value })}
                             className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#da0000]"
                             required
                         />
-                        <textarea 
+                        <textarea
                             placeholder="Write your comment here..."
                             value={newComment.text}
-                            onChange={(e) => setNewComment({...newComment, text: e.target.value})}
+                            onChange={(e) => setNewComment({ ...newComment, text: e.target.value })}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#da0000]"
                             rows="4"
                             required
                         ></textarea>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={isSubmittingComment}
                             className="self-start bg-[#da0000] text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
                         >
@@ -388,19 +388,19 @@ export default function SingleArticle() {
                                             {(isAdmin || myComments.includes(comment._id)) && (
                                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     {myComments.includes(comment._id) && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => {
                                                                 setEditingCommentId(comment._id);
                                                                 setEditCommentText(comment.text);
-                                                            }} 
+                                                            }}
                                                             className="text-gray-400 hover:text-blue-600"
                                                             title="Edit"
                                                         >
                                                             <Pencil size={14} />
                                                         </button>
                                                     )}
-                                                    <button 
-                                                        onClick={() => handleDeleteComment(comment._id)} 
+                                                    <button
+                                                        onClick={() => handleDeleteComment(comment._id)}
                                                         className="text-gray-400 hover:text-red-600"
                                                         title="Delete"
                                                     >
@@ -410,23 +410,23 @@ export default function SingleArticle() {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     {editingCommentId === comment._id ? (
                                         <div className="mt-2 flex flex-col gap-2">
-                                            <textarea 
+                                            <textarea
                                                 value={editCommentText}
                                                 onChange={(e) => setEditCommentText(e.target.value)}
                                                 className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                                                 rows="3"
                                             ></textarea>
                                             <div className="flex gap-2 self-end">
-                                                <button 
+                                                <button
                                                     onClick={() => { setEditingCommentId(null); setEditCommentText(''); }}
                                                     className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => handleEditCommentSubmit(comment._id)}
                                                     className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
                                                 >
@@ -454,22 +454,22 @@ export default function SingleArticle() {
                     </div>
 
                     <div className="flex flex-col gap-6">
-                    {latestNews.map((news) => (
-                        <Link to={`/news/${news.slug || news._id}`} key={news._id} className="flex gap-4 group cursor-pointer border-b border-gray-100 pb-4 last:border-0">
-                            <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px]">
-                                <img
-                                    src={news.image || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop"}
-                                    alt={news.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-[15px] font-bold text-[#222] leading-[1.35] group-hover:text-[#da0000] transition-colors line-clamp-3">
-                                    {news.title}
-                                </h3>
-                            </div>
-                        </Link>
-                    ))}
+                        {latestNews.map((news) => (
+                            <Link to={`/news/${news.slug || news._id}`} key={news._id} className="flex gap-4 group cursor-pointer border-b border-gray-100 pb-4 last:border-0">
+                                <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px]">
+                                    <img
+                                        src={news.image || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop"}
+                                        alt={news.title}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-[15px] font-bold text-[#222] leading-[1.35] group-hover:text-[#da0000] transition-colors line-clamp-3">
+                                        {news.title}
+                                    </h3>
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>

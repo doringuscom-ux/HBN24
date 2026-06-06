@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body {
-    font-family: 'Mukta', sans-serif;
+    font-family: 'Noto Sans Devanagari', sans-serif;
 }
 
 /* Custom Scrollbar for Sidebar */
@@ -243,4 +243,16 @@ body {
     font-size: 13px;
     font-weight: 900;
     margin-top: 4px;
+}
+
+/* Force article content styles to override Rich Text Editor inline styles */
+.force-article-font * {
+    font-family: 'Noto Sans Devanagari', sans-serif !important;
+    font-size: 21px !important;
+    line-height: 1.8 !important;
+    font-weight: 500 !important;
+    color: #2c2c2c !important;
+}
+.force-article-font p {
+    margin-bottom: 24px !important;
 }

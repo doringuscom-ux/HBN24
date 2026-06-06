@@ -134,7 +134,8 @@ export default function AajTakNavbar() {
             }
 
             const registration = await navigator.serviceWorker.register('/sw.js');
-            console.log('Service Worker registered');
+            registration.update(); // Force browser to fetch the latest sw.js immediately
+            console.log('Service Worker registered and update requested');
 
             const vapidPublicKey = 'BOz7JONpAMsXdBh8vUlJZX3L3QDfXQfQcBwJzWSIh200fd00a6yTGY3cJxaCKgYPrYUuUGPEum-A22OsXzixae4';
             const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);

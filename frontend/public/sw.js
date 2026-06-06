@@ -11,7 +11,6 @@ self.addEventListener('push', function (event) {
     const options = {
         body: data.body,
         icon: data.icon || '/favicon.png',
-        image: data.image, // Adds large banner image
         badge: '/favicon.png',
         vibrate: [100, 50, 100],
         data: {
@@ -20,6 +19,10 @@ self.addEventListener('push', function (event) {
             url: data.url || '/'
         }
     };
+
+    if (data.image) {
+        options.image = data.image; // Add large banner image if available
+    }
 
     event.waitUntil(
         self.registration.showNotification(data.title, options)
