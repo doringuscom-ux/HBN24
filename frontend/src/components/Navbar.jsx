@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Menu,
     ChevronDown,
     Search,
     Bell,
     Newspaper,
+    X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/HBN Thumbnail.png";
@@ -15,8 +16,22 @@ export default function AajTakNavbar() {
     const [open, setOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [latestNews, setLatestNews] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [dismissedNotifs, setDismissedNotifs] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('dismissedNotifs') || '[]'); } catch { return []; }
+    });
+    const notifRef = useRef(null);
 
     useEffect(() => {
+        // Handle click outside to close notifications
+        const handleClickOutside = (event) => {
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setNotificationsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
         // Only inject if it doesn't exist
         if (!document.getElementById('google-translate-script')) {
             window.googleTranslateElementInit = () => {
@@ -36,6 +51,46 @@ export default function AajTakNavbar() {
             script.async = true;
             document.body.appendChild(script);
         }
+
+        // Auto-prompt for notifications if not already asked
+        if ('Notification' in window && Notification.permission === 'default') {
+            // Slight delay so it doesn't block initial render
+            setTimeout(() => {
+                subscribeToNotifications(true);
+            }, 3000);
+        }
+        // Fetch latest news for notifications
+        const fetchLatestNews = async () => {
+            try {
+                const res = await fetch(__API_URL__ + '/api/news');
+                const data = await res.json();
+                
+                // Get dismissed IDs from state directly
+                let dismissed = [];
+                try { dismissed = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]'); } catch {}
+
+                const sortedNews = data
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .filter(n => !dismissed.includes(n._id))
+                    .slice(0, 15);
+                setLatestNews(sortedNews);
+
+                const lastRead = localStorage.getItem('lastReadNewsDate');
+                if (lastRead) {
+                    const unread = sortedNews.filter(n => new Date(n.createdAt) > new Date(lastRead)).length;
+                    setUnreadCount(unread);
+                } else {
+                    setUnreadCount(sortedNews.length);
+                }
+            } catch (err) {
+                console.error("Failed to fetch latest news:", err);
+            }
+        };
+        fetchLatestNews();
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
     const changeLanguage = (e) => {
@@ -58,6 +113,99 @@ export default function AajTakNavbar() {
             setSearchOpen(false);
             setSearchQuery("");
         }
+    };
+
+    const subscribeToNotifications = async (isAuto = false) => {
+        try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                if (!isAuto) alert('Push notifications are not supported in this browser.');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                if (!isAuto) alert('Notification permission denied.');
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker registered');
+
+            const vapidPublicKey = 'BOz7JONpAMsXdBh8vUlJZX3L3QDfXQfQcBwJzWSIh200fd00a6yTGY3cJxaCKgYPrYUuUGPEum-A22OsXzixae4';
+            const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+
+            await fetch(__API_URL__ + '/api/notifications/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(subscription),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!isAuto) alert('You are now subscribed to notifications!');
+        } catch (error) {
+            console.error('Error subscribing to notifications:', error);
+            if (!isAuto) alert('Failed to subscribe to notifications.');
+        }
+    };
+
+    // Helper to convert VAPID key
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    const handleClearNotifications = () => {
+        localStorage.setItem('lastReadNewsDate', new Date().toISOString());
+        setUnreadCount(0);
+    };
+
+    const handleDismissNotification = (e, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const updatedDismissed = [...dismissedNotifs, id];
+        setDismissedNotifs(updatedDismissed);
+        localStorage.setItem('dismissedNotifs', JSON.stringify(updatedDismissed));
+        
+        const updatedNews = latestNews.filter(n => n._id !== id);
+        setLatestNews(updatedNews);
+
+        // Update unread count based on remaining
+        const lastRead = localStorage.getItem('lastReadNewsDate');
+        if (lastRead) {
+            setUnreadCount(updatedNews.filter(n => new Date(n.createdAt) > new Date(lastRead)).length);
+        } else {
+            setUnreadCount(updatedNews.length);
+        }
+    };
+
+    const timeAgo = (dateStr) => {
+        const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " mins ago";
+        return Math.floor(seconds) + " secs ago";
     };
 
     const navLinks = [
@@ -168,9 +316,80 @@ export default function AajTakNavbar() {
                     </a>
 
                     {/* Notification */}
-                    <button className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
-                        <Bell size={22} />
-                    </button>
+                    <div className="relative" ref={notifRef}>
+                        <button 
+                            onClick={() => {
+                                setNotificationsOpen(!notificationsOpen);
+                                setSearchOpen(false);
+                            }}
+                            title="Notifications"
+                            className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300 relative"
+                        >
+                            <Bell size={22} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-2 -right-3 bg-red-600 text-white text-[9px] leading-none font-bold px-[5px] py-[3px] rounded-full min-w-[18px] text-center border border-[#02132b] shadow-sm">
+                                    {unreadCount > 10 ? '10+' : unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {/* Dropdown */}
+                        {notificationsOpen && (
+                            <div className="absolute right-0 top-12 w-[320px] sm:w-[380px] bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden z-50">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                                    <h3 className="text-black font-bold text-lg">Notifications</h3>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={handleClearNotifications}
+                                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+                                        >
+                                            Clear All
+                                        </button>
+                                        <button 
+                                            onClick={() => setNotificationsOpen(false)}
+                                            className="text-gray-500 hover:text-red-500 transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="max-h-[400px] overflow-y-auto">
+                                    {latestNews.length === 0 ? (
+                                        <div className="p-4 text-center text-gray-500">No new notifications</div>
+                                    ) : (
+                                        latestNews.map((news) => (
+                                            <div key={news._id} className="relative border-b border-gray-50 hover:bg-gray-50 transition-colors group">
+                                                <Link 
+                                                    to={`/news/${news.slug || news._id}`}
+                                                    onClick={() => setNotificationsOpen(false)}
+                                                    className="flex items-start gap-3 p-3 pr-8"
+                                                >
+                                                    <img 
+                                                        src={news.image || '/favicon.png'} 
+                                                        alt="" 
+                                                        className="w-20 h-14 object-cover rounded-md flex-shrink-0"
+                                                    />
+                                                    <div>
+                                                        <h4 className="text-black font-bold text-sm line-clamp-2 leading-tight mb-1">
+                                                            {news.title}
+                                                        </h4>
+                                                        <p className="text-gray-500 text-xs">{timeAgo(news.createdAt)}</p>
+                                                    </div>
+                                                </Link>
+                                                <button 
+                                                    onClick={(e) => handleDismissNotification(e, news._id)}
+                                                    className="absolute top-3 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 p-1 rounded-full"
+                                                    title="Remove notification"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Search */}
                     <div className="relative flex items-center">

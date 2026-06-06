@@ -3,6 +3,14 @@ const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const webpush = require('web-push');
+
+// Configure web-push
+webpush.setVapidDetails(
+    'mailto:contact@hbnnews24.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Models
 const News = require('./models/News');
 const Comment = require('./models/Comment');
+const Subscription = require('./src/models/Subscription');
 
 const Parser = require('rss-parser');
 const parser = new Parser();
@@ -57,6 +66,22 @@ app.use('/api/seo', seoRoutes);
 // Add a root route so Vercel doesn't show "Cannot GET /"
 app.get('/', (req, res) => {
     res.send('HBN24 Backend API is running successfully!');
+});
+
+// Notifications Route
+app.post('/api/notifications/subscribe', async (req, res) => {
+    try {
+        const subscription = req.body;
+        // Check if exists
+        const existing = await Subscription.findOne({ endpoint: subscription.endpoint });
+        if (!existing) {
+            await new Subscription(subscription).save();
+        }
+        res.status(201).json({ message: 'Subscribed successfully' });
+    } catch (error) {
+        console.error('Error saving subscription:', error);
+        res.status(500).json({ message: 'Server error saving subscription' });
+    }
 });
 
 app.get('/sitemap.xml', async (req, res) => {
@@ -317,6 +342,26 @@ app.post('/api/news', authMiddleware, async (req, res) => {
         if (req.body.slug) req.body.slug = req.body.slug.trim();
         const newNews = new News(req.body);
         const savedNews = await newNews.save();
+
+        // Send Push Notifications in background
+        const subscriptions = await Subscription.find();
+        const payload = JSON.stringify({
+            title: savedNews.title,
+            body: savedNews.shortDescription || 'नयी खबर पढ़ें!',
+            url: `https://hbnnews24.com/news/${savedNews.slug || savedNews._id}`,
+            icon: savedNews.image || 'https://hbnnews24.com/favicon.png'
+        });
+
+        subscriptions.forEach(sub => {
+            webpush.sendNotification(sub, payload).catch(err => {
+                console.error('Push notification failed:', err);
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    // Subscription has expired or is no longer valid
+                    Subscription.findByIdAndDelete(sub._id).exec();
+                }
+            });
+        });
+
         res.status(201).json(savedNews);
     } catch (error) {
         console.error('Error creating news:', error);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 
@@ -31,7 +31,9 @@ export default function AdminDashboard() {
     const [selectedPageSeoUrl, setSelectedPageSeoUrl] = useState('');
     const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
 
-    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo'
+    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo', 'users'
+    const [usersList, setUsersList] = useState([]);
+    const [newUser, setNewUser] = useState({ username: '', password: '' });
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
     const [seoData, setSeoData] = useState({
@@ -64,7 +66,69 @@ export default function AdminDashboard() {
         fetchNews();
         fetchRashifal();
         fetchSeo();
+        fetchUsers();
     }, []);
+
+    const fetchUsers = async () => {
+        const token = localStorage.getItem('adminToken');
+        if (!token) return;
+        try {
+            const res = await fetch(__API_URL__ + '/api/auth/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setUsersList(data);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
+
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/auth/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(newUser)
+            });
+            if (res.ok) {
+                alert('User created successfully');
+                setNewUser({ username: '', password: '' });
+                fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Error creating user');
+            }
+        } catch (error) {
+            alert('Error creating user');
+        }
+    };
+
+    const handleDeleteUser = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this user?")) return;
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + `/api/auth/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                alert('User deleted successfully');
+                fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Error deleting user');
+            }
+        } catch (error) {
+            alert('Error deleting user');
+        }
+    };
 
     useEffect(() => {
         const fetchMissingCount = async () => {
@@ -594,6 +658,12 @@ export default function AdminDashboard() {
                     >
                         <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
                     </button>
+                    <button 
+                        onClick={() => setCurrentView('users')}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Users (Admins)
+                    </button>
                     <a href="/" target="_blank" rel="noopener noreferrer" className="px-6 py-3 flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
                         <LayoutDashboard size={20} /> View Website
                     </a>
@@ -611,7 +681,7 @@ export default function AdminDashboard() {
                 <header className="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">
-                            {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : 'News Management'}
+                            {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">
                             {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
