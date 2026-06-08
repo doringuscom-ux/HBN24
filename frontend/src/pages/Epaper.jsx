@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toJpeg } from 'html-to-image';
 
 const SUDOKU_PUZZLES = [
   "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
@@ -219,9 +220,9 @@ export default function Epaper() {
     }
 
     const stripHtml = (html) => {
-        const tmp = document.createElement('DIV');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        if (!html) return '';
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || doc.body.innerText || '';
     };
 
     const totalPages = Math.ceil(news.length / itemsPerPage);
@@ -230,9 +231,40 @@ export default function Epaper() {
         currentPage * itemsPerPage
     );
 
-    // Calculate dynamic time icon
     const currentHour = new Date().getHours();
     const timeIcon = (currentHour >= 6 && currentHour < 18) ? '☀️' : '🌙';
+
+    const downloadNewsCutting = async (id, title) => {
+        const element = document.getElementById(`article-${id}`);
+        if (!element) return;
+        
+        try {
+            const filter = (node) => {
+                // Ignore Google Translate elements and iframes to prevent fetch errors
+                if (node.tagName === 'IFRAME') return false;
+                if (node.classList && node.classList.contains('skiptranslate')) return false;
+                if (node.id === 'google_translate_element') return false;
+                return true;
+            };
+
+            const dataUrl = await toJpeg(element, {
+                quality: 0.95,
+                backgroundColor: '#fef7e6',
+                pixelRatio: 2,
+                filter: filter
+            });
+            
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            // Clean title for filename
+            const cleanTitle = title.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_').substring(0, 30);
+            link.download = `HBN24_News_Cutting_${cleanTitle}.jpg`;
+            link.click();
+        } catch (error) {
+            console.error("Error generating cutting:", error);
+            alert("Failed to download cutting. Please try again.");
+        }
+    };
 
     // Assign newspaper layout roles
     const getStoryStyle = (index) => {
@@ -259,12 +291,12 @@ export default function Epaper() {
                         <span>अंक 1</span>
                     </div>
                     <h1
-                        className="text-7xl md:text-[110px] font-black tracking-tighter leading-none text-blue-950 uppercase"
-                        style={{ textShadow: '6px 6px 0 rgba(0,0,0,0.05)' }}
+                        className="text-[40px] sm:text-6xl md:text-[110px] font-black tracking-tight md:tracking-tighter leading-none text-blue-950 uppercase whitespace-nowrap"
+                        style={{ textShadow: '4px 4px 0 rgba(0,0,0,0.05)' }}
                     >
                         HBN News 24
                     </h1>
-                    <p className="text-[11px] tracking-[0.3rem] font-mono mt-1 text-gray-600">
+                    <p className="text-[12px] tracking-normal font-mono mt-2 text-gray-700">
                         राष्ट्रीय हिंदी दैनिक • स्थापना 2024
                     </p>
                     <div className="flex flex-wrap justify-between gap-2 text-[12px] font-medium border-t border-b border-black/20 py-2 mt-3 bg-black/5 px-2">
@@ -319,9 +351,18 @@ export default function Epaper() {
                                 className={`${colSpan} group break-inside-avoid pb-5 ${idx !== paginatedNews.length - 1 ? 'border-b md:border-b-0' : ''
                                     }`}
                             >
-                                <article className="h-full flex flex-col">
+                                <article id={`article-${item._id}`} className="h-full flex flex-col p-4 -m-4 rounded transition-colors hover:bg-black/5 relative">
+                                    {/* Download Cutting Button - Only visible on hover or mobile */}
+                                    <button 
+                                        onClick={() => downloadNewsCutting(item._id, item.title)}
+                                        className="absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
+                                        title="न्यूज़ की कटिंग डाउनलोड करें"
+                                    >
+                                        ✂️ कटिंग लें
+                                    </button>
+
                                     {/* category stripe */}
-                                    <div className="mb-2 flex items-center gap-2">
+                                    <div className="mb-2 flex items-center gap-2 pr-20">
                                         <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 tracking-wider">
                                             {catHindi}
                                         </span>
@@ -352,12 +393,22 @@ export default function Epaper() {
                                     {/* Image – only if not text-only and exists */}
                                     {item.image && (
                                         <div className="mb-3 overflow-hidden border border-black/10 bg-white shadow-sm">
-                                            <img
-                                                src={item.image}
-                                                alt={item.title}
-                                                className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
-                                                loading="lazy"
-                                            />
+                                            {item.image && !item.image.includes('chatgpt.com') ? (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.title}
+                                                    className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
+                                                    loading="lazy"
+                                                    crossOrigin="anonymous"
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.title}
+                                                    className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
+                                                    loading="lazy"
+                                                />
+                                            )}
                                             {style === 'headline' && (
                                                 <p className="text-[9px] font-mono bg-gray-100 p-1 text-center border-t border-black/10">
                                                     📸 सांकेतिक तस्वीर | फोटो: HBN News 24

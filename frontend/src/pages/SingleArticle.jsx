@@ -21,6 +21,83 @@ export default function SingleArticle() {
     const [editCommentText, setEditCommentText] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
     const commentsRef = useRef(null);
+    const articleContentRef = useRef(null);
+
+    // Effect to clean up any invisible trailing empty nodes (like <p><span><br></span></p>)
+    // And to intercept clicks on injected related news links for SPA navigation
+    useEffect(() => {
+        if (articleContentRef.current) {
+            let child = articleContentRef.current.lastElementChild;
+            while (child) {
+                const textContent = child.textContent || '';
+                const hasMedia = child.querySelector('img, iframe, video, audio');
+                if (textContent.trim() === '' && !hasMedia) {
+                    const prev = child.previousElementSibling;
+                    child.remove();
+                    child = prev;
+                } else {
+                    break;
+                }
+            }
+
+            const handleLinkClick = (e) => {
+                const anchor = e.target.closest('a');
+                if (anchor && anchor.getAttribute('href') && anchor.getAttribute('href').startsWith('/news/')) {
+                    e.preventDefault();
+                    navigate(anchor.getAttribute('href'));
+                }
+            };
+            articleContentRef.current.addEventListener('click', handleLinkClick);
+
+            // Related News Carousel functionality
+            const leftBtn = articleContentRef.current.querySelector('.related-scroll-left');
+            const rightBtn = articleContentRef.current.querySelector('.related-scroll-right');
+            const scrollCont = articleContentRef.current.querySelector('.related-scroll-container');
+            
+            if (leftBtn && rightBtn && scrollCont) {
+                // Hide scrollbar
+                scrollCont.style.cssText = "scrollbar-width: none; -ms-overflow-style: none;";
+                const style = document.createElement('style');
+                style.innerHTML = ".related-scroll-container::-webkit-scrollbar { display: none; }";
+                articleContentRef.current.appendChild(style);
+
+                const scrollAmount = window.innerWidth < 640 ? 280 : 320;
+
+                const onLeftClick = () => scrollCont.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                const onRightClick = () => scrollCont.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                
+                leftBtn.addEventListener('click', onLeftClick);
+                rightBtn.addEventListener('click', onRightClick);
+                
+                const updateArrows = () => {
+                    leftBtn.style.opacity = scrollCont.scrollLeft > 5 ? "1" : "0";
+                    leftBtn.style.pointerEvents = scrollCont.scrollLeft > 5 ? "auto" : "none";
+                    
+                    const maxScroll = scrollCont.scrollWidth - scrollCont.clientWidth;
+                    rightBtn.style.opacity = scrollCont.scrollLeft >= maxScroll - 5 ? "0" : "1";
+                    rightBtn.style.pointerEvents = scrollCont.scrollLeft >= maxScroll - 5 ? "none" : "auto";
+                };
+                scrollCont.addEventListener('scroll', updateArrows);
+                // initial call after a short delay to ensure rendering
+                setTimeout(updateArrows, 100);
+
+                return () => {
+                    if (articleContentRef.current) {
+                        articleContentRef.current.removeEventListener('click', handleLinkClick);
+                    }
+                    leftBtn.removeEventListener('click', onLeftClick);
+                    rightBtn.removeEventListener('click', onRightClick);
+                    scrollCont.removeEventListener('scroll', updateArrows);
+                };
+            }
+
+            return () => {
+                if (articleContentRef.current) {
+                    articleContentRef.current.removeEventListener('click', handleLinkClick);
+                }
+            };
+        }
+    });
 
     useEffect(() => {
         // Fetch article and latest news
@@ -251,7 +328,81 @@ export default function SingleArticle() {
         return <div className="text-center py-20 text-xl font-bold text-red-600">Article not found (URL me shayad error hai)</div>;
     }
 
-    const hasContent = article.content && article.content.trim() !== '' && article.content !== '<p><br></p>';
+    // Removed complex regex cleaner; relying on useEffect DOM cleaner for better accuracy
+    let cleanContent = article.content || '';
+
+    // Inject related news inside the article content as a horizontal widget
+    if (latestNews.length > 0) {
+        // Get up to 4 related articles
+        const relatedArticlesToInject = latestNews.filter(n => n.category === article.category).slice(0, 4);
+        if (relatedArticlesToInject.length < 4) {
+            const moreNews = latestNews.filter(n => n.category !== article.category).slice(0, 4 - relatedArticlesToInject.length);
+            relatedArticlesToInject.push(...moreNews);
+        }
+
+        if (relatedArticlesToInject.length > 0) {
+            const paragraphs = cleanContent.split(/(<\/p>)/i);
+            const totalParagraphs = paragraphs.filter(p => p.toLowerCase() === '</p>').length;
+            // Inject after the 2nd paragraph (or 1st if very short) to make it appear higher
+            const targetParagraph = totalParagraphs >= 3 ? 2 : 1;
+
+            let injectedHTML = '';
+            let pCount = 0;
+            let widgetInjected = false;
+
+            for (let i = 0; i < paragraphs.length; i++) {
+                injectedHTML += paragraphs[i];
+                if (paragraphs[i].toLowerCase() === '</p>') {
+                    pCount++;
+                    if (pCount === targetParagraph && !widgetInjected) {
+                        
+                        let articlesHtml = relatedArticlesToInject.map((related, index) => {
+                            const linkUrl = `/news/${related.slug || related._id}`;
+                            const isLast = index === relatedArticlesToInject.length - 1;
+                            return `
+                                <a href="${linkUrl}" class="flex-none w-[280px] sm:w-[320px] flex gap-3 snap-start border-r border-gray-200 pr-4 ${isLast ? 'border-r-0 pr-0' : ''}" style="text-decoration: none !important;">
+                                    <div class="w-[100px] sm:w-[120px] h-[70px] sm:h-[80px] flex-shrink-0 overflow-hidden">
+                                        <img src="${related.image}" alt="News" class="w-full h-full object-cover" />
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="font-bold hover:text-[#da0000] transition-colors block" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: #111827 !important; font-size: 15px !important; line-height: 1.3 !important;">
+                                            ${related.title}
+                                        </span>
+                                    </div>
+                                </a>
+                            `;
+                        }).join('');
+
+                        injectedHTML += `
+                            <div class="my-8 font-sans w-full clear-both relative z-10 mx-auto max-w-[100%] group">
+                                <div class="border border-gray-200 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] relative">
+                                    <div class="bg-[#002866] px-4 py-2 font-extrabold" style="color: #ffffff !important; font-size: 17px !important;">
+                                        सम्बंधित ख़बरें
+                                    </div>
+                                    
+                                    <button class="related-scroll-left absolute left-2 top-[55%] -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 bg-[#a3a3a3] rounded-full flex items-center justify-center z-20 shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:bg-[#888] transition-all opacity-0 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;"><path d="m15 18-6-6 6-6" stroke="#ffffff" /></svg>
+                                    </button>
+                                    
+                                    <button class="related-scroll-right absolute right-2 top-[55%] -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 bg-[#a3a3a3] rounded-full flex items-center justify-center z-20 shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:bg-[#888] transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;"><path d="m9 18 6-6-6-6" stroke="#ffffff" /></svg>
+                                    </button>
+
+                                    <div class="related-scroll-container flex overflow-x-auto gap-4 p-4 scroll-smooth snap-x relative items-center">
+                                        ${articlesHtml}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        widgetInjected = true;
+                    }
+                }
+            }
+            cleanContent = injectedHTML;
+        }
+    }
+
+    const hasContent = cleanContent && cleanContent.trim() !== '';
 
     return (
         <div className="w-full max-w-[1280px] mx-auto px-4 py-8 flex flex-col md:flex-row gap-8 font-sans">
@@ -308,8 +459,9 @@ export default function SingleArticle() {
                 {hasContent && (
                     <div className="relative">
                         <div
+                            ref={articleContentRef}
                             className={`force-article-font overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-none' : 'max-h-[300px]'}`}
-                            dangerouslySetInnerHTML={{ __html: article.content }}
+                            dangerouslySetInnerHTML={{ __html: cleanContent }}
                         />
                         {!isExpanded && (
                             <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>

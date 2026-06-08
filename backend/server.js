@@ -448,8 +448,8 @@ app.get('/api/youtube', async (req, res) => {
             }).slice(0, 10);
         };
 
-        const fetchShorts = async () => {
-            const response = await fetch('https://www.youtube.com/@HBNNews24x7/shorts');
+        const fetchShorts = async (url) => {
+            const response = await fetch(url);
             const html = await response.text();
             const match = html.match(/var ytInitialData = (\{.*?\});<\/script>/);
             if (!match) return [];
@@ -472,9 +472,13 @@ app.get('/api/youtube', async (req, res) => {
             }).slice(0, 10);
         };
 
-        const [videos, shorts] = await Promise.all([fetchVideos(), fetchShorts()]);
+        const [videos, shorts, news24Shorts] = await Promise.all([
+            fetchVideos(), 
+            fetchShorts('https://www.youtube.com/@HBNNews24x7/shorts'),
+            fetchShorts('https://www.youtube.com/@News24thinkfirst/shorts')
+        ]);
 
-        res.json({ videos, shorts });
+        res.json({ videos, shorts, news24Shorts });
     } catch (error) {
         console.error('Error fetching YouTube Data:', error);
         res.status(500).json({ message: 'Error fetching videos' });

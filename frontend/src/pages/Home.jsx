@@ -7,11 +7,13 @@ import ReligionSection from "../components/ReligionSection"
 import LifestyleSection from "../components/LifestyleSection"
 import TechnologySection from "../components/TechnologySection"
 import BusinessSection from "../components/BusinessSection"
+import ShortVideos from "../components/ShortVideos"
 
 export default function Home() {
     const [news, setNews] = useState([]);
     const [videos, setVideos] = useState([]);
     const [shorts, setShorts] = useState([]);
+    const [news24Shorts, setNews24Shorts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -27,6 +29,7 @@ export default function Home() {
                 setNews(newsData);
                 setVideos(videoData.videos || []);
                 setShorts(videoData.shorts || []);
+                setNews24Shorts(videoData.news24Shorts || []);
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching home data:", err);
@@ -63,6 +66,13 @@ export default function Home() {
             <SportsSection news={fillNews(filterCategory('sports'))} />
             <ReligionSection news={fillNews(filterCategory('religion'))} />
             <LifestyleSection news={fillNews(filterCategory('lifestyle'))} />
+            
+            {news24Shorts.length > 0 && (
+                <div className="w-full max-w-[1280px] mx-auto px-4 mb-12">
+                    <ShortVideos shorts={news24Shorts} title="न्यूज़24 शॉर्ट्स" />
+                </div>
+            )}
+
             <TechnologySection news={fillNews(filterCategory('technology'))} />
             <BusinessSection news={fillNews(filterCategory('business'))} />
         </div>

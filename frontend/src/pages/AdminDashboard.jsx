@@ -1163,7 +1163,27 @@ export default function AdminDashboard() {
                                                 config={{
                                                     readonly: false,
                                                     height: 300,
-                                                    placeholder: 'Paste the full article content here...'
+                                                    placeholder: 'Paste the full article content here...',
+                                                    uploader: {
+                                                        url: __API_URL__ + '/api/upload',
+                                                        format: 'json',
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
+                                                        filesVariableName: 'image',
+                                                        isSuccess: (resp) => !resp.error && resp.imageUrl,
+                                                        process: (resp) => {
+                                                            return {
+                                                                files: [resp.imageUrl],
+                                                                path: resp.imageUrl,
+                                                                baseurl: '',
+                                                                error: resp.error ? 1 : 0,
+                                                                msg: resp.message
+                                                            };
+                                                        },
+                                                        defaultHandlerSuccess: function (data) {
+                                                            this.selection.insertImage(data.files[0]);
+                                                        }
+                                                    }
                                                 }}
                                                 onChange={(newContent) => handleContentChange(newContent)}
                                             />
@@ -1205,7 +1225,7 @@ export default function AdminDashboard() {
                                                         </>
                                                     )}
                                                 </div>
-                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} onClick={(e) => { e.target.value = null }} disabled={isUploading} />
                                             </label>
                                         </div>
 

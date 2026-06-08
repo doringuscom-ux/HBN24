@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ShortVideos({ shorts = [] }) {
+export default function ShortVideos({ shorts = [], title = "शॉर्ट वीडियो" }) {
     const scrollRef = useRef(null);
     const [playingVideoId, setPlayingVideoId] = useState(null);
 
@@ -43,7 +43,7 @@ export default function ShortVideos({ shorts = [] }) {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-[#da0000] border-b-[8px] border-b-transparent"></div>
-                    <h2 className="text-[20px] font-bold text-[#111]">शॉर्ट वीडियो</h2>
+                    <h2 className="text-[20px] font-bold text-[#111]">{title}</h2>
                 </div>
                 <div className="flex gap-2">
                     <button 
