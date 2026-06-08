@@ -329,7 +329,9 @@ export default function SingleArticle() {
                 canonicalLink.rel = "canonical";
                 document.head.appendChild(canonicalLink);
             }
-            canonicalLink.href = article.canonicalUrl || window.location.href;
+            // Clean Auto Canonical URL
+            const cleanUrl = `${window.location.origin}/news/${article.slug || article._id}`;
+            canonicalLink.href = article.canonicalUrl || cleanUrl;
         }
     }, [article]);
 
