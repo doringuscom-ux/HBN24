@@ -265,7 +265,7 @@ export default function SingleArticle() {
 
 
                 <div className="w-full bg-gray-100">
-                    <img src={article.image} alt={article.imageAlt || article.title} className="w-full h-auto max-h-[500px] object-cover" />
+                    <img src={article.image} alt={article.imageAlt || article.title} className="w-full h-auto max-h-[500px] object-contain" />
                     <p className="text-sm text-gray-500 py-2 px-1 border-b border-gray-200">
                         {article.imageAlt || `${article.title} (Photo)`}
                     </p>

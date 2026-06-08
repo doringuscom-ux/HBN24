@@ -14,7 +14,7 @@ export default function BusinessSection({ news = [] }) {
 
     return (
         <section className="w-full bg-white pb-10 pt-4 font-sans">
-            <div className="w-[1270px] mx-auto">
+            <div className="w-full max-w-[1270px] mx-auto px-4">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
@@ -28,9 +28,9 @@ export default function BusinessSection({ news = [] }) {
 
                 {/* Content Box */}
                 <div className="bg-[#f5f5f5] p-5 border border-[#eaeaea]">
-                    <div className="grid grid-cols-[40%_1fr_1fr] gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[40%_1fr_1fr] gap-6 md:gap-6">
                         {/* Left Column */}
-                        <div className="flex flex-col pr-6 border-r border-[#e0e0e0]">
+                        <div className="flex flex-col md:pr-6 border-b md:border-b-0 md:border-r border-[#e0e0e0] pb-6 md:pb-0">
                             {/* Main News */}
                             <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="group cursor-pointer flex flex-col gap-3 h-full block">
                                 <div className="w-full overflow-hidden">
@@ -43,10 +43,10 @@ export default function BusinessSection({ news = [] }) {
                         </div>
 
                         {/* Middle Column */}
-                        <div className="flex flex-col justify-between pr-6 border-r border-[#e0e0e0]">
+                        <div className="flex flex-col justify-between md:pr-6 border-b md:border-b-0 md:border-r border-[#e0e0e0] pb-6 md:pb-0">
                             {middleNewsList.map((news, index) => (
-                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-4 group cursor-pointer ${index !== middleNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''} block`}>
-                                    <div className="w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-4 group cursor-pointer ${index !== middleNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''}`}>
+                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                         <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1 flex pt-0.5">
@@ -59,10 +59,10 @@ export default function BusinessSection({ news = [] }) {
                         </div>
 
                         {/* Right Column */}
-                        <div className="flex flex-col justify-between pl-2">
+                        <div className="flex flex-col justify-between md:pl-2">
                             {rightNewsList.map((news, index) => (
-                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-4 group cursor-pointer ${index !== rightNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''} block`}>
-                                    <div className="w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-4 group cursor-pointer ${index !== rightNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''}`}>
+                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                         <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1 flex pt-0.5">

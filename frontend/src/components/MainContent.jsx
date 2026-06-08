@@ -4,6 +4,7 @@ import NewsGrid from './NewsGrid';
 import ShortVideos from './ShortVideos';
 import SidebarNews from './SidebarNews';
 import EntertainmentSection from './EntertainmentSection';
+import LiveTV from './LiveTV';
 
 export default function MainContent({ mixNews = [], entertainmentNews = [], videos = [], shorts = [], superfastNews = [], featuredNews = [] }) {
     return (
@@ -20,6 +21,7 @@ export default function MainContent({ mixNews = [], entertainmentNews = [], vide
                 {/* Right Column (30%) - SidebarNews */}
                 <div className="w-full lg:w-[30%]">
                     <div className="h-full">
+                        <LiveTV />
                         <SidebarNews news={superfastNews} />
                     </div>
                 </div>

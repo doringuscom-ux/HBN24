@@ -44,7 +44,7 @@ export default function Entertainment() {
     return (
         <div className="w-full min-h-screen bg-[#f3f4f6]">
             {/* Banner Section */}
-            <div className="w-full h-[160px] bg-gradient-to-r from-[#b32b13] via-[#df6a22] to-[#f4b647] relative overflow-hidden flex items-center px-10">
+            <div className="w-full min-h-[120px] md:h-[160px] py-4 md:py-0 bg-gradient-to-r from-[#b32b13] via-[#df6a22] to-[#f4b647] relative overflow-hidden flex items-center px-4 md:px-10">
                 
                 {/* Background Watermark Right */}
                 <div className="absolute right-[-20px] top-1/2 transform -translate-y-1/2 opacity-20 pointer-events-none">
@@ -52,7 +52,7 @@ export default function Entertainment() {
                 </div>
 
                 {/* Left side Graphics */}
-                <div className="absolute left-0 bottom-0 h-full flex items-end">
+                <div className="absolute left-0 bottom-0 h-full hidden md:flex items-end">
                     {/* Stars Background */}
                     <div className="absolute inset-0 pointer-events-none w-[250px]">
                         <Star className="absolute top-4 left-6 text-white/40 w-6 h-6 fill-current animate-pulse" />
@@ -68,23 +68,35 @@ export default function Entertainment() {
                     </div>
                 </div>
 
-                <div className="w-[1270px] mx-auto flex items-center justify-between relative z-10 pl-[120px]">
+                <div className="w-full max-w-[1270px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between relative z-10 md:pl-[120px] gap-4 md:gap-0">
                     {/* Center Title */}
-                    <div className="flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex flex-col justify-center w-full md:w-auto">
+                        <div className="flex items-center gap-2 mb-3 md:mb-1.5">
                             <span className="bg-[#a61c0a] text-white text-[11px] font-bold px-2 py-0.5 rounded-[2px] leading-tight shadow-sm">Hindi News</span>
                             <span className="text-white text-[13px] font-bold">/ मनोरंजन</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white rounded-full p-1.5 flex items-center justify-center shadow-md">
-                                <MdLocalMovies className="text-[#df6a22] w-6 h-6" />
+                        <div className="flex items-center justify-between w-full md:w-auto">
+                            <div className="flex items-center gap-3">
+                                {/* Mobile Icon */}
+                                <img src={cinemaImg} alt="Cinema" className="w-12 h-12 object-contain drop-shadow-md md:hidden" />
+                                {/* Desktop Icon */}
+                                <div className="hidden md:flex bg-white rounded-full p-1.5 items-center justify-center shadow-md">
+                                    <MdLocalMovies className="text-[#df6a22] w-6 h-6" />
+                                </div>
+                                <h1 className="text-white text-[26px] md:text-[34px] font-black tracking-wide drop-shadow-md">मूवी मसाला</h1>
                             </div>
-                            <h1 className="text-white text-[34px] font-black tracking-wide drop-shadow-md">मूवी मसाला</h1>
+                            
+                            {/* Mobile Socials */}
+                            <div className="flex items-center gap-3 text-white md:hidden">
+                                <FaWhatsapp size={16} className="cursor-pointer hover:text-green-400 drop-shadow-sm" />
+                                <FaFacebookF size={15} className="cursor-pointer hover:text-blue-500 drop-shadow-sm" />
+                                <FaXTwitter size={15} className="cursor-pointer hover:text-black drop-shadow-sm" />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Right side Feedback & Socials */}
-                    <div className="flex flex-col items-end gap-3 pr-[40px]">
+                    {/* Right side Feedback & Socials (Desktop) */}
+                    <div className="hidden md:flex flex-col items-end gap-3 pr-[40px]">
                         <button className="bg-white text-[#d32f2f] text-[12px] font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm hover:bg-gray-100 transition-colors">
                             <Pencil size={12} strokeWidth={3} /> Feedback
                         </button>
@@ -98,14 +110,14 @@ export default function Entertainment() {
             </div>
             
             {/* Main Content Area */}
-            <div className="w-[1270px] mx-auto py-10">
-                <div className="flex gap-6 mt-2">
+            <div className="w-full max-w-[1270px] mx-auto px-4 py-6 md:py-10">
+                <div className="flex flex-col lg:flex-row gap-6 mt-2">
                     {/* Left Main Content */}
-                    <div className="w-[70%] flex flex-col gap-4">
+                    <div className="w-full lg:w-[70%] flex flex-col gap-4">
                         {/* Top Row: 2 columns */}
-                        <div className="grid grid-cols-3 gap-4 h-[360px]">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[360px]">
                             {/* Main Article (Takes 2 columns) */}
-                            <Link to={`/news/${mainNews.slug || mainNews._id}`} className="col-span-2 relative group cursor-pointer overflow-hidden shadow-sm bg-black border border-gray-200 block">
+                            <Link to={`/news/${mainNews.slug || mainNews._id}`} className="col-span-1 md:col-span-2 relative group cursor-pointer overflow-hidden shadow-sm bg-black border border-gray-200 block h-[250px] md:h-auto">
                                 <img src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100" />
                                 <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-4 px-5">
                                     <h3 className="text-white text-[22px] font-bold leading-[1.4]">
@@ -128,7 +140,7 @@ export default function Entertainment() {
                         </div>
 
                         {/* Bottom Row: 3 columns */}
-                        <div className="grid grid-cols-3 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                             {bottomNews.map((news, idx) => (
                                 <Link to={`/news/${news.slug || news._id}`} key={idx} className="col-span-1 bg-white shadow-sm flex flex-col group cursor-pointer border border-gray-200 block">
                                     <div className="w-full h-[180px] overflow-hidden relative">
@@ -145,7 +157,7 @@ export default function Entertainment() {
 
                         {/* Rest of the news */}
                         {newsData.length > 5 && (
-                            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
                                 {newsData.slice(5).map((news, idx) => (
                                     <Link to={`/news/${news.slug || news._id}`} key={idx} className="col-span-1 bg-white shadow-sm flex flex-col group cursor-pointer border border-gray-200 block">
                                         <div className="w-full h-[180px] overflow-hidden relative">
@@ -163,7 +175,7 @@ export default function Entertainment() {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-[30%] bg-white p-5 shadow-sm border border-gray-200 h-fit sticky top-4">
+                    <div className="w-full lg:w-[30%] bg-white p-5 shadow-sm border border-gray-200 h-fit lg:sticky lg:top-4">
                         <div className="flex items-center gap-2 mb-4 border-b-[2px] border-gray-100 pb-2">
                             <div className="w-0 h-0 border-t-[10px] border-t-[#d91f26] border-l-[10px] border-l-transparent"></div>
                             <h2 className="text-[20px] font-black text-black">लेटेस्ट</h2>

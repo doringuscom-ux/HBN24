@@ -170,8 +170,13 @@ export default function AajTakNavbar() {
 
             if (!isAuto) alert('You are now subscribed to notifications!');
         } catch (error) {
-            console.error('Error subscribing to notifications:', error);
-            if (!isAuto) alert('Failed to subscribe to notifications.');
+            // Suppress the expected AbortError during local development or in unsupported environments
+            if (error.name === 'AbortError' || (error.message && error.message.includes('push service error'))) {
+                console.log('Push notifications are not fully supported in this environment (e.g. Localhost or Incognito). Skipping subscription.');
+            } else {
+                console.error('Error subscribing to notifications:', error);
+                if (!isAuto) alert('Failed to subscribe to notifications.');
+            }
         }
     };
 
@@ -287,7 +292,7 @@ export default function AajTakNavbar() {
                 </div>
 
                 {/* Right Side Icons */}
-                <div className="flex items-center gap-4 xl:gap-6 text-white ml-auto">
+                <div className="flex items-center gap-2 sm:gap-4 xl:gap-6 text-white ml-auto">
                     
                     {/* Hidden Original Google Translate Widget */}
                     <div id="google_translate_element" className="hidden"></div>
@@ -295,10 +300,10 @@ export default function AajTakNavbar() {
                     {/* Custom Language Selector */}
                     <select 
                         onChange={changeLanguage} 
-                        className="bg-white/10 text-white font-bold py-1.5 px-3 rounded-md border border-white/20 focus:outline-none focus:border-[#ff3b22] text-sm cursor-pointer hover:bg-white/20 transition-all appearance-none"
+                        className="bg-white/10 text-white font-bold py-1 px-1.5 sm:py-1.5 sm:px-3 rounded border border-white/20 focus:outline-none focus:border-[#ff3b22] text-[11px] sm:text-sm cursor-pointer hover:bg-white/20 transition-all appearance-none"
                         defaultValue={document.cookie.includes('googtrans=/hi/en') ? 'en' : document.cookie.includes('googtrans=/hi/pa') ? 'pa' : 'hi'}
                     >
-                        <option value="hi" className="text-black">Hindi (Default)</option>
+                        <option value="hi" className="text-black">Hindi</option>
                         <option value="en" className="text-black">English</option>
                         <option value="pa" className="text-black">Punjabi</option>
                     </select>
@@ -308,7 +313,7 @@ export default function AajTakNavbar() {
                     </Link>
 
                     {/* X */}
-                    <a href="https://x.com/HbnNews24" target="_blank" rel="noopener noreferrer" className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                    <a href="https://x.com/HbnNews24" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="18"
@@ -321,7 +326,7 @@ export default function AajTakNavbar() {
                     </a>
 
                     {/* YouTube */}
-                    <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noopener noreferrer" className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                    <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="22"
@@ -445,7 +450,7 @@ export default function AajTakNavbar() {
 
                 {/* Mobile Menu Dropdown */}
                 {open && (
-                    <div className="absolute top-[60px] left-0 w-64 bg-white/95 backdrop-blur-xl shadow-2xl z-50 rounded-br-2xl xl:hidden border border-gray-100 overflow-hidden">
+                    <div className="absolute top-[60px] left-0 w-64 bg-white/95 backdrop-blur-xl shadow-2xl z-50 rounded-br-2xl xl:hidden border border-gray-100 overflow-hidden flex flex-col">
                         {navLinks.map((item) => (
                             <Link
                                 key={item.name}
@@ -456,6 +461,17 @@ export default function AajTakNavbar() {
                                 {item.name}
                             </Link>
                         ))}
+                        <div className="px-6 py-4 flex flex-col gap-4 bg-gray-50 border-t border-gray-100/50">
+                            <div className="flex items-center justify-between px-4 text-gray-800 mt-2">
+                                <Link to="/epaper" className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300"><Newspaper size={24} /></Link>
+                                <a href="https://x.com/HbnNews24" target="_blank" rel="noopener noreferrer" className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                </a>
+                                <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noopener noreferrer" className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2.5 7.1c.3-1.5 1.5-2.6 3-2.9C8.9 3.8 12 3.8 12 3.8s3.1 0 6.5.4c1.5.3 2.7 1.4 3 2.9.5 2.1.5 4.9.5 4.9s0 2.8-.5 4.9c-.3 1.5-1.5 2.6-3 2.9-3.4.4-6.5.4-6.5.4s-3.1 0-6.5-.4c-1.5-.3-2.7-1.4-3-2.9-.5-2.1-.5-4.9-.5-4.9s0-2.8.5-4.9z" /><path d="m10 15 5-3-5-3z" /></svg>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

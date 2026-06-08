@@ -18,7 +18,7 @@ const Footer = () => {
 
     return (
         <footer className="w-full bg-[#171717] border-t-[3px] border-[#937851] py-5">
-            <div className="w-[1270px] mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            <div className="w-full max-w-[1270px] mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
                 {footerLinks.map((link, index) => (
                     <Link
                         key={index}

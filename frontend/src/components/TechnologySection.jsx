@@ -15,7 +15,7 @@ export default function TechnologySection({ news = [] }) {
 
     return (
         <section className="w-full bg-white pb-10 pt-4 font-sans border-b-2 border-gray-100">
-            <div className="w-[1270px] mx-auto">
+            <div className="w-full max-w-[1270px] mx-auto px-4">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-5">
                     <div className="flex items-center gap-2">
@@ -28,13 +28,13 @@ export default function TechnologySection({ news = [] }) {
                 </div>
 
                 {/* Content Box */}
-                <div className="flex gap-6">
+                <div className="flex flex-col md:flex-row gap-6">
                     {/* Left Column (42%) */}
-                    <div className="w-[42%] flex flex-col pr-4 border-r border-[#e5e5e5]">
+                    <div className="w-full md:w-[42%] flex flex-col md:pr-4 border-b md:border-b-0 md:border-r border-[#e5e5e5] pb-6 md:pb-0">
                         
                         {/* Top Main News */}
-                        <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="flex gap-4 group cursor-pointer mb-5 block">
-                            <div className="w-[230px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                        <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="flex flex-col sm:flex-row gap-4 group cursor-pointer mb-5">
+                            <div className="w-full sm:w-[230px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                 <img src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             </div>
                             <div className="flex-1">
@@ -45,8 +45,8 @@ export default function TechnologySection({ news = [] }) {
                         </Link>
 
                         {/* Bottom News Left */}
-                        <Link to={bottomNewsLeft._id !== 'loading' ? `/news/${bottomNewsLeft._id}` : '#'} className="border-t border-[#e5e5e5] pt-4 group cursor-pointer flex gap-4 block">
-                            <div className="w-[130px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                        <Link to={bottomNewsLeft._id !== 'loading' ? `/news/${bottomNewsLeft._id}` : '#'} className="border-t border-[#e5e5e5] pt-4 group cursor-pointer flex flex-col sm:flex-row gap-4">
+                            <div className="w-full sm:w-[130px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                 <img src={bottomNewsLeft.image} alt={bottomNewsLeft.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             </div>
                             <div className="flex-1 flex items-center">
@@ -59,10 +59,10 @@ export default function TechnologySection({ news = [] }) {
                     </div>
 
                     {/* Middle Column (29%) */}
-                    <div className="w-[29%] flex flex-col justify-between pr-4 border-r border-[#e5e5e5]">
+                    <div className="w-full md:w-[29%] flex flex-col justify-between md:pr-4 border-b md:border-b-0 md:border-r border-[#e5e5e5] pb-6 md:pb-0">
                         {middleNewsList.map((news, index) => (
-                            <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-3 group cursor-pointer ${index !== middleNewsList.length - 1 ? 'border-b border-[#e5e5e5] pb-4 mb-4' : ''} block`}>
-                                <div className="w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                            <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-3 group cursor-pointer ${index !== middleNewsList.length - 1 ? 'border-b border-[#e5e5e5] pb-4 mb-4' : ''}`}>
+                                <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                     <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                 </div>
                                 <div className="flex-1 flex pt-1">
@@ -75,10 +75,10 @@ export default function TechnologySection({ news = [] }) {
                     </div>
 
                     {/* Right Column (29%) */}
-                    <div className="w-[29%] flex flex-col justify-between">
+                    <div className="w-full md:w-[29%] flex flex-col justify-between">
                         {rightNewsList.map((news, index) => (
-                            <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-3 group cursor-pointer ${index !== rightNewsList.length - 1 ? 'border-b border-[#e5e5e5] pb-4 mb-4' : ''} block`}>
-                                <div className="w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
+                            <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-3 group cursor-pointer ${index !== rightNewsList.length - 1 ? 'border-b border-[#e5e5e5] pb-4 mb-4' : ''}`}>
+                                <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
                                     <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                 </div>
                                 <div className="flex-1 flex pt-1">

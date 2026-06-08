@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 
@@ -13,6 +13,7 @@ export default function AdminDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
     const [isGeneratingRashifal, setIsGeneratingRashifal] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [bulkStatus, setBulkStatus] = useState({ isRunning: false, total: 0, processed: 0 });
     const [missingSeoCount, setMissingSeoCount] = useState(0);
 
@@ -37,7 +38,9 @@ export default function AdminDashboard() {
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
     const [seoData, setSeoData] = useState({
-        googleAnalyticsId: ''
+        googleAnalyticsId: '',
+        liveTvUrl: '',
+        liveTvType: 'hls'
     });
     const [formData, setFormData] = useState({
         title: '',
@@ -174,7 +177,9 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (data) {
                 setSeoData({
-                    googleAnalyticsId: data.googleAnalyticsId || ''
+                    googleAnalyticsId: data.googleAnalyticsId || '',
+                    liveTvUrl: data.liveTvUrl || '',
+                    liveTvType: data.liveTvType || 'hls'
                 });
             }
         } catch (error) {
@@ -627,13 +632,26 @@ export default function AdminDashboard() {
     ];
 
     return (
-        <div className="flex h-screen bg-gray-50 font-sans">
+        <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <div className="w-64 bg-gray-900 text-white flex flex-col shadow-xl z-20">
-                <div className="p-6 text-2xl font-black border-b border-gray-800 flex items-center gap-2 tracking-tight">
-                    <span className="text-red-600 bg-white px-2 py-0.5 rounded shadow-sm">HBN</span> Admin
+            <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 w-64 bg-gray-900 text-white flex flex-col shadow-xl z-30 transition-transform duration-200 ease-in-out`}>
+                <div className="p-6 text-2xl font-black border-b border-gray-800 flex items-center justify-between gap-2 tracking-tight">
+                    <div className="flex items-center gap-2">
+                        <span className="text-red-600 bg-white px-2 py-0.5 rounded shadow-sm">HBN</span> Admin
+                    </div>
+                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+                        <X size={24} />
+                    </button>
                 </div>
-                <div className="flex-1 py-6 flex flex-col gap-2">
+                <div className="flex-1 py-6 flex flex-col gap-2 overflow-y-auto">
                     <button 
                         onClick={() => setCurrentView('all')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'all' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
@@ -676,18 +694,23 @@ export default function AdminDashboard() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden w-full">
                 {/* Header */}
-                <header className="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
-                        </h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
-                        </p>
+                <header className="h-auto min-h-[80px] bg-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-8 z-10 border-b border-gray-200 gap-4">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <Menu size={24} />
+                        </button>
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
+                            </h1>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 hidden sm:block">
+                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
                         {bulkStatus.isRunning && (
                             <div className="bg-purple-100 text-purple-800 px-4 py-1.5 rounded-full text-sm font-bold border border-purple-200 flex items-center gap-2 animate-pulse shadow-sm">
                                 <Sparkles size={16} />
@@ -706,35 +729,66 @@ export default function AdminDashboard() {
                         </div>
                         <button
                             onClick={openCreateModal}
-                            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-md shadow-red-600/20 whitespace-nowrap"
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-md shadow-red-600/20 whitespace-nowrap flex-1 sm:flex-none justify-center"
                         >
                             <Plus size={18} /> Add News
                         </button>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-8">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-8">
                     {currentView === 'seo' ? (
                         <div className="flex flex-col gap-8 w-full">
                             {/* Unified SEO Generator Header */}
-                            <div className="bg-purple-600 rounded-xl shadow-md p-6 text-white flex items-center justify-between">
+                            <div className="bg-purple-600 rounded-xl shadow-md p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div>
-                                    <h2 className="text-2xl font-bold flex items-center gap-2"><Sparkles /> Master SEO Auto-Generator</h2>
-                                    <p className="text-purple-100 mt-1">Automatically generate intelligent SEO for Static Pages or News Articles using AI.</p>
+                                    <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2"><Sparkles /> Master SEO Auto-Generator</h2>
+                                    <p className="text-purple-100 mt-1 text-sm sm:text-base">Automatically generate intelligent SEO for Static Pages or News Articles using AI.</p>
                                 </div>
                                 <button 
                                     onClick={() => setIsSeoModalOpen(true)}
-                                    className="bg-white text-purple-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-bold shadow-sm transition-colors text-lg"
+                                    className="bg-white text-purple-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-bold shadow-sm transition-colors text-base sm:text-lg w-full sm:w-auto text-center flex justify-center items-center gap-2"
                                 >
                                     ✨ Auto-Generate AI
                                 </button>
                             </div>
 
                             {/* Page-Specific SEO Box */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4">
+                                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">Global Settings & Features</h2>
+                                    <button onClick={handleSeoSave} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                        Save Settings
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-5">
+                                    <div className="w-full md:w-1/2 pr-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Google Analytics ID</label>
+                                        <input type="text" name="googleAnalyticsId" value={seoData.googleAnalyticsId} onChange={handleSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="G-XXXXXXXXXX" />
+                                        <p className="text-xs text-gray-500 mt-1">Example: G-ABC123XYZ</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Live TV Player Type</label>
+                                            <select name="liveTvType" value={seoData.liveTvType} onChange={handleSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white font-medium">
+                                                <option value="hls">News Channel Live (.m3u8)</option>
+                                                <option value="youtube">YouTube Video Player</option>
+                                            </select>
+                                            <p className="text-xs text-gray-500 mt-1">Select the type of player to use on the homepage.</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Live TV URL</label>
+                                            <input type="text" name="liveTvUrl" value={seoData.liveTvUrl} onChange={handleSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="https://..." />
+                                            <p className="text-xs text-gray-500 mt-1">Paste the .m3u8 link or YouTube link here.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div id="static-seo-form" className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                <div className="flex justify-between items-center mb-6 border-b pb-4">
-                                    <h2 className="text-xl font-bold text-gray-800">Page-Specific SEO Settings</h2>
-                                    <button onClick={handlePageSeoSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4">
+                                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">Page-Specific SEO Settings</h2>
+                                    <button onClick={handlePageSeoSave} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
                                         Save Page SEO
                                     </button>
                                 </div>
@@ -881,21 +935,21 @@ export default function AdminDashboard() {
                         </div>
                     ) : currentView === 'rashifal' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4">
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Update Daily Rashifal</h2>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Update Daily Rashifal</h2>
                                     <p className="text-sm text-gray-500 mt-1">Generate or edit today's horoscope for all 12 zodiac signs.</p>
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                                     <button 
                                         onClick={handleGenerateRashifal} 
                                         disabled={isGeneratingRashifal}
-                                        className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center gap-2 disabled:opacity-50"
+                                        className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
                                         <Sparkles size={18} />
                                         {isGeneratingRashifal ? "Generating..." : "✨ Auto-Generate AI"}
                                     </button>
-                                    <button onClick={handleRashifalSave} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                    <button onClick={handleRashifalSave} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center">
                                         Save Rashifal
                                     </button>
                                 </div>
@@ -979,7 +1033,7 @@ export default function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit">
                                                             <Pencil size={18} />
                                                         </button>
@@ -1057,24 +1111,24 @@ export default function AdminDashboard() {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl my-8 overflow-hidden transform transition-all">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 sticky top-0 z-10">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center p-0 sm:p-4 overflow-y-auto">
+                    <div className="bg-white rounded-none sm:rounded-xl shadow-2xl w-full max-w-5xl min-h-screen sm:min-h-0 sm:my-8 lg:my-12 flex flex-col overflow-hidden transform transition-all">
+                        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 sticky top-0 z-20 shadow-sm">
                             <h3 className="text-xl font-bold text-gray-900">{editingId ? 'Edit News Article' : 'Add New Article'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
                                 <X size={24} />
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6">
-                            <div className="flex flex-col lg:flex-row gap-8">
+                        <form onSubmit={handleSubmit} className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:pt-6">
+                            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10 flex-1">
                                 {/* Left Column: Main Content */}
-                                <div className="flex-1 flex flex-col gap-5">
+                                <div className="flex-1 flex flex-col gap-5 lg:mt-2">
                                     <h4 className="text-lg font-bold text-gray-800 border-b pb-2">Main Content</h4>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Headline (Title)</label>
                                         <textarea required name="title" value={formData.title} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" rows="2" placeholder="Enter an engaging headline..."></textarea>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">URL Slug</label>
                                             <input type="text" name="slug" value={formData.slug} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-gray-50" placeholder="Auto-generated if empty" />
@@ -1118,7 +1172,7 @@ export default function AdminDashboard() {
                                 </div>
 
                                 {/* Right Column: Media & SEO */}
-                                <div className="w-full lg:w-[380px] flex flex-col gap-5">
+                                <div className="w-full lg:w-[380px] flex flex-col gap-5 lg:mt-2">
                                     <div className="flex justify-between items-center border-b pb-2">
                                         <h4 className="text-lg font-bold text-gray-800">Media & SEO</h4>
                                         <button 
@@ -1181,7 +1235,7 @@ export default function AdminDashboard() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Keywords</label>
                                         <input type="text" name="metaKeywords" value={formData.metaKeywords} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" placeholder="news, politics, sports..." />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Robots Tag</label>
                                             <select name="robots" value={formData.robots} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-white">
@@ -1199,9 +1253,9 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            <div className="mt-8 flex justify-end gap-4 pt-5 border-t border-gray-200">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
-                                <button type="submit" className="px-8 py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95">{editingId ? 'Save All Changes' : 'Publish Complete Article'}</button>
+                            <div className="mt-8 sm:mt-8 -mx-4 sm:mx-0 p-4 sm:p-0 pt-4 sm:pt-5 bg-white sm:bg-transparent border-t border-gray-200 sticky bottom-0 z-20 flex flex-col-reverse sm:flex-row justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:shadow-none">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
+                                <button type="submit" className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95">{editingId ? 'Save All Changes' : 'Publish Complete Article'}</button>
                             </div>
                         </form>
                     </div>

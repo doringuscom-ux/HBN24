@@ -39,6 +39,12 @@ router.post('/', authMiddleware, async (req, res) => {
             seo.metaKeywords = req.body.metaKeywords;
             seo.robots = req.body.robots;
             seo.googleAnalyticsId = req.body.googleAnalyticsId;
+            if (req.body.liveTvUrl !== undefined) {
+                seo.liveTvUrl = req.body.liveTvUrl;
+            }
+            if (req.body.liveTvType !== undefined) {
+                seo.liveTvType = req.body.liveTvType;
+            }
             seo.updatedAt = Date.now();
             await seo.save();
         } else {

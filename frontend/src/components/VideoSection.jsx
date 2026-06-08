@@ -8,7 +8,7 @@ const getYouTubeId = (url) => {
 
 export default function VideoSection({ videos = [] }) {
     const [mainIndex, setMainIndex] = useState(0);
-    const [playing, setPlaying] = useState(false);
+    const [playingIndex, setPlayingIndex] = useState(null);
     const [animate, setAnimate] = useState(false);
 
     let activeVideos = videos.map((v, i) => ({ ...v, originalIndex: i }));
@@ -32,23 +32,24 @@ export default function VideoSection({ videos = [] }) {
         const clickedVideo = activeVideos.find(v => v.originalIndex === index);
         const clickedYtId = getYouTubeId(clickedVideo?.link);
         
-        if (clickedYtId) {
-            e.preventDefault();
-        } else {
-            return; // Let standard link behavior happen
-        }
+        if (!clickedYtId) return; // Let standard link behavior happen
+        e.preventDefault();
 
-        if (index !== mainIndex) {
-            // Swap animation
-            setAnimate(true);
-            setTimeout(() => {
-                setMainIndex(index);
-                setPlaying(true);
-                setAnimate(false);
-            }, 300);
+        // On mobile/tablet (<1024px), play inline without swapping
+        if (window.innerWidth < 1024) {
+            setPlayingIndex(index);
         } else {
-            // Just play
-            setPlaying(true);
+            // On desktop, swap the video to the main center view
+            if (index !== mainIndex) {
+                setAnimate(true);
+                setTimeout(() => {
+                    setMainIndex(index);
+                    setPlayingIndex(index);
+                    setAnimate(false);
+                }, 300);
+            } else {
+                setPlayingIndex(index);
+            }
         }
     };
 
@@ -69,7 +70,7 @@ export default function VideoSection({ videos = [] }) {
                 <div className="video-inner-body">
                     <div className="video-col">
                         {leftVideos.map((video) => (
-                            <VideoCard key={video.originalIndex} video={video} onClick={handleVideoClick} />
+                            <VideoCard key={video.originalIndex} video={video} onClick={handleVideoClick} isPlaying={playingIndex === video.originalIndex} />
                         ))}
                     </div>
 
@@ -77,7 +78,7 @@ export default function VideoSection({ videos = [] }) {
                         <div 
                             className={`main-video block relative overflow-hidden transition-all duration-300 transform w-full aspect-[16/9] ${animate ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
                         >
-                            {playing && ytId ? (
+                            {playingIndex === mainVideo.originalIndex && ytId ? (
                                 <iframe 
                                     width="100%" 
                                     height="100%" 
@@ -110,7 +111,7 @@ export default function VideoSection({ videos = [] }) {
 
                     <div className="video-col right-col">
                         {rightVideos.map((video) => (
-                            <VideoCard key={video.originalIndex} video={video} onClick={handleVideoClick} />
+                            <VideoCard key={video.originalIndex} video={video} onClick={handleVideoClick} isPlaying={playingIndex === video.originalIndex} />
                         ))}
                     </div>
                 </div>
@@ -119,12 +120,31 @@ export default function VideoSection({ videos = [] }) {
     );
 }
 
-function VideoCard({ video, onClick }) {
+function VideoCard({ video, onClick, isPlaying }) {
+    const ytId = getYouTubeId(video.link);
+    
+    if (isPlaying && ytId) {
+        return (
+            <div className="video-card block w-full mb-4 md:mb-0">
+                <iframe 
+                    width="100%" 
+                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`} 
+                    title={video.title}
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                    className="w-full aspect-video rounded-md"
+                ></iframe>
+                <h3 className="text-red-500 font-medium line-clamp-2 mt-2">{video.title}</h3>
+            </div>
+        );
+    }
+
     return (
         <a 
             href={video.link} 
             onClick={(e) => onClick(e, video.originalIndex)}
-            className="video-card block cursor-pointer group"
+            className="video-card block cursor-pointer group mb-4 md:mb-0"
         >
             <div className="video-thumb overflow-hidden relative">
                 <img src={video.image} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

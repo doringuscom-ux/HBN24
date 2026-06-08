@@ -12,7 +12,7 @@ export default function LifestyleSection({ news = [] }) {
 
     return (
         <section className="w-full bg-white pb-8 font-sans">
-            <div className="w-[1270px] mx-auto">
+            <div className="w-full max-w-[1270px] mx-auto px-4">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">

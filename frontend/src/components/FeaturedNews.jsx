@@ -15,10 +15,10 @@ export default function FeaturedNews({ news = [] }) {
         return (
             <div className="w-full bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                 <div className="relative overflow-hidden">
-                    <img src={featured.image} alt="Featured" className="w-full h-[450px] object-cover" />
+                    <img src={featured.image} alt="Featured" className="w-full object-cover bg-gray-100" />
                 </div>
                 <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
-                    <h1 className="text-[34px] font-black text-[#111] mb-4 leading-[1.25]">{featured.title}</h1>
+                    <h1 className="text-[24px] md:text-[34px] font-black text-[#111] mb-4 leading-[1.25]">{featured.title}</h1>
                 </div>
             </div>
         );
@@ -46,7 +46,7 @@ export default function FeaturedNews({ news = [] }) {
                 <img 
                     src={featured.image} 
                     alt="Featured" 
-                    className="w-full h-[450px] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
                 {displayCategory && (
                     <div className="absolute top-4 left-4 bg-[#da0000] text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg capitalize">
@@ -55,7 +55,7 @@ export default function FeaturedNews({ news = [] }) {
                 )}
             </div>
             <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
-                <h1 className="text-[34px] font-black text-[#111] mb-4 group-hover:text-[#da0000] transition-colors leading-[1.25]">
+                <h1 className="text-[24px] md:text-[34px] font-black text-[#111] mb-4 group-hover:text-[#da0000] transition-colors leading-[1.25]">
                     {featured.title}
                 </h1>
                 <div className="w-12 h-1.5 bg-[#da0000] mb-4 rounded-full"></div>

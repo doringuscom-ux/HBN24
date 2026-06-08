@@ -245,6 +245,16 @@ body {
     margin-top: 4px;
 }
 
+@media (max-width: 1280px) {
+    .video-container { width: 100%; padding: 0 16px; }
+    .video-inner-body { grid-template-columns: 1fr; gap: 20px; }
+    .video-middle { padding: 0; border: none; order: -1; }
+    .video-col { padding-top: 0; display: grid; grid-template-columns: 1fr; gap: 15px; }
+    .video-thumb, .video-thumb img { width: 100%; height: auto; aspect-ratio: 16/9; }
+    .main-video, .main-video img { width: 100%; height: auto; aspect-ratio: 16/9; }
+    .main-caption h3 { width: 100%; font-size: 18px; line-height: 24px; }
+}
+
 /* Force article content styles to override Rich Text Editor inline styles */
 .force-article-font * {
     font-family: 'Noto Sans Devanagari', sans-serif !important;
@@ -255,4 +265,9 @@ body {
 }
 .force-article-font p {
     margin-bottom: 24px !important;
+}
+.force-article-font img {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
 }

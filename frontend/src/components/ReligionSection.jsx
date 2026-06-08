@@ -85,7 +85,7 @@ export default function ReligionSection({ news = [] }) {
 
     return (
         <section className="w-full bg-white pb-10 pt-4 font-sans border-b-2 border-gray-100">
-            <div className="w-[1270px] mx-auto">
+            <div className="w-full max-w-[1270px] mx-auto px-4">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-5">
                     <div className="flex items-center gap-2">
@@ -97,13 +97,13 @@ export default function ReligionSection({ news = [] }) {
                     </a>
                 </div>
 
-                <div className="flex gap-10">
+                <div className="flex flex-col md:flex-row gap-10">
                     {/* Left Column (News) */}
-                    <div className="w-[55%] flex flex-col pr-5">
+                    <div className="w-full md:w-[55%] flex flex-col md:pr-5">
                         
                         {/* Top Main News */}
-                        <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="flex gap-4 group cursor-pointer mb-6 block">
-                            <div className="w-[260px] aspect-[16/9] overflow-hidden flex-shrink-0 border border-gray-200 p-[2px]">
+                        <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="flex flex-col sm:flex-row gap-4 group cursor-pointer mb-6">
+                            <div className="w-full sm:w-[260px] aspect-[16/9] overflow-hidden flex-shrink-0 border border-gray-200 p-[2px]">
                                 <img src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             </div>
                             <div className="flex-1">
@@ -116,8 +116,8 @@ export default function ReligionSection({ news = [] }) {
                         {/* Bottom List News */}
                         <div className="flex flex-col">
                             {sideNews.map((news, index) => (
-                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-4 group cursor-pointer pt-4 ${index !== sideNews.length - 1 ? 'border-b border-[#e5e5e5] pb-4' : ''} ${index === 0 ? 'border-t-2 border-[#f57c00]/20' : ''} block`}>
-                                    <div className="w-[140px] aspect-[16/9] overflow-hidden flex-shrink-0 rounded-[4px]">
+                                <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-4 group cursor-pointer pt-4 ${index !== sideNews.length - 1 ? 'border-b border-[#e5e5e5] pb-4' : ''} ${index === 0 ? 'border-t-2 border-[#f57c00]/20' : ''}`}>
+                                    <div className="w-full sm:w-[140px] aspect-[16/9] overflow-hidden flex-shrink-0 rounded-[4px]">
                                         <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1 flex pt-1">
@@ -131,7 +131,7 @@ export default function ReligionSection({ news = [] }) {
                     </div>
 
                     {/* Right Column (Horoscope Widget) */}
-                    <div className="w-[45%] flex flex-col pl-4">
+                    <div className="w-full md:w-[45%] flex flex-col md:pl-4 mt-8 md:mt-0">
                         <h3 className="text-[20px] font-bold text-black mb-3">राशिफल</h3>
                         
                         <div className="w-full relative overflow-hidden pb-8 pt-4 h-full rounded-[2px] bg-[#0d274c]">

@@ -52,37 +52,49 @@ export default function Lifestyle() {
     return (
         <div className="w-full min-h-screen bg-[#f3f4f6]">
             {/* Banner Section */}
-            <div className="w-full h-[160px] relative overflow-hidden flex items-center px-10" style={{ background: 'linear-gradient(to right, #ef5a50, #fb9a5e)' }}>
+            <div className="w-full min-h-[120px] md:h-[160px] py-4 md:py-0 relative overflow-hidden flex items-center px-4 md:px-10" style={{ background: 'linear-gradient(to right, #ef5a50, #fb9a5e)' }}>
                 
                 {/* Background Watermark Right */}
-                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none hidden md:block">
                     <img src={lifeImg} alt="Life Graphic" className="h-[140px] w-auto object-contain drop-shadow-sm" />
                 </div>
 
                 {/* Left side Graphics */}
-                <div className="absolute left-[-20px] top-1/2 transform -translate-y-1/2 pointer-events-none flex items-center justify-center">
+                <div className="absolute left-[-20px] top-1/2 transform -translate-y-1/2 pointer-events-none hidden md:flex items-center justify-center">
                     {/* Real Cloud Image with faded edges */}
                     <img src={cloudImg} alt="Cloud" className="absolute w-[260px] h-auto object-contain z-0 opacity-80" style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 70%)', maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 70%)' }} />
                     <img src={lifeStyleImg} alt="Lifestyle Graphic" className="h-[140px] w-auto object-contain relative z-10 drop-shadow-md" />
                 </div>
 
-                <div className="w-[1270px] mx-auto flex items-center justify-between relative z-10 pl-[120px]">
+                <div className="w-full max-w-[1270px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between relative z-10 md:pl-[120px] gap-4 md:gap-0">
                     {/* Center Title */}
-                    <div className="flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex flex-col justify-center w-full md:w-auto">
+                        <div className="flex items-center gap-2 mb-3 md:mb-1.5">
                             <span className="text-white text-[11px] font-bold px-2 py-0.5 rounded-[2px] leading-tight shadow-sm" style={{ border: '1px solid white' }}>Hindi News</span>
                             <span className="text-white text-[13px] font-bold">/ लाइफस्टाइल</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="bg-transparent flex items-center justify-center border-2 border-white rounded-full p-2">
-                                <BiDrink className="text-white w-[30px] h-[30px]" />
+                        <div className="flex items-center justify-between w-full md:w-auto">
+                            <div className="flex items-center gap-3">
+                                {/* Mobile Icon */}
+                                <BiDrink className="text-white w-10 h-10 md:hidden" />
+                                {/* Desktop Icon */}
+                                <div className="hidden md:flex bg-transparent items-center justify-center border-2 border-white rounded-full p-2">
+                                    <BiDrink className="text-white w-[30px] h-[30px]" />
+                                </div>
+                                <h1 className="text-white text-[32px] md:text-[46px] font-black tracking-wide drop-shadow-md" style={{ fontFamily: '"Mukta", sans-serif' }}>लाइफ Style</h1>
                             </div>
-                            <h1 className="text-white text-[46px] font-black tracking-wide drop-shadow-md" style={{ fontFamily: '"Mukta", sans-serif' }}>लाइफ Style</h1>
+                            
+                            {/* Mobile Socials */}
+                            <div className="flex items-center gap-3 text-white md:hidden">
+                                <FaWhatsapp size={16} className="cursor-pointer hover:text-green-400 drop-shadow-sm" />
+                                <FaFacebookF size={15} className="cursor-pointer hover:text-blue-500 drop-shadow-sm" />
+                                <FaXTwitter size={15} className="cursor-pointer hover:text-black drop-shadow-sm" />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Right side Feedback & Socials */}
-                    <div className="flex flex-col items-end gap-3 pr-[40px]">
+                    {/* Right side Feedback & Socials (Desktop) */}
+                    <div className="hidden md:flex flex-col items-end gap-3 pr-[40px]">
                         <button className="bg-white text-[#d32f2f] text-[12px] font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm hover:bg-gray-100 transition-colors">
                             <Pencil size={12} strokeWidth={3} /> Feedback
                         </button>
@@ -96,14 +108,14 @@ export default function Lifestyle() {
             </div>
             
             {/* Main Content Area */}
-            <div className="w-[1270px] mx-auto py-10">
-                <div className="flex gap-6 mt-2">
+            <div className="w-full max-w-[1270px] mx-auto px-4 py-6 md:py-10">
+                <div className="flex flex-col lg:flex-row gap-6 mt-2">
                     {/* Left Main Content */}
-                    <div className="w-[70%] flex flex-col gap-4">
+                    <div className="w-full lg:w-[70%] flex flex-col gap-4">
                         {/* Top Row: 2 columns */}
-                        <div className="grid grid-cols-3 gap-4 h-[360px]">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[360px]">
                             {/* Main Article (Takes 2 columns) */}
-                            <Link to={`/news/${mainNews.slug || mainNews._id}`} className="col-span-2 relative group cursor-pointer overflow-hidden shadow-sm bg-black border border-gray-200 block">
+                            <Link to={`/news/${mainNews.slug || mainNews._id}`} className="col-span-1 md:col-span-2 relative group cursor-pointer overflow-hidden shadow-sm bg-black border border-gray-200 block h-[250px] md:h-auto">
                                 {mainNews.image ? (
                                     <img src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100" />
                                 ) : (
@@ -134,7 +146,7 @@ export default function Lifestyle() {
                         </div>
 
                         {/* Bottom Row: 3 columns */}
-                        <div className="grid grid-cols-3 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                             {bottomNews.map((news, idx) => (
                                 <Link to={`/news/${news.slug || news._id}`} key={idx} className="col-span-1 bg-white shadow-sm flex flex-col group cursor-pointer border border-gray-200 block">
                                     <div className="w-full h-[180px] overflow-hidden relative">
@@ -155,7 +167,7 @@ export default function Lifestyle() {
 
                         {/* Rest of the news */}
                         {newsData.length > 5 && (
-                            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
                                 {newsData.slice(5).map((news, idx) => (
                                     <Link to={`/news/${news.slug || news._id}`} key={idx} className="col-span-1 bg-white shadow-sm flex flex-col group cursor-pointer border border-gray-200 block">
                                         <div className="w-full h-[180px] overflow-hidden relative">
@@ -177,7 +189,7 @@ export default function Lifestyle() {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-[30%] bg-white p-5 shadow-sm border border-gray-200 h-fit sticky top-4">
+                    <div className="w-full lg:w-[30%] bg-white p-5 shadow-sm border border-gray-200 h-fit lg:sticky lg:top-4">
                         <div className="flex items-center gap-2 mb-4 border-b-[2px] border-gray-100 pb-2">
                             <div className="w-0 h-0 border-t-[10px] border-t-[#d91f26] border-l-[10px] border-l-transparent"></div>
                             <h2 className="text-[20px] font-black text-black">लेटेस्ट</h2>
