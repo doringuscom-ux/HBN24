@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 export default function BusinessSection({ news = [] }) {
     const safeNews = (index) => {
         if (news[index]) return { image: news[index].image, title: news[index].title, _id: news[index].slug || news[index]._id };
-        return { image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop", title: "Loading...", _id: "loading" };
+        return { image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", title: "Loading...", _id: "loading" };
     };
 
     const mainNews = safeNews(0);
@@ -46,8 +46,8 @@ export default function BusinessSection({ news = [] }) {
                         <div className="flex flex-col justify-between md:pr-6 border-b md:border-b-0 md:border-r border-[#e0e0e0] pb-6 md:pb-0">
                             {middleNewsList.map((news, index) => (
                                 <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-4 group cursor-pointer ${index !== middleNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''}`}>
-                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
-                                        <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0 bg-gray-50 rounded">
+                                        <img src={news.image} alt={news.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1 flex pt-0.5">
                                         <h3 className="text-[#000] text-[16px] font-medium leading-[1.3] group-hover:text-[#d91f26] transition-colors">
@@ -62,8 +62,8 @@ export default function BusinessSection({ news = [] }) {
                         <div className="flex flex-col justify-between md:pl-2">
                             {rightNewsList.map((news, index) => (
                                 <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex flex-col sm:flex-row gap-4 group cursor-pointer ${index !== rightNewsList.length - 1 ? 'border-b border-[#e0e0e0] pb-4 mb-4' : ''}`}>
-                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0">
-                                        <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    <div className="w-full sm:w-[110px] aspect-[16/9] overflow-hidden flex-shrink-0 bg-gray-50 rounded">
+                                        <img src={news.image} alt={news.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1 flex pt-0.5">
                                         <h3 className="text-[#000] text-[16px] font-medium leading-[1.3] group-hover:text-[#d91f26] transition-colors">

@@ -10,7 +10,7 @@ export default function ReligionSection({ news = [] }) {
         title: news[0].title,
         _id: news[0].slug || news[0]._id
     } : {
-        image: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=600&auto=format&fit=crop", 
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", 
         title: "Loading...",
         _id: "loading"
     };
@@ -23,7 +23,7 @@ export default function ReligionSection({ news = [] }) {
 
     while (sideNews.length < 3) {
         sideNews.push({
-            image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=400&auto=format&fit=crop",
+            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E",
             title: "Loading...",
             _id: "loading"
         });

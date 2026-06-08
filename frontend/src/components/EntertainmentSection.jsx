@@ -7,9 +7,9 @@ export default function EntertainmentSection({ news = [] }) {
     const safeNews = (index) => {
         if (news[index]) return { image: news[index].image, title: news[index].title, id: news[index].slug || news[index]._id };
         return { 
-            image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop", 
+            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", 
             title: "Loading...", 
-            id: "loading" 
+            id: `loading-${index}`
         };
     };
 
@@ -53,11 +53,11 @@ export default function EntertainmentSection({ news = [] }) {
 
                     {/* Secondary Left Feature */}
                     <Link to={subMain.id !== 'loading' && typeof subMain.id === 'string' ? `/news/${subMain.id}` : '#'} className="flex gap-4 group cursor-pointer border-t border-gray-200 pt-4 block">
-                        <div className="w-1/2 overflow-hidden">
+                        <div className="w-1/2 overflow-hidden bg-gray-50 rounded">
                             <img 
                                 src={subMain.image} 
                                 alt={subMain.title}
-                                className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
                             />
                         </div>
                         <div className="w-1/2 flex items-center">
@@ -73,11 +73,11 @@ export default function EntertainmentSection({ news = [] }) {
                     {list.map((item, index) => (
                         <React.Fragment key={item.id}>
                             <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
-                                <div className="w-1/2 overflow-hidden relative">
+                                <div className="w-1/2 overflow-hidden relative bg-gray-50 rounded">
                                     <img 
                                         src={item.image} 
                                         alt={item.title}
-                                        className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                        className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
                                     />
                                 </div>
                                 <div className="w-1/2 flex items-center">
@@ -98,11 +98,11 @@ export default function EntertainmentSection({ news = [] }) {
                     {list2.map((item, index) => (
                         <React.Fragment key={item.id}>
                             <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
-                                <div className="w-1/2 overflow-hidden relative">
+                                <div className="w-1/2 overflow-hidden relative bg-gray-50 rounded">
                                     <img 
                                         src={item.image} 
                                         alt={item.title}
-                                        className="w-full h-[120px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                        className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
                                     />
                                 </div>
                                 <div className="w-1/2 flex items-center">

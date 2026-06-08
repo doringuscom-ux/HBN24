@@ -17,7 +17,7 @@ export default function ShortVideos({ shorts = [], title = "शॉर्ट व�
         allVideos.push({
             id: Math.random(),
             title: "Loading...",
-            image: "https://images.unsplash.com/photo-1616469829941-c7200edec809?q=80&w=400&auto=format&fit=crop",
+            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E",
             tag: 'शॉर्ट्स',
             link: '#'
         });

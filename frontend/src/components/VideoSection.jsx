@@ -15,7 +15,7 @@ export default function VideoSection({ videos = [] }) {
     
     // Fill with loading placeholders if API fails or hasn't loaded
     while (activeVideos.length < 5) {
-        activeVideos.push({ originalIndex: activeVideos.length, title: "Loading...", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop", duration: "0:00", link: "#" });
+        activeVideos.push({ originalIndex: activeVideos.length, title: "Loading...", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", duration: "0:00", link: "#" });
     }
 
     // Determine current main video

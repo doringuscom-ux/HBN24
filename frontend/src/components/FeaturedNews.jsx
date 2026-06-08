@@ -2,27 +2,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function FeaturedNews({ news = [] }) {
-    const defaultNews = {
-        title: "Loading...",
-        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop",
-        description: "Please wait while we load the latest news...",
-        category: "NEWS"
-    };
-
-    const featured = news.length > 0 ? news[0] : defaultNews;
-
-    if (!featured._id) {
+    if (news.length === 0) {
         return (
-            <div className="w-full bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
-                <div className="relative overflow-hidden">
-                    <img src={featured.image} alt="Featured" className="w-full object-cover bg-gray-100" />
-                </div>
+            <div className="w-full bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 animate-pulse">
+                <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-gray-200"></div>
                 <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
-                    <h1 className="text-[24px] md:text-[34px] font-black text-[#111] mb-4 leading-[1.25]">{featured.title}</h1>
+                    <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-1/2"></div>
                 </div>
             </div>
         );
     }
+
+    const featured = news[0];
 
     let displayCategory = '';
     if (Array.isArray(featured.category)) {
@@ -42,11 +34,13 @@ export default function FeaturedNews({ news = [] }) {
 
     return (
         <Link to={`/news/${featured.slug || featured._id}`} className="block w-full group cursor-pointer bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border border-gray-100">
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden aspect-[16/9] sm:aspect-[21/9]">
                 <img 
                     src={featured.image} 
                     alt="Featured" 
-                    className="w-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-700 ease-out"
+                    fetchPriority="high"
+                    loading="eager"
+                    className="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
                 {displayCategory && (
                     <div className="absolute top-4 left-4 bg-[#da0000] text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg capitalize">

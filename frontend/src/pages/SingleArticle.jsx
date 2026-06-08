@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toJpeg } from 'html-to-image';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageCircle, Share2, Bookmark, Pencil, Trash2 } from 'lucide-react';
 
@@ -116,6 +117,18 @@ export default function SingleArticle() {
                 const newsRes = await fetch(`${__API_URL__}/api/news`);
                 const newsData = await newsRes.json();
 
+                // Optimize Cloudinary images
+                const optimizeCloudinaryUrl = (url) => {
+                    if (!url || typeof url !== 'string') return url;
+                    if (url.includes('cloudinary.com') && url.includes('/upload/') && !url.includes('/upload/q_auto')) {
+                        return url.replace('/upload/', '/upload/q_auto,f_auto,w_800/');
+                    }
+                    return url;
+                };
+
+                articleData.image = optimizeCloudinaryUrl(articleData.image);
+                let optimizedNewsData = newsData.map(n => ({ ...n, image: optimizeCloudinaryUrl(n.image) }));
+
                 setArticle(articleData);
                 setLikes(articleData.likes || 0);
 
@@ -136,7 +149,7 @@ export default function SingleArticle() {
                 }
 
                 // Filter out the current article from sidebar
-                setLatestNews(newsData.filter(n => n._id !== articleData._id).slice(0, 8));
+                setLatestNews(optimizedNewsData.filter(n => n._id !== articleData._id).slice(0, 8));
 
                 // Fetch comments
                 const commentsRes = await fetch(`${__API_URL__}/api/news/${articleData._id}/comments`);
@@ -361,8 +374,8 @@ export default function SingleArticle() {
                             const isLast = index === relatedArticlesToInject.length - 1;
                             return `
                                 <a href="${linkUrl}" class="flex-none w-[280px] sm:w-[320px] flex gap-3 snap-start border-r border-gray-200 pr-4 ${isLast ? 'border-r-0 pr-0' : ''}" style="text-decoration: none !important;">
-                                    <div class="w-[100px] sm:w-[120px] h-[70px] sm:h-[80px] flex-shrink-0 overflow-hidden">
-                                        <img src="${related.image}" alt="News" class="w-full h-full object-cover" />
+                                    <div class="w-[120px] sm:w-[140px] h-[90px] sm:h-[100px] flex-shrink-0 overflow-hidden bg-gray-50 rounded">
+                                        <img src="${related.image}" alt="News" class="w-full h-full object-contain" />
                                     </div>
                                     <div class="flex-1">
                                         <span class="font-bold hover:text-[#da0000] transition-colors block" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: #111827 !important; font-size: 15px !important; line-height: 1.3 !important;">
@@ -610,7 +623,7 @@ export default function SingleArticle() {
                             <Link to={`/news/${news.slug || news._id}`} key={news._id} className="flex gap-4 group cursor-pointer border-b border-gray-100 pb-4 last:border-0">
                                 <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px]">
                                     <img
-                                        src={news.image || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop"}
+                                        src={news.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E"}
                                         alt={news.title}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                     />

@@ -26,11 +26,11 @@ export default function SidebarNews({ news = [] }) {
                 {displayNews.map((item, index) => (
                     <Link to={`/news/${item.slug || item._id}`} key={item._id || index} className="flex gap-4 group cursor-pointer border-b border-gray-100 pb-4 last:border-0">
                         {/* Image */}
-                        <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px]">
+                        <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px] bg-gray-50">
                             <img
-                                src={item.image || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop"}
+                                src={item.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E"}
                                 alt={item.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
                             />
                         </div>
 

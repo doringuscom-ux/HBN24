@@ -258,14 +258,14 @@ export default function AajTakNavbar() {
                 </button>
 
                 {/* Logo */}
-                <div className="flex items-center justify-center flex-shrink-0 mr-8 group cursor-pointer h-full z-50">
+                <Link to="/" className="flex items-center justify-center flex-shrink-0 mr-8 group cursor-pointer h-full z-50">
                     <img
                         src={logo}
                         alt="HBN 24"
                         className="h-full w-auto object-contain rounded-[4px] scale-[1.6] group-hover:scale-[1.7] transition-transform duration-300 transform-gpu"
                         style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                     />
-                </div>
+                </Link>
 
                 {/* Desktop Navigation */}
                 <div className="hidden xl:flex items-center h-full flex-1">

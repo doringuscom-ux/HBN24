@@ -144,6 +144,56 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
+// Optimized route for Homepage
+app.get('/api/news/home', async (req, res) => {
+    try {
+        const categories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast', 'featured'];
+        
+        // Fire parallel queries for each category + mix news + fallback news
+        const queries = categories.map(cat => 
+            News.find({ category: cat }).sort({ createdAt: -1 }).limit(12)
+        );
+        
+        // Get 12 latest mix news (not in the specific categories)
+        queries.push(
+            News.find({ category: { $nin: categories } }).sort({ createdAt: -1 }).limit(12)
+        );
+        
+        // Get 20 latest general news for fallbacks
+        queries.push(
+            News.find().sort({ createdAt: -1 }).limit(20)
+        );
+
+        const results = await Promise.all(queries);
+        
+        const homeData = {};
+        categories.forEach((cat, index) => {
+            homeData[cat] = results[index];
+        });
+        homeData.mixNews = results[categories.length];
+        const latestFallback = results[categories.length + 1];
+
+        // Apply fallback filling logic
+        const fillNews = (categoryNews) => {
+            if (categoryNews.length >= 12) return categoryNews;
+            const borrowed = latestFallback.filter(n => !categoryNews.some(cn => cn._id.equals(n._id)));
+            return [...categoryNews, ...borrowed].slice(0, 12);
+        };
+
+        homeData.mixNews = fillNews(homeData.mixNews);
+        categories.forEach(cat => {
+            homeData[cat] = fillNews(homeData[cat]);
+        });
+        
+        homeData.latestNews = latestFallback;
+
+        res.json(homeData);
+    } catch (error) {
+        console.error('Error fetching home news:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Search route
 app.get('/api/news/search', async (req, res) => {
     try {

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 export default function LifestyleSection({ news = [] }) {
     const safeNews = (index) => {
         if (news[index]) return { image: news[index].image, title: news[index].title, _id: news[index].slug || news[index]._id };
-        return { image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop", title: "Loading...", _id: "loading" };
+        return { image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", title: "Loading...", _id: "loading" };
     };
 
     const mainNews = safeNews(0);
