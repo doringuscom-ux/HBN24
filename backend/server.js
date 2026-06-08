@@ -144,9 +144,17 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
+// Cache for Homepage API
+let homeCache = { data: null, timestamp: 0 };
+
 // Optimized route for Homepage
 app.get('/api/news/home', async (req, res) => {
     try {
+        // Return from cache if younger than 2 minutes (120,000 ms)
+        const now = Date.now();
+        if (homeCache.data && (now - homeCache.timestamp < 120000)) {
+            return res.json(homeCache.data);
+        }
         const categories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast', 'featured'];
         
         // Fire parallel queries for each category + mix news + fallback news
@@ -186,6 +194,9 @@ app.get('/api/news/home', async (req, res) => {
         });
         
         homeData.latestNews = latestFallback;
+
+        // Update cache
+        homeCache = { data: homeData, timestamp: Date.now() };
 
         res.json(homeData);
     } catch (error) {

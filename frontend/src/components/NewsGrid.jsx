@@ -15,6 +15,9 @@ export default function NewsGrid({ news = [] }) {
                         <img
                             src={item.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E"}
                             alt={item.title}
+                            loading="lazy"
+                            width="140"
+                            height="90"
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                         {/* Icons */}

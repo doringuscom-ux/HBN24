@@ -95,7 +95,7 @@ export default function VideoSection({ videos = [] }) {
                                     onClick={(e) => handleVideoClick(e, mainVideo.originalIndex)}
                                     className="block w-full h-full cursor-pointer group"
                                 >
-                                    <img src={mainVideo.image} alt={mainVideo.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img loading="lazy" width="400" height="250" src={mainVideo.image} alt={mainVideo.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                     <div className="main-gradient absolute inset-0 pointer-events-none"></div>
                                     <div className="main-caption absolute bottom-0 left-0 w-full p-4 pointer-events-none z-10">
                                         <h3 className="text-white text-xl font-bold">{mainVideo.title}</h3>
@@ -147,7 +147,7 @@ function VideoCard({ video, onClick, isPlaying }) {
             className="video-card block cursor-pointer group mb-4 md:mb-0"
         >
             <div className="video-thumb overflow-hidden relative">
-                <img src={video.image} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img loading="lazy" width="400" height="250" src={video.image} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="duration">
                     <span className="small-play">▶</span>
                     {video.duration}

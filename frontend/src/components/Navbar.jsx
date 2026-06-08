@@ -390,7 +390,7 @@ export default function AajTakNavbar() {
                                                     onClick={() => setNotificationsOpen(false)}
                                                     className="flex items-start gap-3 p-3 pr-8"
                                                 >
-                                                    <img 
+                                                    <img loading="lazy" width="400" height="250" 
                                                         src={news.image || '/favicon.png'} 
                                                         alt="" 
                                                         className="w-20 h-14 object-cover rounded-md flex-shrink-0"

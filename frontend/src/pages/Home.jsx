@@ -21,6 +21,19 @@ export default function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // 1. Instantly load from cache if available (SWR pattern)
+                const cachedNews = localStorage.getItem('hbn24_home_cache');
+                const cachedVideos = localStorage.getItem('hbn24_video_cache');
+                if (cachedNews && cachedVideos) {
+                    setNews(JSON.parse(cachedNews));
+                    const v = JSON.parse(cachedVideos);
+                    setVideos(v.videos || []);
+                    setShorts(v.shorts || []);
+                    setNews24Shorts(v.news24Shorts || []);
+                    setLoading(false); // Instantly stop loading screen!
+                }
+
+                // 2. Fetch fresh data in the background
                 const [newsRes, videoRes] = await Promise.all([
                     fetch(__API_URL__ + '/api/news/home'),
                     fetch(__API_URL__ + '/api/youtube')
@@ -52,6 +65,10 @@ export default function Home() {
                 setShorts(videoData.shorts || []);
                 setNews24Shorts(videoData.news24Shorts || []);
                 setLoading(false);
+
+                // 3. Update the cache with fresh data for next time
+                localStorage.setItem('hbn24_home_cache', JSON.stringify(newsData));
+                localStorage.setItem('hbn24_video_cache', JSON.stringify(videoData));
             } catch (err) {
                 console.error("Error fetching home data:", err);
                 setLoading(false);

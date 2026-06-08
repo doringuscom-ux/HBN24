@@ -38,7 +38,7 @@ export default function EntertainmentSection({ news = [] }) {
                     {/* Main Feature */}
                     <Link to={main.id !== 'loading' && typeof main.id === 'string' ? `/news/${main.id}` : '#'} className="relative group cursor-pointer block">
                         <div className="overflow-hidden bg-black rounded-[4px]">
-                            <img 
+                            <img loading="lazy" width="400" height="250" 
                                 src={main.image} 
                                 alt={main.title}
                                 className="w-full h-[272px] object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
@@ -54,7 +54,7 @@ export default function EntertainmentSection({ news = [] }) {
                     {/* Secondary Left Feature */}
                     <Link to={subMain.id !== 'loading' && typeof subMain.id === 'string' ? `/news/${subMain.id}` : '#'} className="flex gap-4 group cursor-pointer border-t border-gray-200 pt-4 block">
                         <div className="w-1/2 overflow-hidden bg-gray-50 rounded">
-                            <img 
+                            <img loading="lazy" width="400" height="250" 
                                 src={subMain.image} 
                                 alt={subMain.title}
                                 className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
@@ -74,7 +74,7 @@ export default function EntertainmentSection({ news = [] }) {
                         <React.Fragment key={item.id}>
                             <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
                                 <div className="w-1/2 overflow-hidden relative bg-gray-50 rounded">
-                                    <img 
+                                    <img loading="lazy" width="400" height="250" 
                                         src={item.image} 
                                         alt={item.title}
                                         className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
@@ -99,7 +99,7 @@ export default function EntertainmentSection({ news = [] }) {
                         <React.Fragment key={item.id}>
                             <Link to={item.id !== 'loading' && typeof item.id === 'string' ? `/news/${item.id}` : '#'} className="flex gap-4 group cursor-pointer block">
                                 <div className="w-1/2 overflow-hidden relative bg-gray-50 rounded">
-                                    <img 
+                                    <img loading="lazy" width="400" height="250" 
                                         src={item.image} 
                                         alt={item.title}
                                         className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"

@@ -31,7 +31,7 @@ export default function LifestyleSection({ news = [] }) {
                         {/* Left Column (Main News) */}
                         <Link to={mainNews._id !== 'loading' ? `/news/${mainNews._id}` : '#'} className="group cursor-pointer flex flex-col gap-3 block">
                             <div className="w-full aspect-[16/9] overflow-hidden">
-                                <img src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                <img loading="lazy" width="400" height="250" src={mainNews.image} alt={mainNews.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             </div>
                             <h3 className="text-[#000] text-[22px] font-bold leading-[1.3] group-hover:text-[#d91f26] transition-colors pr-4">
                                 {mainNews.title}
@@ -43,7 +43,7 @@ export default function LifestyleSection({ news = [] }) {
                             {sideNews.map((news, index) => (
                                 <Link to={news._id !== 'loading' ? `/news/${news._id}` : '#'} key={index} className={`flex gap-4 pb-4 ${index !== sideNews.length - 1 ? 'border-b border-[#e0e0e0] mb-4' : ''} group cursor-pointer block`}>
                                     <div className="w-[155px] flex-shrink-0 overflow-hidden">
-                                        <img src={news.image} alt={news.title} className="w-full h-[85px] object-cover group-hover:scale-105 transition-transform duration-300" />
+                                        <img loading="lazy" width="400" height="250" src={news.image} alt={news.title} className="w-full h-[85px] object-cover group-hover:scale-105 transition-transform duration-300" />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="text-[#000] text-[18px] leading-[1.3] font-medium group-hover:text-[#d91f26] transition-colors mt-0.5">

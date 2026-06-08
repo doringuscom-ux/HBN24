@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from "./components/Navbar"
-import Home from "./pages/Home"
-import Entertainment from "./pages/Entertainment"
-import Religion from "./pages/Religion"
-import Sports from "./pages/Sports"
-import Lifestyle from "./pages/Lifestyle"
-import Business from "./pages/Business"
-import Technology from "./pages/Technology"
-import SingleArticle from "./pages/SingleArticle"
-import AdminDashboard from "./pages/AdminDashboard"
-import AdminLogin from "./pages/AdminLogin"
 import Footer from "./components/Footer"
-import Epaper from "./pages/Epaper"
-import NotFound from "./pages/NotFound"
-import Search from "./pages/Search"
+import Home from "./pages/Home"
+
+const Entertainment = lazy(() => import('./pages/Entertainment'));
+const Religion = lazy(() => import('./pages/Religion'));
+const Sports = lazy(() => import('./pages/Sports'));
+const Lifestyle = lazy(() => import('./pages/Lifestyle'));
+const Business = lazy(() => import('./pages/Business'));
+const Technology = lazy(() => import('./pages/Technology'));
+const SingleArticle = lazy(() => import('./pages/SingleArticle'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const Epaper = lazy(() => import('./pages/Epaper'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Search = lazy(() => import('./pages/Search'));
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
@@ -122,35 +123,37 @@ function AppContent() {
   return (
     <div className={`min-h-screen ${isAdmin ? 'bg-gray-100' : 'bg-white'}`}>
       {!isAdmin && <Navbar />}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/entertainment" element={<Entertainment />} />
-        <Route path="/religion" element={<Religion />} />
-        <Route path="/sports" element={<Sports />} />
-        <Route path="/lifestyle" element={<Lifestyle />} />
-        <Route path="/business" element={<Business />} />
-        <Route path="/technology" element={<Technology />} />
-        <Route path="/epaper" element={<Epaper />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/news/:id" element={<SingleArticle />} />
-        <Route 
-          path="/admin/login" 
-          element={
-            <PublicRoute>
-              <AdminLogin />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div></div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/entertainment" element={<Entertainment />} />
+          <Route path="/religion" element={<Religion />} />
+          <Route path="/sports" element={<Sports />} />
+          <Route path="/lifestyle" element={<Lifestyle />} />
+          <Route path="/business" element={<Business />} />
+          <Route path="/technology" element={<Technology />} />
+          <Route path="/epaper" element={<Epaper />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/news/:id" element={<SingleArticle />} />
+          <Route 
+            path="/admin/login" 
+            element={
+              <PublicRoute>
+                <AdminLogin />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
       {!isAdmin && <Footer />}
     </div>
   );
