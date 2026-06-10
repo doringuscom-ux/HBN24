@@ -240,10 +240,11 @@ export default function Epaper() {
         
         try {
             const filter = (node) => {
-                // Ignore Google Translate elements and iframes to prevent fetch errors
+                // Ignore Google Translate elements, iframes, and the cutting button
                 if (node.tagName === 'IFRAME') return false;
                 if (node.classList && node.classList.contains('skiptranslate')) return false;
                 if (node.id === 'google_translate_element') return false;
+                if (node.classList && node.classList.contains('cutting-btn')) return false;
                 return true;
             };
 
@@ -340,9 +341,9 @@ export default function Epaper() {
 
                         // Dynamic column spans
                         let colSpan = 'col-span-1';
-                        if (style === 'headline') colSpan = 'md:col-span-3 border-r-2 border-black/20 md:pr-6 md:pb-6';
-                        if (style === 'double-column') colSpan = 'md:col-span-2 border-r border-black/15 md:pr-4 md:pb-6';
-                        if (style === 'bottom-wide') colSpan = 'md:col-span-2 border-l border-black/15 md:pl-4';
+                        if (style === 'headline') colSpan = 'md:col-span-3 md:border-r-2 border-black/20 md:pr-6 md:pb-6';
+                        if (style === 'double-column') colSpan = 'md:col-span-2 md:border-r border-black/15 md:pr-4 md:pb-6';
+                        if (style === 'bottom-wide') colSpan = 'md:col-span-2 md:border-l border-black/15 md:pl-4';
                         if (style === 'feature') colSpan = 'md:col-span-1';
 
                         return (
@@ -351,18 +352,19 @@ export default function Epaper() {
                                 className={`${colSpan} group break-inside-avoid pb-5 ${idx !== paginatedNews.length - 1 ? 'border-b md:border-b-0' : ''
                                     }`}
                             >
-                                <article id={`article-${item._id}`} className="h-full flex flex-col p-4 -m-4 rounded transition-colors hover:bg-black/5 relative">
-                                    {/* Download Cutting Button - Only visible on hover or mobile */}
-                                    <button 
-                                        onClick={() => downloadNewsCutting(item._id, item.title)}
-                                        className="absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
-                                        title="न्यूज़ की कटिंग डाउनलोड करें"
-                                    >
-                                        ✂️ कटिंग लें
-                                    </button>
+                                <div className="h-full -m-4 rounded transition-colors hover:bg-black/5">
+                                    <article id={`article-${item._id}`} className="h-full flex flex-col p-4 relative">
+                                        {/* Download Cutting Button - Only visible on hover or mobile */}
+                                        <button 
+                                            onClick={() => downloadNewsCutting(item._id, item.title)}
+                                            className="cutting-btn absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
+                                            title="न्यूज़ की कटिंग डाउनलोड करें"
+                                        >
+                                            ✂️ कटिंग लें
+                                        </button>
 
-                                    {/* category stripe */}
-                                    <div className="mb-2 flex items-center gap-2 pr-20">
+                                        {/* category stripe */}
+                                        <div className="mb-2 flex items-center gap-2 pr-20">
                                         <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 tracking-wider">
                                             {catHindi}
                                         </span>
@@ -418,9 +420,9 @@ export default function Epaper() {
                                     )}
 
                                     {/* Article text with real dropcap on headline */}
-                                    <div className={`text-gray-800 text-justify flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
+                                    <div className={`text-gray-800 text-left md:text-justify break-words flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
                                         <p
-                                            className={`text-sm leading-relaxed ${style === 'headline'
+                                            className={`text-sm leading-relaxed break-words ${style === 'headline'
                                                     ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[25]'
                                                     : style === 'double-column'
                                                     ? 'line-clamp-[16]'
@@ -434,6 +436,7 @@ export default function Epaper() {
                                     {/* Auto-filler Game for empty space on right side */}
                                     {style === 'double-column' && <NewspaperGame />}
                                 </article>
+                                </div>
                             </div>
                         );
                     })}
