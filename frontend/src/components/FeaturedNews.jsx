@@ -42,13 +42,9 @@ export default function FeaturedNews({ news = [] }) {
                     alt="Featured" 
                     fetchPriority="high"
                     loading="eager"
-                    className="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover bg-gray-100 group-hover:scale-95 transition-transform duration-700 ease-out rounded-[12px] group-hover:rounded-[16px]"
                 />
-                {displayCategory && (
-                    <div className="absolute top-4 left-4 bg-[#da0000] text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg capitalize">
-                        {displayCategory}
-                    </div>
-                )}
+                {/* Category badge removed as requested */}
             </div>
             <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
                 <h1 className="text-[24px] md:text-[34px] font-black text-[#111] mb-4 group-hover:text-[#da0000] transition-colors leading-[1.25]">

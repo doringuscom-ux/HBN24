@@ -166,9 +166,25 @@ export default function Epaper() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [suvicharText, setSuvicharText] = useState('मंजिलें क्या हैं, रास्ता क्या है? हौसला हो तो फासला क्या है?');
     const itemsPerPage = 11; // 11 stories per page to allow the last one to be wide
 
     useEffect(() => {
+        const fetchSuvichar = async () => {
+            try {
+                const res = await fetch(__API_URL__ + '/api/suvichar');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.text) {
+                        setSuvicharText(data.text);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching suvichar:', error);
+            }
+        };
+        fetchSuvichar();
+
         const fetchEpaperNews = async () => {
             try {
                 const res = await fetch(__API_URL__ + '/api/news');
@@ -235,35 +251,82 @@ export default function Epaper() {
     const timeIcon = (currentHour >= 6 && currentHour < 18) ? '☀️' : '🌙';
 
     const downloadNewsCutting = async (id, title) => {
-        const element = document.getElementById(`article-${id}`);
-        if (!element) return;
+        const articleElement = document.getElementById(`article-${id}`);
+        const mastheadElement = document.getElementById('epaper-masthead');
+        if (!articleElement || !mastheadElement) return;
         
         try {
+            // Create a temporary container
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '0';
+            tempContainer.style.top = '0';
+            tempContainer.style.zIndex = '-9999'; // Hide behind current UI
+            tempContainer.style.width = '1200px'; // Force desktop width
+            tempContainer.style.backgroundColor = '#fef7e6';
+            tempContainer.style.backgroundImage = 'url("https://www.transparenttextures.com/patterns/old-paper-texture.png")';
+            tempContainer.style.padding = '20px 40px';
+            tempContainer.style.boxSizing = 'border-box';
+            tempContainer.style.display = 'flex';
+            tempContainer.style.flexDirection = 'column';
+            tempContainer.style.gap = '30px';
+
+            // Clone masthead and force desktop visibility
+            const mastheadClone = mastheadElement.cloneNode(true);
+            const hiddenElements = mastheadClone.querySelectorAll('.hidden.md\\:flex');
+            hiddenElements.forEach(el => {
+                el.classList.remove('hidden', 'md:flex');
+                el.style.display = 'flex';
+            });
+            
+            // Clone article and clean it up
+            const articleClone = articleElement.cloneNode(true);
+            const cuttingBtn = articleClone.querySelector('.cutting-btn');
+            if (cuttingBtn) cuttingBtn.remove();
+            
+            // Enhance article styling for standalone download
+            articleClone.style.border = '4px solid #1e293b';
+            articleClone.style.padding = '25px';
+            articleClone.style.backgroundColor = '#ffffff';
+            articleClone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+            articleClone.style.width = '100%';
+
+            tempContainer.appendChild(mastheadClone);
+            tempContainer.appendChild(articleClone);
+            
+            // Append to the root so styles apply perfectly
+            document.getElementById('root').appendChild(tempContainer);
+
+            // Wait for browser to calculate layout of the new cloned DOM
+            await new Promise(resolve => setTimeout(resolve, 300));
+
             const filter = (node) => {
-                // Ignore Google Translate elements, iframes, and the cutting button
                 if (node.tagName === 'IFRAME') return false;
                 if (node.classList && node.classList.contains('skiptranslate')) return false;
                 if (node.id === 'google_translate_element') return false;
-                if (node.classList && node.classList.contains('cutting-btn')) return false;
                 return true;
             };
 
-            const dataUrl = await toJpeg(element, {
+            const dataUrl = await toJpeg(tempContainer, {
                 quality: 0.95,
                 backgroundColor: '#fef7e6',
                 pixelRatio: 2,
                 filter: filter
             });
             
+            document.getElementById('root').removeChild(tempContainer);
+            
             const link = document.createElement('a');
             link.href = dataUrl;
-            // Clean title for filename
             const cleanTitle = title.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_').substring(0, 30);
             link.download = `HBN24_News_Cutting_${cleanTitle}.jpg`;
             link.click();
         } catch (error) {
             console.error("Error generating cutting:", error);
             alert("Failed to download cutting. Please try again.");
+            // Clean up
+            const temp = document.getElementById('root').querySelector('div[style*="-9999"]');
+            if (temp) document.getElementById('root').removeChild(temp);
         }
     };
 
@@ -287,24 +350,44 @@ export default function Epaper() {
                 }}
             >
                 {/* ========== REAL NEWSPAPER MASTHEAD ========== */}
-                <div className="border-b-[6px] border-black/20 pb-4 pt-6 px-6 text-center">
-                    <div className="flex justify-center text-[11px] font-mono border-b border-black/20 pb-1 mb-2 text-gray-700 uppercase">
-                        <span>अंक 1</span>
-                    </div>
-                    <div className="inline-block relative">
-                        <div className="text-right text-xs sm:text-sm md:text-xl font-bold text-gray-800 pr-1 md:pr-2 font-sans tracking-wide">
-                            सच्ची खबर, बेबाक नजर
+                <div id="epaper-masthead" className="border-b-[6px] border-black/20 pb-4 pt-6 px-6 relative">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-4 w-full">
+                        <div className="hidden md:flex w-full md:w-[220px] justify-center md:justify-start shrink-0 mb-auto pt-2 md:pt-4">
+                            <div className="flex flex-col items-center text-center">
+                                <h3 className="text-3xl md:text-4xl font-normal text-[#a61c1c] mb-1 drop-shadow-sm" style={{fontFamily: "'Yatra One', cursive"}}>सुविचार</h3>
+                                <p className="text-[13px] md:text-[15px] font-bold text-gray-800 leading-snug tracking-tight max-w-[180px]">{suvicharText}</p>
+                            </div>
                         </div>
-                        <h1
-                            className="text-[40px] sm:text-6xl md:text-[110px] font-black tracking-tight md:tracking-tighter leading-none text-blue-950 uppercase whitespace-nowrap"
-                            style={{ textShadow: '4px 4px 0 rgba(0,0,0,0.05)' }}
-                        >
-                            HBN NEWS 24
-                        </h1>
+                        <div className="text-center flex-1">
+                            <div className="inline-block relative mt-2 md:mt-4">
+                                <div className="text-center text-[9px] md:text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] -mb-1 md:-mb-2 relative z-10 font-sans">
+                                    A Unit of HBN News 24
+                                </div>
+                                <h1
+                                    className="text-[36px] sm:text-5xl md:text-[68px] lg:text-[90px] font-black tracking-tight leading-tight md:leading-[1.1] text-slate-900 uppercase whitespace-nowrap drop-shadow-sm"
+                                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", letterSpacing: '-0.02em' }}
+                                >
+                                    दैनिक सबसे तेज़
+                                </h1>
+                                <div className="text-center text-[11px] sm:text-[13px] md:text-[16px] font-bold text-[#a61c1c] uppercase -mt-2 md:-mt-4 opacity-90">
+                                    सच्ची खबर, बेबाक नजर
+                                </div>
+                            </div>
+                            <p className="text-[12px] tracking-normal font-mono mt-4 text-gray-700">
+                                राष्ट्रीय हिंदी दैनिक • स्थापना 2024
+                            </p>
+                        </div>
+                        <div className="hidden md:flex w-full md:w-[220px] justify-center md:justify-end shrink-0 mb-auto pt-2 md:pt-4">
+                            <div className="flex flex-col items-end text-right border-r-[3px] border-[#a61c1c] pr-4 opacity-95">
+                                <div className="flex items-center gap-2 mb-1.5 text-[#a61c1c]">
+                                    <span className="text-[22px] md:text-[26px] font-black" style={{fontFamily: "'Yatra One', cursive"}}>ॐ</span>
+                                    <span className="text-[14px] md:text-[16px] font-bold tracking-widest uppercase border-b-2 border-[#a61c1c]/30 pb-0.5">आज का पंचांग</span>
+                                </div>
+                                <div className="text-[18px] md:text-[20px] font-black text-gray-900 tracking-tight leading-tight">ज्येष्ठ कृष्ण पक्ष, तृतीया</div>
+                                <div className="text-[13px] md:text-[15px] font-bold text-gray-600 mt-1">विक्रम संवत 2083 • बुधवार</div>
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-[12px] tracking-normal font-mono mt-2 text-gray-700">
-                        राष्ट्रीय हिंदी दैनिक • स्थापना 2024
-                    </p>
                     <div className="flex flex-wrap justify-between gap-2 text-[12px] font-medium border-t border-b border-black/20 py-2 mt-3 bg-black/5 px-2">
                         <span>
                             {new Date().toLocaleDateString('hi-IN', {
@@ -359,10 +442,10 @@ export default function Epaper() {
                             >
                                 <div className="h-full -m-4 rounded transition-colors hover:bg-black/5">
                                     <article id={`article-${item._id}`} className="h-full flex flex-col p-4 relative">
-                                        {/* Download Cutting Button - Only visible on hover or mobile */}
+                                        {/* Download Cutting Button - Visible on mobile, hover on desktop */}
                                         <button 
                                             onClick={() => downloadNewsCutting(item._id, item.title)}
-                                            className="cutting-btn absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
+                                            className="cutting-btn absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
                                             title="न्यूज़ की कटिंग डाउनलोड करें"
                                         >
                                             ✂️ कटिंग लें

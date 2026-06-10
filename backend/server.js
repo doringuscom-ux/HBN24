@@ -55,6 +55,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
 const rashifalRoutes = require('./src/routes/rashifalRoutes');
 const seoRoutes = require('./src/routes/seoRoutes');
+const suvicharRoutes = require('./src/routes/suvicharRoutes');
 const authMiddleware = require('./src/middleware/authMiddleware');
 
 app.use('/api/epaper', epaperRoutes);
@@ -62,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/rashifal', rashifalRoutes);
 app.use('/api/seo', seoRoutes);
+app.use('/api/suvichar', suvicharRoutes);
 
 // Add a root route so Vercel doesn't show "Cannot GET /"
 app.get('/', (req, res) => {

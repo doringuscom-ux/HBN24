@@ -37,6 +37,8 @@ export default function AdminDashboard() {
     const [newUser, setNewUser] = useState({ username: '', password: '' });
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
+    const [suvicharText, setSuvicharText] = useState('');
+    const [isGeneratingSuvichar, setIsGeneratingSuvichar] = useState(false);
     const [seoData, setSeoData] = useState({
         googleAnalyticsId: '',
         liveTvUrl: '',
@@ -68,6 +70,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         fetchNews();
         fetchRashifal();
+        fetchSuvichar();
         fetchSeo();
         fetchUsers();
     }, []);
@@ -362,6 +365,64 @@ export default function AdminDashboard() {
             alert('Error generating Rashifal');
         } finally {
             setIsGeneratingRashifal(false);
+        }
+    };
+
+    const fetchSuvichar = async () => {
+        try {
+            const res = await fetch(__API_URL__ + '/api/suvichar');
+            const data = await res.json();
+            if (data && data.text) {
+                setSuvicharText(data.text);
+            }
+        } catch (error) {
+            console.error('Error fetching suvichar:', error);
+        }
+    };
+
+    const handleSuvicharSave = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/suvichar', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ text: suvicharText })
+            });
+            if (res.status === 401) {
+                navigate('/admin/login');
+                return;
+            }
+            alert('Suvichar saved successfully!');
+        } catch (error) {
+            console.error('Error saving suvichar:', error);
+            alert('Error saving suvichar');
+        }
+    };
+
+    const handleGenerateSuvichar = async () => {
+        setIsGeneratingSuvichar(true);
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/suvichar/generate-ai', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Suvichar Generated Successfully!');
+                if (data.data && data.data.text) {
+                    setSuvicharText(data.data.text);
+                }
+            } else {
+                alert(data.message || 'Failed to generate Suvichar');
+            }
+        } catch (err) {
+            alert('Error generating Suvichar');
+        } finally {
+            setIsGeneratingSuvichar(false);
         }
     };
 
@@ -671,6 +732,12 @@ export default function AdminDashboard() {
                         <Settings size={20} className={currentView === 'rashifal' ? 'text-red-500' : ''} /> Rashifal
                     </button>
                     <button 
+                        onClick={() => setCurrentView('suvichar')}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'suvichar' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <FileText size={20} className={currentView === 'suvichar' ? 'text-red-500' : ''} /> Suvichar
+                    </button>
+                    <button 
                         onClick={() => setCurrentView('seo')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'seo' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
@@ -703,10 +770,10 @@ export default function AdminDashboard() {
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
+                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'suvichar' ? 'Suvichar Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
+                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'suvichar' ? 'Manage daily thought of the day' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
                             </p>
                         </div>
                     </div>
@@ -974,6 +1041,38 @@ export default function AdminDashboard() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    ) : currentView === 'suvichar' ? (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-3xl">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4">
+                                <div>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Update Suvichar</h2>
+                                    <p className="text-sm text-gray-500 mt-1">Generate or edit today's Thought of the Day.</p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                    <button 
+                                        onClick={handleGenerateSuvichar} 
+                                        disabled={isGeneratingSuvichar}
+                                        className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        <Sparkles size={18} />
+                                        {isGeneratingSuvichar ? "Generating..." : "✨ Auto-Generate AI"}
+                                    </button>
+                                    <button onClick={handleSuvicharSave} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center">
+                                        Save Suvichar
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <label className="block text-sm font-bold text-gray-800 mb-2">Suvichar Text</label>
+                                <textarea
+                                    className="w-full p-4 text-base border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:outline-none transition-all resize-none bg-white font-sans text-center"
+                                    rows="6"
+                                    value={suvicharText}
+                                    onChange={(e) => setSuvicharText(e.target.value)}
+                                    placeholder="सुविचार यहाँ लिखें..."
+                                ></textarea>
+                            </div>
                         </div>
                     ) : (
                         <>
