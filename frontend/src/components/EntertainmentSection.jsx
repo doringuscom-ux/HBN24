@@ -2,10 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import { entertainmentNews } from '../data/mockNews';
+import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function EntertainmentSection({ news = [] }) {
-    const safeNews = (index) => {
-        if (news[index]) return { image: news[index].image, title: news[index].title, id: news[index].slug || news[index]._id };
+    const safeNews = (index, width = 300) => {
+        if (news[index]) return { image: optimizeImage(news[index].image, width), title: news[index].title, id: news[index].slug || news[index]._id };
         return { 
             image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", 
             title: "Loading...", 
@@ -13,7 +14,7 @@ export default function EntertainmentSection({ news = [] }) {
         };
     };
 
-    const main = safeNews(0);
+    const main = safeNews(0, 600);
     const subMain = safeNews(1);
     const list = [safeNews(2), safeNews(3), safeNews(4)];
     const list2 = [safeNews(5), safeNews(6), safeNews(7)];

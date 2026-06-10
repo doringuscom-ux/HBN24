@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function TechnologySection({ news = [] }) {
-    const safeNews = (index) => {
-        if (news[index]) return { image: news[index].image, title: news[index].title, _id: news[index].slug || news[index]._id };
+    const safeNews = (index, width = 300) => {
+        if (news[index]) return { image: optimizeImage(news[index].image, width), title: news[index].title, _id: news[index].slug || news[index]._id };
         return { image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E", title: "Loading...", _id: "loading" };
     };
 
-    const mainNews = safeNews(0);
+    const mainNews = safeNews(0, 600);
     const bottomNewsLeft = safeNews(1);
     
     const middleNewsList = [safeNews(2), safeNews(3), safeNews(4)];

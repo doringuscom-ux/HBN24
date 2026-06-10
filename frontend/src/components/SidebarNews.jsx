@@ -1,6 +1,7 @@
 import React from 'react';
 import { Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function SidebarNews({ news = [] }) {
     const displayNews = news.slice(0, 7); // Display top 7 superfast news to balance layout with Live TV
@@ -28,8 +29,10 @@ export default function SidebarNews({ news = [] }) {
                         {/* Image */}
                         <div className="relative w-[110px] h-[75px] flex-shrink-0 overflow-hidden rounded-[4px] bg-gray-50">
                             <img
-                                src={item.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E"}
+                                src={optimizeImage(item.image, 300) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23e5e7eb'/%3E%3C/svg%3E"}
                                 alt={item.title}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
                             />
                         </div>

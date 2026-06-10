@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { optimizeImage } from '../utils/imageOptimizer';
 import { GiRam, GiBullHorns, GiGemini, GiCrab, GiLion, GiFemale, GiScales, GiScorpion, GiBowArrow, GiGoat, GiJug, GiDoubleFish } from 'react-icons/gi';
 import rashifalBg from '../assets/rashiphal_circle1.webp';
 

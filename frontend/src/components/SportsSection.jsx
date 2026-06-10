@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function SportsSection({ news = [] }) {
     const textNews = news.slice(3, 6).map(n => ({ title: n.title, id: n.slug || n._id }));

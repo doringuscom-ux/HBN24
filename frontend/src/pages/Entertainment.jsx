@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Pencil, Star } from 'lucide-react';
 import { FaXTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa6';
 import { MdLocalMovies } from 'react-icons/md';
-import cinemaImg from '../assets/Cinema.png';
+import cinemaImg from '../assets/Cinema.webp';
 
 export default function Entertainment() {
     const [newsData, setNewsData] = useState([]);

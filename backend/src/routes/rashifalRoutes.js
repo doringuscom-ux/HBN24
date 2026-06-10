@@ -110,10 +110,17 @@ Each object must have this exact structure:
         const data = await response.json();
         let aiMessage = data.choices[0].message.content.trim();
         
-        if (aiMessage.startsWith('```json')) aiMessage = aiMessage.replace(/^```json/, '').replace(/```$/, '').trim();
-        else if (aiMessage.startsWith('```')) aiMessage = aiMessage.replace(/^```/, '').replace(/```$/, '').trim();
+        // Robust JSON extraction
+        let jsonStr = aiMessage;
+        const jsonMatch = aiMessage.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[0];
+        } else {
+            // fallback cleanup
+            jsonStr = aiMessage.replace(/```json/g, '').replace(/```/g, '').trim();
+        }
 
-        const signs = JSON.parse(aiMessage);
+        const signs = JSON.parse(jsonStr);
 
         if (!Array.isArray(signs) || signs.length !== 12) {
             return res.status(500).json({ message: 'AI returned invalid format. Expected exactly 12 signs.' });

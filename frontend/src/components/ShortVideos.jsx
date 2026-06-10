@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function ShortVideos({ shorts = [], title = "शॉर्ट वीडियो" }) {
     const scrollRef = useRef(null);
@@ -92,9 +93,12 @@ export default function ShortVideos({ shorts = [], title = "शॉर्ट व�
                                     className="w-full h-full cursor-pointer"
                                     onClick={() => ytId ? setPlayingVideoId(video.id) : window.open(video.link, '_blank')}
                                 >
-                                    <img
-                                        src={video.image}
-                                        alt={video.title}
+                                    <img 
+                                        loading="lazy" 
+                                        width="400" 
+                                        height="250" 
+                                        src={optimizeImage(video.image, 300)} 
+                                        alt={video.title} 
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     {/* Overlay Gradient */}

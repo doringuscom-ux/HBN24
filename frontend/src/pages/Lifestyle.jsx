@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import { FaXTwitter, FaFacebookF, FaWhatsapp } from 'react-icons/fa6';
 import { BiDrink } from 'react-icons/bi';
-import lifeStyleImg from '../assets/LifeStyle.png';
-import lifeImg from '../assets/life.png';
+import lifeStyleImg from '../assets/LifeStyle.webp';
+import lifeImg from '../assets/life.webp';
 import cloudImg from '../assets/cloud.webp';
 
 export default function Lifestyle() {

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { optimizeImage } from '../utils/imageOptimizer';
+
 export default function FeaturedNews({ news = [] }) {
     if (news.length === 0) {
         return (
@@ -36,7 +38,7 @@ export default function FeaturedNews({ news = [] }) {
         <Link to={`/news/${featured.slug || featured._id}`} className="block w-full group cursor-pointer bg-white rounded-[16px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border border-gray-100">
             <div className="relative overflow-hidden aspect-[16/9] sm:aspect-[21/9]">
                 <img 
-                    src={featured.image} 
+                    src={optimizeImage(featured.image, 800)} 
                     alt="Featured" 
                     fetchPriority="high"
                     loading="eager"

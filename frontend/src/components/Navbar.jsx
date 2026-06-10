@@ -8,7 +8,7 @@ import {
     X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "../assets/HBN Thumbnail.png";
+import logo from "../assets/HBN Thumbnail.webp";
 
 export default function AajTakNavbar() {
     const location = useLocation();
@@ -32,7 +32,7 @@ export default function AajTakNavbar() {
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
-        // Only inject if it doesn't exist
+        // Only inject if it doesn't exist (Delayed for performance)
         if (!document.getElementById('google-translate-script')) {
             window.googleTranslateElementInit = () => {
                 new window.google.translate.TranslateElement(
@@ -45,11 +45,14 @@ export default function AajTakNavbar() {
                 );
             };
 
-            const script = document.createElement('script');
-            script.id = 'google-translate-script';
-            script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-            script.async = true;
-            document.body.appendChild(script);
+            setTimeout(() => {
+                const script = document.createElement('script');
+                script.id = 'google-translate-script';
+                script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+                script.async = true;
+                script.defer = true;
+                document.body.appendChild(script);
+            }, 2500); // Wait 2.5 seconds after mount to prevent blocking main thread
         }
 
         // Auto-prompt or re-verify notifications
@@ -91,7 +94,11 @@ export default function AajTakNavbar() {
                 console.error("Failed to fetch latest news:", err);
             }
         };
-        fetchLatestNews();
+        
+        // Delay fetching notifications by 3 seconds to avoid blocking critical LCP/API requests
+        setTimeout(() => {
+            fetchLatestNews();
+        }, 3000);
 
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
@@ -253,6 +260,7 @@ export default function AajTakNavbar() {
                 <button
                     onClick={() => setOpen(!open)}
                     className="text-white mr-4 xl:hidden hover:text-[#ff3b22] hover:scale-110 transition-all duration-300"
+                    aria-label="Toggle Navigation Menu"
                 >
                     <Menu size={28} />
                 </button>
@@ -262,6 +270,8 @@ export default function AajTakNavbar() {
                     <img
                         src={logo}
                         alt="HBN 24"
+                        width="150"
+                        height="60"
                         className="h-full w-auto object-contain rounded-[4px] scale-[1.6] group-hover:scale-[1.7] transition-transform duration-300 transform-gpu"
                         style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                     />
@@ -302,18 +312,19 @@ export default function AajTakNavbar() {
                         onChange={changeLanguage} 
                         className="bg-white/10 text-white font-bold py-1 px-1.5 sm:py-1.5 sm:px-3 rounded border border-white/20 focus:outline-none focus:border-[#ff3b22] text-[11px] sm:text-sm cursor-pointer hover:bg-white/20 transition-all appearance-none"
                         defaultValue={document.cookie.includes('googtrans=/hi/en') ? 'en' : document.cookie.includes('googtrans=/hi/pa') ? 'pa' : 'hi'}
+                        aria-label="Language Selector"
                     >
                         <option value="hi" className="text-black">Hindi</option>
                         <option value="en" className="text-black">English</option>
                         <option value="pa" className="text-black">Punjabi</option>
                     </select>
 
-                    <Link to="/epaper" className="hidden md:flex hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                    <Link to="/epaper" aria-label="E-paper" className="hidden md:flex hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
                         <Newspaper size={22} />
                     </Link>
 
                     {/* X */}
-                    <a href="https://x.com/HbnNews24" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                    <a href="https://x.com/HbnNews24" aria-label="Follow us on X" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="18"
@@ -326,7 +337,7 @@ export default function AajTakNavbar() {
                     </a>
 
                     {/* YouTube */}
-                    <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
+                    <a href="https://www.youtube.com/@hbnnews24x7" aria-label="Subscribe on YouTube" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-[#ff3b22] hover:scale-110 transition-all duration-300">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="22"
@@ -374,6 +385,7 @@ export default function AajTakNavbar() {
                                         <button 
                                             onClick={() => setNotificationsOpen(false)}
                                             className="text-gray-500 hover:text-red-500 transition-colors"
+                                            aria-label="Close Notifications"
                                         >
                                             <X size={20} />
                                         </button>
@@ -406,6 +418,7 @@ export default function AajTakNavbar() {
                                                     onClick={(e) => handleDismissNotification(e, news._id)}
                                                     className="absolute top-3 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 p-1 rounded-full"
                                                     title="Remove notification"
+                                                    aria-label="Remove notification"
                                                 >
                                                     <X size={14} />
                                                 </button>
@@ -422,6 +435,7 @@ export default function AajTakNavbar() {
                         <button 
                             onClick={() => setSearchOpen(!searchOpen)} 
                             className="hover:text-[#ff3b22] hover:scale-110 transition-all duration-300 bg-white/10 p-2 rounded-full hover:bg-white/20"
+                            aria-label="Toggle Search"
                         >
                             <Search size={18} />
                         </button>
@@ -440,7 +454,7 @@ export default function AajTakNavbar() {
                                     className="w-full text-black px-3 py-1.5 focus:outline-none"
                                     autoFocus
                                 />
-                                <button type="submit" className="bg-[#da0000] text-white p-1.5 rounded-md hover:bg-red-700">
+                                <button type="submit" aria-label="Search Submit" className="bg-[#da0000] text-white p-1.5 rounded-md hover:bg-red-700">
                                     <Search size={16} />
                                 </button>
                             </form>

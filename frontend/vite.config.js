@@ -9,6 +9,7 @@ export default defineConfig(({ command, mode }) => {
     define: {
       '__API_URL__': JSON.stringify(mode === 'production' ? 'https://hbn-24.vercel.app' : '')
     },
+
     server: {
       proxy: {
         '/api': 'http://localhost:5000',

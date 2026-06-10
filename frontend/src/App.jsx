@@ -58,7 +58,9 @@ function AppContent() {
         console.error('Failed to fetch page SEOs', err);
       }
     };
-    fetchSeoData();
+    
+    // Delay SEO fetch by 2 seconds so it doesn't compete with LCP images
+    setTimeout(fetchSeoData, 2000);
   }, []);
 
   useEffect(() => {
@@ -123,37 +125,39 @@ function AppContent() {
   return (
     <div className={`min-h-screen ${isAdmin ? 'bg-gray-100' : 'bg-white'}`}>
       {!isAdmin && <Navbar />}
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div></div>}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/entertainment" element={<Entertainment />} />
-          <Route path="/religion" element={<Religion />} />
-          <Route path="/sports" element={<Sports />} />
-          <Route path="/lifestyle" element={<Lifestyle />} />
-          <Route path="/business" element={<Business />} />
-          <Route path="/technology" element={<Technology />} />
-          <Route path="/epaper" element={<Epaper />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/news/:id" element={<SingleArticle />} />
-          <Route 
-            path="/admin/login" 
-            element={
-              <PublicRoute>
-                <AdminLogin />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+      <main id="main-content" className="flex-grow">
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div></div>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/entertainment" element={<Entertainment />} />
+            <Route path="/religion" element={<Religion />} />
+            <Route path="/sports" element={<Sports />} />
+            <Route path="/lifestyle" element={<Lifestyle />} />
+            <Route path="/business" element={<Business />} />
+            <Route path="/technology" element={<Technology />} />
+            <Route path="/epaper" element={<Epaper />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/news/:id" element={<SingleArticle />} />
+            <Route 
+              path="/admin/login" 
+              element={
+                <PublicRoute>
+                  <AdminLogin />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
       {!isAdmin && <Footer />}
     </div>
   );
