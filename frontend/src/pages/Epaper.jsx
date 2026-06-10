@@ -291,12 +291,17 @@ export default function Epaper() {
                     <div className="flex justify-center text-[11px] font-mono border-b border-black/20 pb-1 mb-2 text-gray-700 uppercase">
                         <span>अंक 1</span>
                     </div>
-                    <h1
-                        className="text-[40px] sm:text-6xl md:text-[110px] font-black tracking-tight md:tracking-tighter leading-none text-blue-950 uppercase whitespace-nowrap"
-                        style={{ textShadow: '4px 4px 0 rgba(0,0,0,0.05)' }}
-                    >
-                        HBN News 24
-                    </h1>
+                    <div className="inline-block relative">
+                        <div className="text-right text-xs sm:text-sm md:text-xl font-bold text-gray-800 pr-1 md:pr-2 font-sans tracking-wide">
+                            सच्ची खबर, बेबाक नजर
+                        </div>
+                        <h1
+                            className="text-[40px] sm:text-6xl md:text-[110px] font-black tracking-tight md:tracking-tighter leading-none text-blue-950 uppercase whitespace-nowrap"
+                            style={{ textShadow: '4px 4px 0 rgba(0,0,0,0.05)' }}
+                        >
+                            HBN NEWS 24
+                        </h1>
+                    </div>
                     <p className="text-[12px] tracking-normal font-mono mt-2 text-gray-700">
                         राष्ट्रीय हिंदी दैनिक • स्थापना 2024
                     </p>
