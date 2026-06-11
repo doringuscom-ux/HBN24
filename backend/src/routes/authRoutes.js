@@ -52,6 +52,37 @@ router.get('/verify', authMiddleware, (req, res) => {
     res.json({ valid: true, adminId: req.admin.id });
 });
 
+// @route   GET /api/auth/refresh
+// @desc    Refresh token and get a new 24h token
+// @access  Private
+router.get('/refresh', authMiddleware, async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.admin.id);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        const payload = {
+            admin: {
+                id: admin.id
+            }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'fallback_secret_key',
+            { expiresIn: '24h' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token, username: admin.username });
+            }
+        );
+    } catch (err) {
+        console.error('Refresh token error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 // @route   GET /api/auth/users
 // @desc    Get all admins
 // @access  Private

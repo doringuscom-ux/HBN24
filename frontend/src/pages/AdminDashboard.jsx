@@ -82,6 +82,11 @@ export default function AdminDashboard() {
             const res = await fetch(__API_URL__ + '/api/auth/users', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (res.status === 401) {
+                localStorage.removeItem('adminToken');
+                navigate('/admin/login');
+                return;
+            }
             if (res.ok) {
                 const data = await res.json();
                 setUsersList(data);
@@ -124,6 +129,11 @@ export default function AdminDashboard() {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (res.status === 401) {
+                localStorage.removeItem('adminToken');
+                navigate('/admin/login');
+                return;
+            }
             if (res.ok) {
                 alert('User deleted successfully');
                 fetchUsers();
@@ -144,6 +154,11 @@ export default function AdminDashboard() {
                 const res = await fetch(__API_URL__ + '/api/seo/missing-count', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (res.status === 401) {
+                    localStorage.removeItem('adminToken');
+                    navigate('/admin/login');
+                    return;
+                }
                 const data = await res.json();
                 setMissingSeoCount(data.missingCount);
             } catch(e) {}
@@ -156,6 +171,11 @@ export default function AdminDashboard() {
                 const res = await fetch(__API_URL__ + '/api/seo/bulk-status', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (res.status === 401) {
+                    localStorage.removeItem('adminToken');
+                    navigate('/admin/login');
+                    return;
+                }
                 const data = await res.json();
                 setBulkStatus(prev => {
                     // If it was running and now it's not, it means it finished. Refresh data.
@@ -193,6 +213,11 @@ export default function AdminDashboard() {
             const res = await fetch(__API_URL__ + '/api/seo/pages', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (res.status === 401) {
+                localStorage.removeItem('adminToken');
+                navigate('/admin/login');
+                return;
+            }
             const data = await res.json();
             setPageSeoList(data);
             if (selectedPageSeoUrl) {
@@ -296,6 +321,7 @@ export default function AdminDashboard() {
                 body: JSON.stringify(seoData)
             });
             if (res.status === 401) {
+                localStorage.removeItem('adminToken');
                 navigate('/admin/login');
                 return;
             }
@@ -334,6 +360,7 @@ export default function AdminDashboard() {
                 body: JSON.stringify({ signs: rashifalData })
             });
             if (res.status === 401) {
+                localStorage.removeItem('adminToken');
                 navigate('/admin/login');
                 return;
             }
@@ -392,6 +419,7 @@ export default function AdminDashboard() {
                 body: JSON.stringify({ text: suvicharText })
             });
             if (res.status === 401) {
+                localStorage.removeItem('adminToken');
                 navigate('/admin/login');
                 return;
             }
@@ -483,7 +511,8 @@ export default function AdminDashboard() {
                     body: JSON.stringify(formData)
                 });
                 if (res.status === 401) {
-                    navigate('/admin/login');
+                    localStorage.removeItem('adminToken');
+                navigate('/admin/login');
                     return;
                 }
             } else {
@@ -497,7 +526,8 @@ export default function AdminDashboard() {
                     body: JSON.stringify(formData)
                 });
                 if (res.status === 401) {
-                    navigate('/admin/login');
+                    localStorage.removeItem('adminToken');
+                navigate('/admin/login');
                     return;
                 }
             }
@@ -532,6 +562,7 @@ export default function AdminDashboard() {
             });
 
             if (res.status === 401) {
+                localStorage.removeItem('adminToken');
                 navigate('/admin/login');
                 return;
             }
@@ -603,7 +634,8 @@ export default function AdminDashboard() {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.status === 401) {
-                    navigate('/admin/login');
+                    localStorage.removeItem('adminToken');
+                navigate('/admin/login');
                     return;
                 }
                 fetchNews();
@@ -636,6 +668,7 @@ export default function AdminDashboard() {
             });
 
             if (res.status === 401) {
+                localStorage.removeItem('adminToken');
                 navigate('/admin/login');
                 return;
             }

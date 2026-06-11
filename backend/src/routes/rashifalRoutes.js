@@ -89,41 +89,57 @@ Each object must have this exact structure:
   "desc": "Today's prediction in Hindi (around 20-30 words, make it sound authentic and based on daily planetary movements)."
 }`;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [ { role: 'user', content: promptText } ]
-            })
-        });
+        let signs;
+        let lastError = null;
+        for (let i = 0; i < 3; i++) {
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [ { role: 'user', content: promptText } ]
+                    })
+                });
 
-        if (!response.ok) {
-            const errText = await response.text();
-            console.error('AI Error:', errText);
-            return res.status(500).json({ message: 'Error from AI service' });
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                const data = await response.json();
+                let aiMessage = data.choices[0].message.content.trim();
+                
+                // Robust JSON extraction
+                let jsonStr = aiMessage;
+                const jsonMatch = aiMessage.match(/\[\s*\{[\s\S]*\}\s*\]/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[0];
+                } else {
+                    jsonStr = aiMessage.replace(/```json/g, '').replace(/```/g, '').trim();
+                }
+
+                jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1'); // Fix trailing commas
+
+                signs = JSON.parse(jsonStr);
+
+                if (!Array.isArray(signs) || signs.length !== 12) {
+                    throw new Error('AI returned invalid format. Expected exactly 12 signs.');
+                }
+                
+                lastError = null;
+                break; // Success
+            } catch (err) {
+                lastError = err;
+                console.error(`AI Fetch/Parse attempt ${i + 1} failed:`, err.message);
+                if (i < 2) await new Promise(r => setTimeout(r, 2000));
+            }
         }
 
-        const data = await response.json();
-        let aiMessage = data.choices[0].message.content.trim();
-        
-        // Robust JSON extraction
-        let jsonStr = aiMessage;
-        const jsonMatch = aiMessage.match(/\[\s*\{[\s\S]*\}\s*\]/);
-        if (jsonMatch) {
-            jsonStr = jsonMatch[0];
-        } else {
-            // fallback cleanup
-            jsonStr = aiMessage.replace(/```json/g, '').replace(/```/g, '').trim();
-        }
-
-        const signs = JSON.parse(jsonStr);
-
-        if (!Array.isArray(signs) || signs.length !== 12) {
-            return res.status(500).json({ message: 'AI returned invalid format. Expected exactly 12 signs.' });
+        if (lastError) {
+            return res.status(500).json({ message: 'Error from AI service or invalid format after retries' });
         }
 
         // Save to DB

@@ -41,6 +41,37 @@ function AppContent() {
   const [pageSeoList, setPageSeoList] = useState([]);
 
   useEffect(() => {
+    // Token auto-refresh logic
+    const refreshToken = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      try {
+        const res = await fetch(__API_URL__ + '/api/auth/refresh', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) {
+            localStorage.setItem('adminToken', data.token);
+          }
+        } else if (res.status === 401) {
+          // If refresh fails due to expiration, log out
+          localStorage.removeItem('adminToken');
+          // Optional: window.location.href = '/admin/login';
+        }
+      } catch (err) {
+        console.error('Failed to refresh token', err);
+      }
+    };
+
+    refreshToken();
+    // Refresh every 12 hours (43200000 ms)
+    const intervalId = setInterval(refreshToken, 43200000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     // Fetch Global SEO once
     const fetchSeoData = async () => {
       try {
