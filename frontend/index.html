@@ -27,15 +27,17 @@
   
   <link rel="preconnect" href="https://hbn-24.vercel.app" crossorigin>
   <script>
-    // Preload the main news API to drastically improve LCP
-    var apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') ? '' : 'https://hbn-24.vercel.app';
-    var link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = apiUrl + '/api/news/home';
-    link.as = 'fetch';
-    link.crossOrigin = 'anonymous';
-    link.fetchPriority = 'high';
-    document.head.appendChild(link);
+    // Preload the main news API to drastically improve LCP only on the homepage
+    if (window.location.pathname === '/') {
+        var apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') ? '' : 'https://hbn-24.vercel.app';
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.href = apiUrl + '/api/news/home';
+        link.as = 'fetch';
+        link.crossOrigin = 'anonymous';
+        link.fetchPriority = 'high';
+        document.head.appendChild(link);
+    }
   </script>
   
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;900&family=Yatra+One&display=swap" />

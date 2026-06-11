@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
@@ -56,7 +56,8 @@ export default function AdminDashboard() {
         metaKeywords: '',
         robots: 'index, follow',
         canonicalUrl: '',
-        isEpaper: false
+        isEpaper: false,
+        location: 'नई दिल्ली'
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
@@ -66,6 +67,32 @@ export default function AdminDashboard() {
     const itemsPerPage = 10;
 
     const API_URL = __API_URL__ + '/api/news';
+
+    const joditConfig = useMemo(() => ({
+        readonly: false,
+        height: 300,
+        placeholder: 'Paste the full article content here...',
+        uploader: {
+            url: __API_URL__ + '/api/upload',
+            format: 'json',
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
+            filesVariableName: 'image',
+            isSuccess: (resp) => !resp.error && resp.imageUrl,
+            process: (resp) => {
+                return {
+                    files: [resp.imageUrl],
+                    path: resp.imageUrl,
+                    baseurl: '',
+                    error: resp.error ? 1 : 0,
+                    msg: resp.message
+                };
+            },
+            defaultHandlerSuccess: function (data) {
+                this.selection.insertImage(data.files[0]);
+            }
+        }
+    }), []);
 
     useEffect(() => {
         fetchNews();
@@ -533,7 +560,7 @@ export default function AdminDashboard() {
             }
             setIsModalOpen(false);
             setEditingId(null);
-            setFormData({ title: '', slug: '', image: '', imageAlt: '', category: 'entertainment', content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false });
+            setFormData({ title: '', slug: '', image: '', imageAlt: '', category: 'entertainment', content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false, location: 'नई दिल्ली' });
             fetchNews();
         } catch (error) {
             console.error('Error saving news:', error);
@@ -620,7 +647,8 @@ export default function AdminDashboard() {
             metaKeywords: item.metaKeywords || '',
             robots: item.robots || 'index, follow',
             canonicalUrl: item.canonicalUrl || '',
-            isEpaper: item.isEpaper || false
+            isEpaper: item.isEpaper || false,
+            location: item.location || 'नई दिल्ली'
         });
         setEditingId(item._id);
         setIsModalOpen(true);
@@ -647,7 +675,7 @@ export default function AdminDashboard() {
 
     const openCreateModal = () => {
         setEditingId(null);
-        setFormData({ title: '', slug: '', image: '', imageAlt: '', category: [], content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false });
+        setFormData({ title: '', slug: '', image: '', imageAlt: '', category: [], content: '', metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow', canonicalUrl: '', isEpaper: false, location: 'नई दिल्ली' });
         setIsModalOpen(true);
     };
 
@@ -1260,28 +1288,34 @@ export default function AdminDashboard() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Headline (Title)</label>
                                         <textarea required name="title" value={formData.title} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" rows="2" placeholder="Enter an engaging headline..."></textarea>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">URL Slug</label>
-                                            <input type="text" name="slug" value={formData.slug} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-gray-50" placeholder="Auto-generated if empty" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Categories (Select Multiple)</label>
-                                            <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg bg-white max-h-[100px] overflow-y-auto">
-                                                {categories.filter(c => c.id !== 'all').map(cat => (
-                                                    <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer bg-gray-50 px-2 py-1 rounded border border-gray-200 hover:bg-red-50 transition-colors">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={(formData.category || []).includes(cat.id)}
-                                                            onChange={() => handleCategoryCheckbox(cat.id)}
-                                                            className="w-3.5 h-3.5 text-red-600 focus:ring-red-500 rounded cursor-pointer"
-                                                        />
-                                                        <span className="text-xs font-medium text-gray-700">{cat.label}</span>
-                                                    </label>
-                                                ))}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2"><Globe size={16}/> Location (City/Place)</label>
+                                        <input type="text" name="location" value={formData.location} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" placeholder="e.g. नई दिल्ली" />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex flex-col lg:flex-row gap-4">
+                                            <div className="flex-1">
+                                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">URL Slug</label>
+                                                <input type="text" name="slug" value={formData.slug} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none bg-gray-50" placeholder="Auto-generated if empty" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Categories (Multiple)</label>
+                                                <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg bg-white max-h-[100px] overflow-y-auto">
+                                                    {categories.filter(c => c.id !== 'all').map(cat => (
+                                                        <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer bg-gray-50 px-2 py-1 rounded border border-gray-200 hover:bg-red-50 transition-colors">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={(formData.category || []).includes(cat.id)}
+                                                                onChange={() => handleCategoryCheckbox(cat.id)}
+                                                                className="w-3.5 h-3.5 text-red-600 focus:ring-red-500 rounded cursor-pointer"
+                                                            />
+                                                            <span className="text-xs font-medium text-gray-700">{cat.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="col-span-2 flex items-center gap-2 mt-1 mb-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                        <div className="flex items-center gap-2 mt-1 mb-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                                             <input type="checkbox" id="isEpaper" name="isEpaper" checked={formData.isEpaper} onChange={handleInputChange} className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded cursor-pointer" />
                                             <label htmlFor="isEpaper" className="text-sm font-semibold text-blue-900 cursor-pointer">Show this article in E-Paper</label>
                                         </div>
@@ -1292,32 +1326,9 @@ export default function AdminDashboard() {
                                             <JoditEditor
                                                 ref={editor}
                                                 value={formData.content}
-                                                config={{
-                                                    readonly: false,
-                                                    height: 300,
-                                                    placeholder: 'Paste the full article content here...',
-                                                    uploader: {
-                                                        url: __API_URL__ + '/api/upload',
-                                                        format: 'json',
-                                                        method: 'POST',
-                                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
-                                                        filesVariableName: 'image',
-                                                        isSuccess: (resp) => !resp.error && resp.imageUrl,
-                                                        process: (resp) => {
-                                                            return {
-                                                                files: [resp.imageUrl],
-                                                                path: resp.imageUrl,
-                                                                baseurl: '',
-                                                                error: resp.error ? 1 : 0,
-                                                                msg: resp.message
-                                                            };
-                                                        },
-                                                        defaultHandlerSuccess: function (data) {
-                                                            this.selection.insertImage(data.files[0]);
-                                                        }
-                                                    }
-                                                }}
-                                                onChange={(newContent) => handleContentChange(newContent)}
+                                                config={joditConfig}
+                                                onBlur={(newContent) => handleContentChange(newContent)}
+                                                onChange={() => {}}
                                             />
                                         </div>
                                     </div>

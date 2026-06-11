@@ -443,10 +443,10 @@ export default function SingleArticle() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-4 gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                            <img src="https://ui-avatars.com/api/?name=Admin&background=da0000&color=fff" alt="Author" className="w-full h-full" />
+                            <img src={`https://ui-avatars.com/api/?name=${article.author || 'Admin'}&background=da0000&color=fff`} alt="Author" className="w-full h-full" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-bold text-[15px] text-gray-900">एडमिन</span>
+                            <span className="font-bold text-[15px] text-gray-900">{article.author || 'एडमिन'}</span>
                             <span className="text-[13px] text-gray-500">
                                 {new Date(article.createdAt || Date.now()).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}, (अपडेटेड {new Date().toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' })})
                             </span>

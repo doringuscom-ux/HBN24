@@ -407,6 +407,26 @@ app.delete('/api/news/:newsId/comments/:commentId', async (req, res) => {
 app.post('/api/news', authMiddleware, async (req, res) => {
     try {
         if (req.body.slug) req.body.slug = req.body.slug.trim();
+        
+        // Ensure location is set
+        if (!req.body.location || req.body.location.trim() === '') {
+            req.body.location = 'नई दिल्ली';
+        }
+
+        // Set author based on logged-in admin
+        if (req.admin && req.admin.id) {
+            const Admin = require('./models/Admin');
+            const adminUser = await Admin.findById(req.admin.id);
+            if (adminUser && adminUser.username) {
+                // Capitalize first letter or use as is, for simplicity use as is, or we can map 'admin' to 'एडमिन'
+                req.body.author = adminUser.username === 'admin' ? 'एडमिन' : adminUser.username;
+            } else {
+                req.body.author = 'एडमिन';
+            }
+        } else {
+            req.body.author = 'एडमिन';
+        }
+
         const newNews = new News(req.body);
         const savedNews = await newNews.save();
 

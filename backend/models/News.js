@@ -16,6 +16,8 @@ const newsSchema = new mongoose.Schema({
     canonicalUrl: { type: String, required: false },
     placement: { type: String, default: 'auto' }, // no longer required, placement is now automatic by index
     isEpaper: { type: Boolean, default: false },
+    location: { type: String, default: 'नई दिल्ली' },
+    author: { type: String, default: 'एडमिन' },
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -304,11 +304,18 @@ export default function Epaper() {
             if (cuttingBtn) cuttingBtn.remove();
             
             // Enhance article styling for standalone download
-            articleClone.style.border = '4px solid #1e293b';
-            articleClone.style.padding = '25px';
-            articleClone.style.backgroundColor = '#ffffff';
-            articleClone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+            articleClone.style.border = 'none';
+            articleClone.style.padding = '20px';
+            articleClone.style.backgroundColor = 'transparent'; // Let the newspaper background show
+            articleClone.style.boxShadow = 'none';
             articleClone.style.width = '100%';
+
+            // Force all images to be in full color for the cutting
+            const images = articleClone.querySelectorAll('img');
+            images.forEach(img => {
+                img.classList.remove('grayscale');
+                img.style.filter = 'none';
+            });
 
             tempContainer.appendChild(mastheadClone);
             tempContainer.appendChild(articleClone);
@@ -495,8 +502,10 @@ export default function Epaper() {
                                     </h2>
 
                                     {/* Byline */}
-                                    <div className="text-[11px] font-mono text-gray-600 uppercase border-b border-dotted border-gray-400 self-start mb-3">
-                                        नई दिल्ली • हमारे संवाददाता
+                                    <div className="flex items-center gap-2 text-[12px] font-medium text-gray-700 mb-3 border-b border-gray-200/50 pb-1 self-start">
+                                        <span className="font-bold text-[#da0000] uppercase tracking-wide">{item.location || 'नई दिल्ली'}</span>
+                                        <span className="text-gray-400">|</span>
+                                        <span className="text-gray-600">{item.author || 'हमारे संवाददाता'}</span>
                                     </div>
 
                                     {/* Image – only if not text-only and exists */}
