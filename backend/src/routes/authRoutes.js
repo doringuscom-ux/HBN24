@@ -26,7 +26,8 @@ router.post('/login', async (req, res) => {
         // Return jsonwebtoken
         const payload = {
             admin: {
-                id: admin.id
+                id: admin.id,
+                role: admin.role || 'user'
             }
         };
 
@@ -36,7 +37,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, username: admin.username });
+                res.json({ token, username: admin.username, role: admin.role || 'user' });
             }
         );
     } catch (err) {
@@ -49,7 +50,7 @@ router.post('/login', async (req, res) => {
 // @desc    Verify if token is valid
 // @access  Private
 router.get('/verify', authMiddleware, (req, res) => {
-    res.json({ valid: true, adminId: req.admin.id });
+    res.json({ valid: true, adminId: req.admin.id, role: req.admin.role });
 });
 
 // @route   GET /api/auth/refresh
@@ -64,7 +65,8 @@ router.get('/refresh', authMiddleware, async (req, res) => {
 
         const payload = {
             admin: {
-                id: admin.id
+                id: admin.id,
+                role: admin.role || 'user'
             }
         };
 
@@ -74,7 +76,7 @@ router.get('/refresh', authMiddleware, async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, username: admin.username });
+                res.json({ token, username: admin.username, role: admin.role || 'user' });
             }
         );
     } catch (err) {
@@ -87,6 +89,9 @@ router.get('/refresh', authMiddleware, async (req, res) => {
 // @desc    Get all admins
 // @access  Private
 router.get('/users', authMiddleware, async (req, res) => {
+    if (req.admin.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
     try {
         const users = await Admin.find().select('-password');
         res.json(users);
@@ -100,7 +105,10 @@ router.get('/users', authMiddleware, async (req, res) => {
 // @desc    Create a new admin
 // @access  Private
 router.post('/users', authMiddleware, async (req, res) => {
-    const { username, password } = req.body;
+    if (req.admin.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+    const { username, password, role, email, phone } = req.body;
     try {
         let admin = await Admin.findOne({ username });
         if (admin) {
@@ -109,11 +117,14 @@ router.post('/users', authMiddleware, async (req, res) => {
 
         admin = new Admin({
             username,
-            password
+            password,
+            role: role || 'user',
+            email,
+            phone
         });
 
         await admin.save();
-        res.status(201).json({ message: 'User created successfully', user: { _id: admin._id, username: admin.username } });
+        res.status(201).json({ message: 'User created successfully', user: { _id: admin._id, username: admin.username, role: admin.role, email: admin.email, phone: admin.phone } });
     } catch (err) {
         console.error('Create user error:', err.message);
         res.status(500).send('Server error');
@@ -124,6 +135,9 @@ router.post('/users', authMiddleware, async (req, res) => {
 // @desc    Delete an admin
 // @access  Private
 router.delete('/users/:id', authMiddleware, async (req, res) => {
+    if (req.admin.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
     try {
         const adminIdToDelete = req.params.id;
         
@@ -141,6 +155,83 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
         res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error('Delete user error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   PUT /api/auth/users/:id/role
+// @desc    Change user role
+// @access  Private
+router.put('/users/:id/role', authMiddleware, async (req, res) => {
+    if (req.admin.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+    const { role } = req.body;
+    try {
+        const adminToUpdate = await Admin.findById(req.params.id);
+        if (!adminToUpdate) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Prevent downgrading oneself?
+        if (req.params.id === req.admin.id && role !== 'admin') {
+            return res.status(400).json({ message: 'You cannot change your own role from admin' });
+        }
+
+        adminToUpdate.role = role;
+        await adminToUpdate.save();
+        res.json({ message: 'Role updated successfully', user: { _id: adminToUpdate._id, username: adminToUpdate.username, role: adminToUpdate.role } });
+    } catch (err) {
+        console.error('Update role error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   PUT /api/auth/users/:id
+// @desc    Update user details (email, phone, password, role)
+// @access  Private
+router.put('/users/:id', authMiddleware, async (req, res) => {
+    if (req.admin.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+    const { username, password, role, email, phone } = req.body;
+    try {
+        const adminToUpdate = await Admin.findById(req.params.id);
+        if (!adminToUpdate) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (username) {
+            const existing = await Admin.findOne({ username });
+            if (existing && existing._id.toString() !== req.params.id) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
+            adminToUpdate.username = username;
+        }
+
+        if (password) adminToUpdate.password = password;
+        if (role) {
+            if (req.params.id === req.admin.id && role !== 'admin') {
+                return res.status(400).json({ message: 'You cannot change your own role from admin' });
+            }
+            adminToUpdate.role = role;
+        }
+        if (email !== undefined) adminToUpdate.email = email;
+        if (phone !== undefined) adminToUpdate.phone = phone;
+
+        await adminToUpdate.save();
+        res.json({ 
+            message: 'User updated successfully', 
+            user: { 
+                _id: adminToUpdate._id, 
+                username: adminToUpdate.username, 
+                role: adminToUpdate.role,
+                email: adminToUpdate.email,
+                phone: adminToUpdate.phone
+            } 
+        });
+    } catch (err) {
+        console.error('Update user error:', err.message);
         res.status(500).send('Server error');
     }
 });

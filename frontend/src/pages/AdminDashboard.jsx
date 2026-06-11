@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import ReactCrop from 'react-image-crop';
@@ -143,8 +143,13 @@ export default function AdminDashboard() {
     const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
 
     const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo', 'users'
+    const [userRole, setUserRole] = useState('user');
     const [usersList, setUsersList] = useState([]);
-    const [newUser, setNewUser] = useState({ username: '', password: '' });
+    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', email: '', phone: '' });
+    const [showPassword, setShowPassword] = useState(false);
+    const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+    const [editUserData, setEditUserData] = useState({ id: '', username: '', role: '', email: '', phone: '', password: '' });
+    const [showEditPassword, setShowEditPassword] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
     const [suvicharText, setSuvicharText] = useState('');
@@ -205,11 +210,38 @@ export default function AdminDashboard() {
     }), []);
 
     useEffect(() => {
-        fetchNews();
-        fetchRashifal();
-        fetchSuvichar();
-        fetchSeo();
-        fetchUsers();
+        const verifyAndLoad = async () => {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                navigate('/admin/login');
+                return;
+            }
+            try {
+                const res = await fetch(__API_URL__ + '/api/auth/verify', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    localStorage.removeItem('adminToken');
+                    navigate('/admin/login');
+                    return;
+                }
+                const data = await res.json();
+                setUserRole(data.role || 'user');
+                
+                if (data.role === 'admin') {
+                    fetchUsers();
+                }
+                if (data.role !== 'user') {
+                    fetchNews();
+                    fetchRashifal();
+                    fetchSuvichar();
+                    fetchSeo();
+                }
+            } catch (error) {
+                console.error('Verify error:', error);
+            }
+        };
+        verifyAndLoad();
     }, []);
 
     const fetchUsers = async () => {
@@ -247,7 +279,7 @@ export default function AdminDashboard() {
             });
             if (res.ok) {
                 alert('User created successfully');
-                setNewUser({ username: '', password: '' });
+                setNewUser({ username: '', password: '', role: 'user', email: '', phone: '' });
                 fetchUsers();
             } else {
                 const err = await res.json();
@@ -255,6 +287,43 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             alert('Error creating user');
+        }
+    };
+
+    const handleOpenEditUser = (u) => {
+        setEditUserData({
+            id: u._id,
+            username: u.username,
+            role: u.role || 'user',
+            email: u.email || '',
+            phone: u.phone || '',
+            password: ''
+        });
+        setIsEditUserModalOpen(true);
+    };
+
+    const handleEditUserSubmit = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + `/api/auth/users/${editUserData.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(editUserData)
+            });
+            if (res.ok) {
+                alert('User updated successfully');
+                setIsEditUserModalOpen(false);
+                fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Error updating user');
+            }
+        } catch (error) {
+            alert('Error updating user');
         }
     };
 
@@ -280,6 +349,29 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             alert('Error deleting user');
+        }
+    };
+
+    const handleChangeRole = async (id, newRole) => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + `/api/auth/users/${id}/role`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ role: newRole })
+            });
+            if (res.ok) {
+                alert('Role updated successfully');
+                fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Error updating role');
+            }
+        } catch (error) {
+            alert('Error updating role');
         }
     };
 
@@ -882,6 +974,20 @@ export default function AdminDashboard() {
         { id: 'education', label: 'एजुकेशन' }
     ];
 
+    if (userRole === 'user') {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-gray-50 font-sans">
+                <div className="text-center">
+                    <h1 className="text-4xl font-black text-gray-800 mb-4">Access Denied</h1>
+                    <p className="text-gray-600 mb-8">You do not have permission to access the admin dashboard.</p>
+                    <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 mx-auto">
+                        <LogOut size={20} /> Logout
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
             {/* Mobile Sidebar Overlay */}
@@ -933,12 +1039,14 @@ export default function AdminDashboard() {
                     >
                         <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
                     </button>
-                    <button 
-                        onClick={() => setCurrentView('users')}
-                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
-                    >
-                        <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Users (Admins)
-                    </button>
+                    {userRole === 'admin' && (
+                        <button 
+                            onClick={() => setCurrentView('users')}
+                            className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                        >
+                            <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Manage Users
+                        </button>
+                    )}
                     <a href="/" target="_blank" rel="noopener noreferrer" className="px-6 py-3 flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
                         <LayoutDashboard size={20} /> View Website
                     </a>
@@ -1263,6 +1371,223 @@ export default function AdminDashboard() {
                                     placeholder="सुविचार यहाँ लिखें..."
                                 ></textarea>
                             </div>
+                        </div>
+                    ) : currentView === 'users' ? (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Manage Users & Roles</h2>
+                            
+                            <form onSubmit={handleCreateUser} className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-4">
+                                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
+                                        <input 
+                                            type="text" 
+                                            required 
+                                            value={newUser.username} 
+                                            onChange={e => setNewUser({...newUser, username: e.target.value})} 
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
+                                            placeholder="Enter username" 
+                                        />
+                                    </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                                        <div className="relative">
+                                            <input 
+                                                type={showPassword ? "text" : "password"} 
+                                                required 
+                                                value={newUser.password} 
+                                                onChange={e => setNewUser({...newUser, password: e.target.value})} 
+                                                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none pr-10" 
+                                                placeholder="Enter password" 
+                                            />
+                                            <button 
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
+                                        <select 
+                                            value={newUser.role} 
+                                            onChange={e => setNewUser({...newUser, role: e.target.value})} 
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white"
+                                        >
+                                            <option value="user">User</option>
+                                            <option value="subadmin">Sub-Admin</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email (Optional)</label>
+                                        <input 
+                                            type="email" 
+                                            value={newUser.email} 
+                                            onChange={e => setNewUser({...newUser, email: e.target.value})} 
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
+                                            placeholder="Enter email" 
+                                        />
+                                    </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newUser.phone} 
+                                            onChange={e => setNewUser({...newUser, phone: e.target.value})} 
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
+                                            placeholder="Enter phone number" 
+                                        />
+                                    </div>
+                                    <div className="w-full sm:w-auto">
+                                        <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
+                                            Create User
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div className="overflow-x-auto border rounded-lg">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50/80">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Username</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Contact</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Role</th>
+                                            <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase w-20">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-100">
+                                        {usersList.map((u) => (
+                                            <tr key={u._id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-4 py-3 text-sm font-semibold text-gray-800">{u.username}</td>
+                                                <td className="px-4 py-3 text-xs text-gray-600">
+                                                    {u.email && <div>✉️ {u.email}</div>}
+                                                    {u.phone && <div>📞 {u.phone}</div>}
+                                                    {!u.email && !u.phone && <span className="text-gray-400">N/A</span>}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600">
+                                                    <select 
+                                                        value={u.role || 'user'}
+                                                        onChange={(e) => handleChangeRole(u._id, e.target.value)}
+                                                        className="border border-gray-300 rounded p-1 text-sm bg-white focus:ring-2 focus:ring-red-500 outline-none"
+                                                    >
+                                                        <option value="user">User</option>
+                                                        <option value="subadmin">Sub-Admin</option>
+                                                        <option value="admin">Admin</option>
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => handleOpenEditUser(u)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit User">
+                                                            <Pencil size={18} />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteUser(u._id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete User">
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Edit User Modal */}
+                            {isEditUserModalOpen && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 overflow-hidden flex flex-col">
+                                        <div className="flex justify-between items-center p-5 border-b bg-gray-50/50">
+                                            <h3 className="text-xl font-bold text-gray-800">Edit User Details</h3>
+                                            <button onClick={() => setIsEditUserModalOpen(false)} className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-red-50">
+                                                <X size={24} />
+                                            </button>
+                                        </div>
+                                        <div className="p-6 overflow-y-auto max-h-[70vh]">
+                                            <form id="edit-user-form" onSubmit={handleEditUserSubmit} className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+                                                    <input 
+                                                        type="text" 
+                                                        required 
+                                                        value={editUserData.username} 
+                                                        onChange={e => setEditUserData({...editUserData, username: e.target.value})} 
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">New Password <span className="text-gray-400 font-normal">(Leave empty to keep current)</span></label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            type={showEditPassword ? "text" : "password"} 
+                                                            value={editUserData.password} 
+                                                            onChange={e => setEditUserData({...editUserData, password: e.target.value})} 
+                                                            className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none pr-10" 
+                                                            placeholder="Enter new password"
+                                                        />
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setShowEditPassword(!showEditPassword)}
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                        >
+                                                            {showEditPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
+                                                    <select 
+                                                        value={editUserData.role} 
+                                                        onChange={e => setEditUserData({...editUserData, role: e.target.value})} 
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none bg-white"
+                                                    >
+                                                        <option value="user">User</option>
+                                                        <option value="subadmin">Sub-Admin</option>
+                                                        <option value="admin">Admin</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                                                    <input 
+                                                        type="email" 
+                                                        value={editUserData.email} 
+                                                        onChange={e => setEditUserData({...editUserData, email: e.target.value})} 
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={editUserData.phone} 
+                                                        onChange={e => setEditUserData({...editUserData, phone: e.target.value})} 
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    />
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div className="p-5 border-t bg-gray-50 flex justify-end gap-3 mt-auto">
+                                            <button 
+                                                onClick={() => setIsEditUserModalOpen(false)} 
+                                                className="px-5 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button 
+                                                type="submit" 
+                                                form="edit-user-form"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+                                            >
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <>

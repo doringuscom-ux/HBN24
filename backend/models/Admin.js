@@ -3,7 +3,14 @@ const bcrypt = require('bcryptjs');
 
 const adminSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    role: { 
+        type: String, 
+        enum: ['admin', 'subadmin', 'user'], 
+        default: 'user' 
+    },
+    email: { type: String, required: false },
+    phone: { type: String, required: false }
 });
 
 // Pre-save hook to hash password before saving to database
