@@ -167,6 +167,10 @@ export default function Epaper() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [suvicharText, setSuvicharText] = useState('मंजिलें क्या हैं, रास्ता क्या है? हौसला हो तो फासला क्या है?');
+    const [panchangData, setPanchangData] = useState({
+        tithi: "ज्येष्ठ कृष्ण पक्ष, तृतीया",
+        samvat: "विक्रम संवत 2083 • बुधवार"
+    });
     const itemsPerPage = 11; // 11 stories per page to allow the last one to be wide
 
     useEffect(() => {
@@ -184,6 +188,21 @@ export default function Epaper() {
             }
         };
         fetchSuvichar();
+
+        const fetchPanchang = async () => {
+            try {
+                const res = await fetch(__API_URL__ + '/api/panchang');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.tithi) {
+                        setPanchangData(data);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching panchang:', error);
+            }
+        };
+        fetchPanchang();
 
         const fetchEpaperNews = async () => {
             try {
@@ -383,8 +402,8 @@ export default function Epaper() {
                                     <span className="text-[22px] md:text-[26px] font-black" style={{fontFamily: "'Yatra One', cursive"}}>ॐ</span>
                                     <span className="text-[14px] md:text-[16px] font-bold tracking-widest uppercase border-b-2 border-[#a61c1c]/30 pb-0.5">आज का पंचांग</span>
                                 </div>
-                                <div className="text-[18px] md:text-[20px] font-black text-gray-900 tracking-tight leading-tight">ज्येष्ठ कृष्ण पक्ष, तृतीया</div>
-                                <div className="text-[13px] md:text-[15px] font-bold text-gray-600 mt-1">विक्रम संवत 2083 • बुधवार</div>
+                                <div className="text-[18px] md:text-[20px] font-black text-gray-900 tracking-tight leading-tight">{panchangData.tithi}</div>
+                                <div className="text-[13px] md:text-[15px] font-bold text-gray-600 mt-1">{panchangData.samvat}</div>
                             </div>
                         </div>
                     </div>
