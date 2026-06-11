@@ -122,7 +122,7 @@ export default function Home() {
                     
                     {news24Shorts.length > 0 && (
                         <div className="w-full max-w-[1280px] mx-auto px-4 mb-12">
-                            <ShortVideos shorts={news24Shorts} title="Ref by न्यूज़24 शॉर्ट्स" />
+                            <ShortVideos shorts={news24Shorts} title="न्यूज़24 शॉर्ट्स" />
                         </div>
                     )}
 
