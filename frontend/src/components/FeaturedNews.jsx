@@ -30,6 +30,9 @@ export default function FeaturedNews({ news = [] }) {
     if (!displayDesc && featured.content) {
         displayDesc = featured.content.replace(/<[^>]+>/g, '').substring(0, 180) + '...';
     }
+    if (displayDesc) {
+        displayDesc = displayDesc.replace(/&amp;nbsp;/gi, ' ').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+    }
     if (!displayDesc) {
         displayDesc = "देश और दुनिया की तमाम बड़ी खबरों के लिए हमारे साथ बने रहें।";
     }

@@ -244,12 +244,26 @@ export default function AajTakNavbar() {
     const navLinks = [
         { name: "होम", path: "/" },
         { name: "ई-पेपर", path: "/epaper" },
-        { name: "मनोरंजन", path: "/entertainment" },
+        { 
+            name: "मनोरंजन", 
+            path: "/entertainment",
+            hasDropdown: true,
+            subLinks: [
+                { name: "लाइफस्टाइल", path: "/lifestyle" }
+            ]
+        },
         { name: "धर्म", path: "/religion" },
         { name: "खेल", path: "/sports" },
-        { name: "लाइफस्टाइल", path: "/lifestyle" },
-        { name: "बिजनेस", path: "/business" },
-        { name: "टेक्नोलॉजी", path: "/technology" },
+        { 
+            name: "बिजनेस", 
+            path: "/business",
+            hasDropdown: true,
+            subLinks: [
+                { name: "टेक्नोलॉजी", path: "/technology" }
+            ]
+        },
+        { name: "जॉब्स", path: "/jobs" },
+        { name: "एजुकेशन", path: "/education" },
     ];
 
     return (
@@ -282,21 +296,32 @@ export default function AajTakNavbar() {
                     {navLinks.map((link) => {
                         const isActive = location.pathname === link.path;
                         return (
-                            <Link
-                                key={link.name}
-                                to={link.path}
-                                className={`flex items-center text-[15px] font-bold px-4 h-full transition-all duration-300 hover:bg-white/5 hover:text-[#ff3b22] relative group ${isActive
-                                    ? "text-white"
-                                    : "text-gray-200"
-                                    }`}
-                            >
-                                {/* Animated Bottom Border */}
-                                <div className={`absolute bottom-0 left-0 w-full h-[4px] bg-[#ff3b22] transition-transform duration-300 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-                                {link.name}
-                                {link.hasDropdown && (
-                                    <ChevronDown size={14} className="ml-1" />
+                            <div key={link.name} className="relative group h-full flex items-center">
+                                <Link
+                                    to={link.path}
+                                    className={`flex items-center text-[15px] font-bold px-4 h-full transition-all duration-300 hover:bg-white/5 hover:text-[#ff3b22] ${isActive
+                                        ? "text-white"
+                                        : "text-gray-200"
+                                        }`}
+                                >
+                                    {/* Animated Bottom Border */}
+                                    <div className={`absolute bottom-0 left-0 w-full h-[4px] bg-[#ff3b22] transition-transform duration-300 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
+                                    {link.name}
+                                    {link.hasDropdown && (
+                                        <ChevronDown size={14} className="ml-1 group-hover:rotate-180 transition-transform duration-300" />
+                                    )}
+                                </Link>
+                                {/* Dropdown menu */}
+                                {link.hasDropdown && link.subLinks && (
+                                    <div className="absolute top-[60px] left-0 w-48 bg-white border border-gray-100 shadow-xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col z-50 overflow-hidden">
+                                        {link.subLinks.map(sub => (
+                                            <Link key={sub.name} to={sub.path} className="px-5 py-3.5 text-[15px] text-gray-800 hover:bg-gray-50 hover:text-[#ff3b22] font-bold border-b border-gray-50 last:border-0 transition-colors">
+                                                {sub.name}
+                                            </Link>
+                                        ))}
+                                    </div>
                                 )}
-                            </Link>
+                            </div>
                         )
                     })}
                 </div>
@@ -466,14 +491,29 @@ export default function AajTakNavbar() {
                 {open && (
                     <div className="absolute top-[60px] left-0 w-64 bg-white/95 backdrop-blur-xl shadow-2xl z-50 rounded-br-2xl xl:hidden border border-gray-100 overflow-hidden flex flex-col">
                         {navLinks.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.path}
-                                onClick={() => setOpen(false)}
-                                className={`block px-6 py-4 font-bold border-b border-gray-100/50 hover:bg-gray-50 hover:text-[#ff3b22] hover:pl-8 transition-all duration-300 ${location.pathname === item.path ? 'text-[#ff3b22]' : 'text-gray-800'}`}
-                            >
-                                {item.name}
-                            </Link>
+                            <div key={item.name}>
+                                <Link
+                                    to={item.path}
+                                    onClick={() => setOpen(false)}
+                                    className={`flex justify-between items-center px-6 py-4 font-bold border-b border-gray-100/50 hover:bg-gray-50 hover:text-[#ff3b22] hover:pl-8 transition-all duration-300 ${location.pathname === item.path ? 'text-[#ff3b22]' : 'text-gray-800'}`}
+                                >
+                                    {item.name}
+                                </Link>
+                                {item.hasDropdown && item.subLinks && (
+                                    <div className="bg-gray-50/80 flex flex-col border-b border-gray-100/50">
+                                        {item.subLinks.map(sub => (
+                                            <Link
+                                                key={sub.name}
+                                                to={sub.path}
+                                                onClick={() => setOpen(false)}
+                                                className="block px-10 py-3 text-[15px] font-bold text-gray-600 hover:text-[#ff3b22] hover:pl-12 transition-all duration-300"
+                                            >
+                                                {sub.name}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ))}
                         <div className="px-6 py-4 flex flex-col gap-4 bg-gray-50 border-t border-gray-100/50">
                             <div className="flex items-center justify-between px-4 text-gray-800 mt-2">

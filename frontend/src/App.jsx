@@ -10,6 +10,8 @@ const Sports = lazy(() => import('./pages/Sports'));
 const Lifestyle = lazy(() => import('./pages/Lifestyle'));
 const Business = lazy(() => import('./pages/Business'));
 const Technology = lazy(() => import('./pages/Technology'));
+const Jobs = lazy(() => import('./pages/Jobs'));
+const Education = lazy(() => import('./pages/Education'));
 const SingleArticle = lazy(() => import('./pages/SingleArticle'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
@@ -166,6 +168,8 @@ function AppContent() {
             <Route path="/lifestyle" element={<Lifestyle />} />
             <Route path="/business" element={<Business />} />
             <Route path="/technology" element={<Technology />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/education" element={<Education />} />
             <Route path="/epaper" element={<Epaper />} />
             <Route path="/search" element={<Search />} />
             <Route path="/news/:id" element={<SingleArticle />} />

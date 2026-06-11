@@ -2,6 +2,114 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
+const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) => {
+    const [crop, setCrop] = useState({ unit: '%', x: 0, y: 0, width: 100, height: 100 * (9 / 16), aspect: 16 / 9 });
+    const [completedCrop, setCompletedCrop] = useState(null);
+    const imageRef = useRef(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            setCrop({ unit: '%', x: 0, y: 0, width: 100, height: 100 * (9 / 16), aspect: 16 / 9 });
+            setCompletedCrop(null);
+        }
+    }, [isOpen]);
+
+    const getCroppedImg = async () => {
+        try {
+            const image = imageRef.current;
+            const canvas = document.createElement('canvas');
+            const scaleX = image.naturalWidth / image.width;
+            const scaleY = image.naturalHeight / image.height;
+            canvas.width = completedCrop.width;
+            canvas.height = completedCrop.height;
+            const ctx = canvas.getContext('2d');
+
+            ctx.drawImage(
+                image,
+                completedCrop.x * scaleX,
+                completedCrop.y * scaleY,
+                completedCrop.width * scaleX,
+                completedCrop.height * scaleY,
+                0,
+                0,
+                completedCrop.width,
+                completedCrop.height
+            );
+
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error('Canvas is empty'));
+                        return;
+                    }
+                    resolve(blob);
+                }, 'image/jpeg', 0.95);
+            });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const handleCropUploadLocal = async () => {
+        if (!completedCrop || !imageRef.current) return;
+        const croppedBlob = await getCroppedImg();
+        if (croppedBlob) {
+            onUpload(croppedBlob);
+        }
+    };
+
+    if (!isOpen || !imageSrc) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 className="text-xl font-bold text-gray-900">Crop Image (16:9)</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-4 sm:p-6 bg-gray-100 flex flex-col items-center justify-center min-h-[300px] overflow-auto">
+                    <ReactCrop
+                        crop={crop}
+                        onChange={c => setCrop(c)}
+                        onComplete={c => setCompletedCrop(c)}
+                        aspect={16 / 9}
+                        style={{ maxWidth: '100%' }}
+                    >
+                        <img
+                            ref={imageRef}
+                            src={imageSrc}
+                            alt="Crop me"
+                            style={{ maxWidth: '100%', maxHeight: '60vh', display: 'block', margin: '0 auto' }}
+                            onLoad={e => {
+                                setCrop({
+                                    unit: '%',
+                                    x: 0,
+                                    y: 0,
+                                    width: 100,
+                                    height: 100 * (9 / 16),
+                                    aspect: 16 / 9,
+                                });
+                            }}
+                        />
+                    </ReactCrop>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                    <button onClick={onClose} className="px-6 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button onClick={handleCropUploadLocal} disabled={isUploading || !completedCrop?.width || !completedCrop?.height} className="px-6 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center justify-center min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isUploading ? 'Uploading...' : 'Crop & Upload'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function AdminDashboard() {
     const editor = useRef(null);
@@ -11,6 +119,8 @@ export default function AdminDashboard() {
     const [isUploading, setIsUploading] = useState(false);
     const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState('');
     const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
     const [isGeneratingRashifal, setIsGeneratingRashifal] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -497,7 +607,13 @@ export default function AdminDashboard() {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        const finalValue = type === 'checkbox' ? checked : value;
+        let finalValue = type === 'checkbox' ? checked : value;
+        
+        // Auto-format slug if user types directly into it
+        if (name === 'slug' && typeof finalValue === 'string') {
+            finalValue = finalValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+        }
+
         setFormData(prev => {
             const updated = { ...prev, [name]: finalValue };
             // Auto-generate slug from title if slug is empty and user is typing title
@@ -679,14 +795,24 @@ export default function AdminDashboard() {
         setIsModalOpen(true);
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    const handleImageSelect = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+                setCropImageSrc(reader.result);
+                setIsCropModalOpen(true);
+            });
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
 
+    const handleCropUpload = async (croppedBlob) => {
         setIsUploading(true);
+        setIsCropModalOpen(false);
+
         const token = localStorage.getItem('adminToken');
         const formDataUpload = new FormData();
-        formDataUpload.append('image', file);
+        formDataUpload.append('image', croppedBlob, 'cropped.jpg');
 
         try {
             const res = await fetch(__API_URL__ + '/api/upload', {
@@ -713,6 +839,7 @@ export default function AdminDashboard() {
             alert('Upload failed. Please try again.');
         } finally {
             setIsUploading(false);
+            setCropImageSrc('');
         }
     };
 
@@ -750,7 +877,9 @@ export default function AdminDashboard() {
         { id: 'business', label: 'बिज़नेस' },
         { id: 'national', label: 'राष्ट्रीय' },
         { id: 'international', label: 'अंतर्राष्ट्रीय' },
-        { id: 'politics', label: 'राजनीति' }
+        { id: 'politics', label: 'राजनीति' },
+        { id: 'jobs', label: 'जॉब्स' },
+        { id: 'education', label: 'एजुकेशन' }
     ];
 
     return (
@@ -1269,6 +1398,15 @@ export default function AdminDashboard() {
                 </main>
             </div>
 
+            {/* Crop Modal */}
+            <ImageCropModal 
+                isOpen={isCropModalOpen} 
+                onClose={() => { setIsCropModalOpen(false); setCropImageSrc(''); }} 
+                imageSrc={cropImageSrc} 
+                onUpload={handleCropUpload} 
+                isUploading={isUploading} 
+            />
+
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center p-0 sm:p-4 overflow-y-auto">
@@ -1368,7 +1506,7 @@ export default function AdminDashboard() {
                                                         </>
                                                     )}
                                                 </div>
-                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} onClick={(e) => { e.target.value = null }} disabled={isUploading} />
+                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageSelect} onClick={(e) => { e.target.value = null }} disabled={isUploading} />
                                             </label>
                                         </div>
 
@@ -1474,6 +1612,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

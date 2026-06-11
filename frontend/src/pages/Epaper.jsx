@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toJpeg } from 'html-to-image';
+import { FaInstagram, FaFacebook, FaFacebookF, FaWhatsapp, FaYoutube, FaTumblr, FaXTwitter, FaPinterest, FaLinkedin, FaGlobe } from 'react-icons/fa6';
 
 const SUDOKU_PUZZLES = [
   "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
@@ -215,13 +216,13 @@ export default function Epaper() {
                         .filter(item => item.isEpaper)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                         
-                    // Calculate timestamp for 24 hours ago
-                    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                    // Calculate timestamp for 4 days ago
+                    const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
                     
-                    // Filter for news in the last 24 hours
-                    const recentEpaperNews = allEpaperNews.filter(item => new Date(item.createdAt) >= twentyFourHoursAgo);
+                    // Filter for news in the last 4 days
+                    const recentEpaperNews = allEpaperNews.filter(item => new Date(item.createdAt) >= fourDaysAgo);
                     
-                    // If no news updated in the last 24 hours, show old news so it doesn't stay empty!
+                    // If no news updated in the last 4 days, show old news so it doesn't stay empty!
                     if (recentEpaperNews.length > 0) {
                         setNews(recentEpaperNews);
                     } else {
@@ -256,8 +257,11 @@ export default function Epaper() {
 
     const stripHtml = (html) => {
         if (!html) return '';
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || doc.body.innerText || '';
+        // Pre-clean to catch any double-encoded entities
+        const cleanHtml = html.replace(/&amp;nbsp;/gi, ' ').replace(/&nbsp;/gi, ' ');
+        const doc = new DOMParser().parseFromString(cleanHtml, 'text/html');
+        const text = doc.body.textContent || doc.body.innerText || '';
+        return text.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
     };
 
     const totalPages = Math.ceil(news.length / itemsPerPage);
@@ -272,6 +276,7 @@ export default function Epaper() {
     const downloadNewsCutting = async (id, title) => {
         const articleElement = document.getElementById(`article-${id}`);
         const mastheadElement = document.getElementById('epaper-masthead');
+        const footerElement = document.getElementById('epaper-footer');
         if (!articleElement || !mastheadElement) return;
         
         try {
@@ -310,15 +315,58 @@ export default function Epaper() {
             articleClone.style.boxShadow = 'none';
             articleClone.style.width = '100%';
 
-            // Force all images to be in full color for the cutting
+            // Force all images to be in full color and show fully without cropping
             const images = articleClone.querySelectorAll('img');
             images.forEach(img => {
-                img.classList.remove('grayscale');
+                img.classList.remove('grayscale', 'aspect-[16/9]', 'object-cover');
                 img.style.filter = 'none';
+                img.style.height = 'auto';
+                img.style.maxHeight = '600px';
+                img.style.objectFit = 'contain';
             });
+
+            // Show full article text by removing line clamps
+            const paragraphs = articleClone.querySelectorAll('p');
+            paragraphs.forEach(p => {
+                p.className = p.className.replace(/line-clamp-\[\d+\]/g, '');
+                p.style.display = 'block';
+            });
+
+            // Make all titles uniform large size for downloaded cutting
+            const titleHeading = articleClone.querySelector('h2');
+            if (titleHeading) {
+                titleHeading.classList.remove('text-4xl', 'md:text-5xl', 'text-2xl', 'md:text-3xl', 'text-xl', 'text-3xl');
+                titleHeading.classList.add('text-4xl', 'md:text-5xl');
+            }
+
+            // Ensure "दैनिक सबसे तेज़" tag is visible on ALL cuttings
+            const categorySpan = articleClone.querySelector('span.bg-black.text-white');
+            if (categorySpan) {
+                const categoryContainer = categorySpan.parentElement;
+                const hasTag = Array.from(categoryContainer.children).some(el => el.textContent.includes('दैनिक सबसे तेज़'));
+                if (!hasTag) {
+                    const tag = document.createElement('span');
+                    tag.className = "text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2";
+                    tag.textContent = "दैनिक सबसे तेज़";
+                    categoryContainer.appendChild(tag);
+                }
+            }
 
             tempContainer.appendChild(mastheadClone);
             tempContainer.appendChild(articleClone);
+            
+            if (footerElement) {
+                const footerClone = footerElement.cloneNode(true);
+                // Make sure hidden dot groups show up on download
+                const hiddenDots = footerClone.querySelectorAll('.hidden.sm\\:flex');
+                hiddenDots.forEach(el => {
+                    el.classList.remove('hidden', 'sm:flex');
+                    el.style.display = 'flex';
+                });
+                footerClone.style.backgroundColor = 'transparent';
+                footerClone.style.borderTop = '1px solid rgba(0,0,0,0.2)';
+                tempContainer.appendChild(footerClone);
+            }
             
             // Append to the root so styles apply perfectly
             document.getElementById('root').appendChild(tempContainer);
@@ -385,8 +433,8 @@ export default function Epaper() {
                             </div>
                         </div>
                         <div className="text-center flex-1">
-                            <div className="inline-block relative mt-2 md:mt-4">
-                                <div className="text-center text-[9px] md:text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] -mb-1 md:-mb-2 relative z-10 font-sans">
+                            <div className="inline-block relative -mt-1 md:mt-4">
+                                <div className="text-center text-[9px] md:text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-0 md:-mb-2 relative z-10 font-sans">
                                     A Unit of HBN News 24
                                 </div>
                                 <h1
@@ -399,7 +447,7 @@ export default function Epaper() {
                                     सच्ची खबर, बेबाक नजर
                                 </div>
                             </div>
-                            <p className="text-[12px] tracking-normal font-mono mt-4 text-gray-700">
+                            <p className="text-[12px] tracking-normal font-mono mt-1 text-gray-700">
                                 राष्ट्रीय हिंदी दैनिक • स्थापना 2024
                             </p>
                         </div>
@@ -414,16 +462,27 @@ export default function Epaper() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-wrap justify-between gap-2 text-[12px] font-medium border-t border-b border-black/20 py-2 mt-3 bg-black/5 px-2">
-                        <span>
+                    <div className="flex justify-between md:grid md:grid-cols-3 gap-1 md:gap-2 text-[12px] md:text-[14px] font-semibold border-y-[3px] border-[#801515] py-2.5 mt-4 bg-gradient-to-r from-[#801515] via-[#a61c1c] to-[#801515] text-white px-2 md:px-4 items-center shadow-sm">
+                        <a href="https://hbnnews24.com/" target="_blank" rel="noreferrer" className="text-left font-sans font-bold uppercase tracking-[0.02em] sm:tracking-[0.15em] text-[10px] md:text-[13px] whitespace-nowrap flex items-center gap-1.5 opacity-95 hover:text-gray-200 transition-colors">
+                            <FaGlobe className="text-[12px] md:text-[15px] opacity-90 shrink-0" /> <span className="hidden sm:inline">www.hbnnews24.com</span><span className="sm:hidden">hbnnews24.com</span>
+                        </a>
+                        <div className="text-center font-bold text-white whitespace-nowrap drop-shadow-sm text-[9px] sm:text-[11px] md:text-[14px]">
                             {new Date().toLocaleDateString('hi-IN', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
-                            })}
-                        </span>
-                        <span>पृष्ठ {currentPage} / {totalPages}</span>
+                            })} <span className="hidden sm:inline mx-1 md:mx-2 opacity-60">|</span> <span className="hidden sm:inline font-medium opacity-90">पृष्ठ {currentPage} / {totalPages}</span>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 md:gap-4 text-[13px] sm:text-[15px] md:text-[18px]">
+                            <a href="https://www.instagram.com/hbnnews24/" target="_blank" rel="noreferrer" className="text-white hover:text-[#ffb3c6] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaInstagram /></a>
+                            <a href="https://www.facebook.com/HBNNews24" target="_blank" rel="noreferrer" className="text-white hover:text-[#b3d4ff] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaFacebook /></a>
+                            <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noreferrer" className="text-white hover:text-[#ffb3b3] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaYoutube /></a>
+                            <a href="https://www.tumblr.com/hbnnews24" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-[#b3c6ff] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaTumblr /></a>
+                            <a href="https://x.com/HbnNews24" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-gray-300 hover:-translate-y-0.5 transition-all drop-shadow-md"><FaXTwitter /></a>
+                            <a href="https://in.pinterest.com/hbnnews24/" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-[#ffb3c6] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaPinterest /></a>
+                            <a href="https://www.linkedin.com/in/hbn-news-b79459342/" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-[#b3e0ff] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaLinkedin /></a>
+                        </div>
                     </div>
                 </div>
 
@@ -484,7 +543,7 @@ export default function Epaper() {
                                         </span>
                                         {style === 'headline' && (
                                             <span className="text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2">
-                                                विशेष संवाददाता
+                                                दैनिक सबसे तेज़
                                             </span>
                                         )}
                                     </div>
@@ -505,7 +564,9 @@ export default function Epaper() {
                                     <div className="flex items-center gap-2 text-[12px] font-medium text-gray-700 mb-3 border-b border-gray-200/50 pb-1 self-start">
                                         <span className="font-bold text-[#da0000] uppercase tracking-wide">{item.location || 'नई दिल्ली'}</span>
                                         <span className="text-gray-400">|</span>
-                                        <span className="text-gray-600">{item.author || 'हमारे संवाददाता'}</span>
+                                        <span className="text-gray-600">
+                                            {['admin', 'एडमिन'].includes(item.author?.toLowerCase()) ? 'विशेष संवाददाता' : (item.author || 'विशेष संवाददाता')}
+                                        </span>
                                     </div>
 
                                     {/* Image – only if not text-only and exists */}
@@ -558,6 +619,63 @@ export default function Epaper() {
                     })}
                 </div>
 
+
+                {/* Footer imprint and CMYK Newspaper Dots */}
+                <div id="epaper-footer" className="border-t border-black/20 pt-4 pb-6 flex flex-col items-center gap-5 bg-transparent">
+                    <div className="text-xs font-sans font-medium text-center text-gray-700 tracking-wide px-4">
+                        प्रकाशक: HBN News 24 मीडिया | यह ई-पेपर मूल मुद्रित संस्करण के समान प्रमाणिक है।
+                    </div>
+                    {/* Newspaper Registration Color Marks and Socials */}
+                    <div className="w-full flex items-center justify-between px-2 sm:px-6 md:px-10">
+                        {/* Dot Group 1 */}
+                        <div className="hidden sm:flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                        </div>
+
+                        {/* Dot Group 2 */}
+                        <div className="hidden md:flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                        </div>
+
+                        {/* Dot Group 3 */}
+                        <div className="flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                        </div>
+
+                        {/* Dot Group 4 */}
+                        <div className="hidden sm:flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                        </div>
+
+                        {/* Right Socials */}
+                        <div className="flex gap-1.5 md:gap-2 items-center">
+                            <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noreferrer" className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FF0000] flex items-center justify-center text-white shadow-sm hover:scale-110 transition-transform"><FaYoutube className="text-xs md:text-base" /></a>
+                            <a href="https://www.facebook.com/HBNNews24" target="_blank" rel="noreferrer" className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#1877F2] flex items-center justify-center text-white shadow-sm hover:scale-110 transition-transform"><FaFacebookF className="text-xs md:text-base" /></a>
+                            <a href="https://x.com/HbnNews24" target="_blank" rel="noreferrer" className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-black flex items-center justify-center text-white shadow-sm hover:scale-110 transition-transform"><FaXTwitter className="text-xs md:text-base" /></a>
+                        </div>
+                    </div>
+                </div>
+
                 {/* ========== PAGE TURNING (REAL AKHBAAR BUTTONS) ========== */}
                 {totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-black/30 px-6 py-5 bg-white/60">
@@ -580,11 +698,6 @@ export default function Epaper() {
                         </button>
                     </div>
                 )}
-
-                {/* Footer imprint */}
-                <div className="text-xs font-sans font-medium text-center border-t border-black/20 py-4 text-gray-700 tracking-wide">
-                    प्रकाशक: HBN News 24 मीडिया | यह ई-पेपर मूल मुद्रित संस्करण के समान प्रमाणिक है।
-                </div>
             </div>
         </div>
     );
