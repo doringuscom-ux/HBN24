@@ -1013,9 +1013,9 @@ export default function Epaper() {
                             })} <span className="hidden sm:inline mx-1 md:mx-2 opacity-60">|</span> <span className="hidden sm:inline font-medium opacity-90">पृष्ठ {currentPage} / {totalPages}</span>
                         </div>
                         <div className="flex items-center justify-end gap-2 md:gap-4 text-[13px] sm:text-[15px] md:text-[18px]">
+                            <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noreferrer" className="text-white hover:text-[#ffb3b3] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaYoutube /></a>
                             <a href="https://www.instagram.com/hbnnews24/" target="_blank" rel="noreferrer" className="text-white hover:text-[#ffb3c6] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaInstagram /></a>
                             <a href="https://www.facebook.com/HBNNews24" target="_blank" rel="noreferrer" className="text-white hover:text-[#b3d4ff] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaFacebook /></a>
-                            <a href="https://www.youtube.com/@hbnnews24x7" target="_blank" rel="noreferrer" className="text-white hover:text-[#ffb3b3] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaYoutube /></a>
                             <a href="https://www.tumblr.com/hbnnews24" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-[#b3c6ff] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaTumblr /></a>
                             <a href="https://x.com/HbnNews24" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-gray-300 hover:-translate-y-0.5 transition-all drop-shadow-md"><FaXTwitter /></a>
                             <a href="https://in.pinterest.com/hbnnews24/" target="_blank" rel="noreferrer" className="hidden sm:block text-white hover:text-[#ffb3c6] hover:-translate-y-0.5 transition-all drop-shadow-md"><FaPinterest /></a>
@@ -1166,33 +1166,33 @@ export default function Epaper() {
                     {/* Newspaper Registration Color Marks and Socials */}
                     <div className="w-full flex items-center justify-between px-2 sm:px-6 md:px-10">
                         {/* Authentic CMYK Registration Marks 1 */}
-                        <div className="hidden sm:flex gap-1.5 md:gap-2 items-center">
+                        <div className="hidden sm:flex gap-1.5 md:gap-3 items-center">
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#b0b0b0]"></div>
+                            <div className="w-24 md:w-40 h-3 md:h-4 bg-[#b0b0b0]"></div>
                         </div>
 
                         {/* Authentic CMYK Registration Marks 2 */}
-                        <div className="hidden md:flex gap-1.5 md:gap-2 items-center">
+                        <div className="hidden md:flex gap-1.5 md:gap-3 items-center">
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#b0b0b0]"></div>
+                            <div className="w-24 md:w-40 h-3 md:h-4 bg-[#b0b0b0]"></div>
                         </div>
 
                         {/* Authentic CMYK Registration Marks 3 */}
-                        <div className="flex gap-1.5 md:gap-2 items-center">
+                        <div className="flex gap-1.5 md:gap-3 items-center">
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#b0b0b0]"></div>
+                            <div className="w-24 md:w-40 h-3 md:h-4 bg-[#b0b0b0]"></div>
                         </div>
 
                         {/* Right Socials */}
