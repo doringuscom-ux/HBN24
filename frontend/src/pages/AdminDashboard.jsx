@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import ReactCrop from 'react-image-crop';
@@ -142,7 +142,8 @@ export default function AdminDashboard() {
     const [selectedPageSeoUrl, setSelectedPageSeoUrl] = useState('');
     const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
 
-    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo', 'users'
+    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo', 'users', 'messages'
+    const [contactMessages, setContactMessages] = useState([]);
     const [userRole, setUserRole] = useState('user');
     const [usersList, setUsersList] = useState([]);
     const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', email: '', phone: '' });
@@ -262,6 +263,54 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error('Error fetching users:', error);
+        }
+    };
+
+    const fetchContactMessages = async () => {
+        const token = localStorage.getItem('adminToken');
+        if (!token) return;
+        try {
+            const res = await fetch(__API_URL__ + '/api/contact', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setContactMessages(data);
+            }
+        } catch (error) {
+            console.error('Error fetching contact messages:', error);
+        }
+    };
+
+    const handleMarkAsRead = async (id) => {
+        const token = localStorage.getItem('adminToken');
+        if (!token) return;
+        try {
+            const res = await fetch(__API_URL__ + `/api/contact/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'read' })
+            });
+            if (res.ok) fetchContactMessages();
+        } catch (error) {
+            console.error('Error updating message status:', error);
+        }
+    };
+
+    const handleDeleteMessage = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this message?")) return;
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + `/api/contact/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchContactMessages();
+        } catch (error) {
+            console.error('Error deleting message:', error);
         }
     };
 
@@ -1040,12 +1089,20 @@ export default function AdminDashboard() {
                         <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
                     </button>
                     {userRole === 'admin' && (
-                        <button 
-                            onClick={() => setCurrentView('users')}
-                            className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
-                        >
-                            <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Manage Users
-                        </button>
+                        <>
+                            <button 
+                                onClick={() => setCurrentView('users')}
+                                className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                            >
+                                <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Manage Users
+                            </button>
+                            <button 
+                                onClick={() => { setCurrentView('messages'); fetchContactMessages(); }}
+                                className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'messages' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                            >
+                                <MessageSquare size={20} className={currentView === 'messages' ? 'text-red-500' : ''} /> Contact Messages
+                            </button>
+                        </>
                     )}
                     <a href="/" target="_blank" rel="noopener noreferrer" className="px-6 py-3 flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
                         <LayoutDashboard size={20} /> View Website
@@ -1371,6 +1428,50 @@ export default function AdminDashboard() {
                                     placeholder="सुविचार यहाँ लिखें..."
                                 ></textarea>
                             </div>
+                        </div>
+                    ) : currentView === 'messages' ? (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Contact Inquiries & Messages</h2>
+                            
+                            {contactMessages.length === 0 ? (
+                                <p className="text-gray-500 text-center py-10">No messages found.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {contactMessages.map((msg) => (
+                                        <div key={msg._id} className={`p-5 rounded-lg border ${msg.status === 'new' ? 'bg-red-50/30 border-red-200 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
+                                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                                                        {msg.subject} 
+                                                        {msg.status === 'new' && <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white">NEW</span>}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 mt-1">From: <span className="font-semibold text-gray-800">{msg.name}</span> ({msg.email})</p>
+                                                    <p className="text-xs text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
+                                                </div>
+                                                <div className="flex gap-2 w-full sm:w-auto">
+                                                    {msg.status === 'new' && (
+                                                        <button 
+                                                            onClick={() => handleMarkAsRead(msg._id)}
+                                                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded text-sm font-semibold hover:bg-blue-100 transition-colors"
+                                                        >
+                                                            Mark as Read
+                                                        </button>
+                                                    )}
+                                                    <button 
+                                                        onClick={() => handleDeleteMessage(msg._id)}
+                                                        className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 text-red-600 border border-gray-200 rounded text-sm font-semibold hover:bg-red-50 hover:border-red-200 transition-colors flex items-center justify-center gap-1"
+                                                    >
+                                                        <Trash2 size={16} /> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-4 rounded border border-gray-100 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                                                {msg.message}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     ) : currentView === 'users' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">

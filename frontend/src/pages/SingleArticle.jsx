@@ -505,8 +505,25 @@ export default function SingleArticle() {
                     )
                 )}
 
+                {/* Author Bio Box for Google News */}
+                {hasContent && (
+                    <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-sm">
+                        <div className="w-16 h-16 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                            <img src={`https://ui-avatars.com/api/?name=${article.author || 'Admin'}&background=da0000&color=fff&size=128`} alt={article.author || 'Author'} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col text-center sm:text-left">
+                            <h4 className="font-bold text-lg text-gray-900 mb-1">About the Author: {article.author || 'HBN News 24 Desk'}</h4>
+                            <p className="text-gray-600 text-[15px] leading-relaxed">
+                                {article.author && !['admin', 'एडमिन'].includes(article.author.toLowerCase()) 
+                                    ? `${article.author} is a dedicated journalist and reporter for HBN News 24, committed to bringing you the most accurate and fastest news updates from ground zero.`
+                                    : 'HBN News 24 Editorial Desk comprises a team of experienced journalists and editors dedicated to providing fast, verified, and unbiased news to our readers.'}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Comments Section */}
-                <div ref={commentsRef} className="mt-12 border-t border-gray-200 pt-8">
+                <div ref={commentsRef} className="mt-8 border-t border-gray-200 pt-8">
                     <h3 className="text-2xl font-bold mb-6">Comments ({comments.length})</h3>
 
                     {/* Comment Form */}

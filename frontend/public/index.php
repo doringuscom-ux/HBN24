@@ -10,9 +10,11 @@ if (!file_exists($htmlPath)) {
 
 $html = file_get_contents($htmlPath);
 $requestUri = $_SERVER['REQUEST_URI'];
+// Safely strip any query string like ?fbclid= without relying on parse_url quirks
+$requestPath = explode('?', $requestUri)[0];
 
 // Check if the route is a news article: e.g. /news/some-article-slug
-if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestUri, $matches)) {
+if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
     $slug = $matches[1];
     
     // Fetch article data from your backend API
@@ -22,7 +24,7 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestUri, $matches)) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 3); // 3 seconds timeout
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8); // 8 seconds timeout for serverless cold start
     $response = curl_exec($ch);
 
     if ($response) {

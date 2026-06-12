@@ -10,10 +10,13 @@ const Footer = () => {
         { name: 'लाइफस्टाइल', path: '/lifestyle' },
         { name: 'बिजनेस', path: '/business' },
         { name: 'टेक्नोलॉजी', path: '/technology' },
-        { name: 'About us', path: '#' },
-        { name: 'Contact us', path: '#' },
-        { name: 'Privacy Policy', path: '#' },
-        { name: 'Terms and Conditions', path: '#' },
+        { name: 'About Us', path: '/about' },
+        { name: 'Contact Us', path: '/contact' },
+        { name: 'Privacy Policy', path: '/privacy-policy' },
+        { name: 'Terms & Conditions', path: '/terms' },
+        { name: 'Disclaimer', path: '/disclaimer' },
+        { name: 'Editorial Policy', path: '/editorial-policy' },
+        { name: 'Fact Check Policy', path: '/fact-check-policy' },
     ];
 
     return (

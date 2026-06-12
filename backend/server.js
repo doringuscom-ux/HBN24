@@ -58,6 +58,7 @@ const seoRoutes = require('./src/routes/seoRoutes');
 const suvicharRoutes = require('./src/routes/suvicharRoutes');
 const panchangRoutes = require('./src/routes/panchangRoutes');
 const cronRoutes = require('./src/routes/cronRoutes');
+const contactRoutes = require('./src/routes/contactRoutes');
 const authMiddleware = require('./src/middleware/authMiddleware');
 
 app.use('/api/epaper', epaperRoutes);
@@ -68,6 +69,7 @@ app.use('/api/seo', seoRoutes);
 app.use('/api/suvichar', suvicharRoutes);
 app.use('/api/panchang', panchangRoutes);
 app.use('/api/cron', cronRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Add a root route so Vercel doesn't show "Cannot GET /"
 app.get('/', (req, res) => {

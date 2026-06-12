@@ -18,6 +18,16 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Epaper = lazy(() => import('./pages/Epaper'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Search = lazy(() => import('./pages/Search'));
+
+// Policy Pages
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const Disclaimer = lazy(() => import('./pages/Disclaimer'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const EditorialPolicy = lazy(() => import('./pages/EditorialPolicy'));
+const FactCheckPolicy = lazy(() => import('./pages/FactCheckPolicy'));
+
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
@@ -172,6 +182,13 @@ function AppContent() {
             <Route path="/education" element={<Education />} />
             <Route path="/epaper" element={<Epaper />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/editorial-policy" element={<EditorialPolicy />} />
+            <Route path="/fact-check-policy" element={<FactCheckPolicy />} />
             <Route path="/news/:id" element={<SingleArticle />} />
             <Route 
               path="/admin/login" 
