@@ -954,8 +954,8 @@ export default function Epaper() {
     return (
         <div className="min-h-screen bg-[#c9c1ae] py-6 px-4 md:px-8 selection:bg-yellow-900 selection:text-white">
             {/* Main newspaper wrapper with aged paper look */}
-            <div
-                className="max-w-[1300px] mx-auto bg-[#fef7e6] shadow-2xl border border-black/20"
+            <div id="epaper-page"
+                className="max-w-[1300px] mx-auto bg-[#fef7e6] shadow-2xl border border-black/20 border-b-[8px] border-b-[#a61c1c]"
                 style={{
                     backgroundImage: 'url("https://www.transparenttextures.com/patterns/old-paper-texture.png")',
                     fontFamily: "'Playfair Display', 'Times New Roman', Times, serif",
@@ -1165,44 +1165,34 @@ export default function Epaper() {
                     </div>
                     {/* Newspaper Registration Color Marks and Socials */}
                     <div className="w-full flex items-center justify-between px-2 sm:px-6 md:px-10">
-                        {/* Dot Group 1 */}
+                        {/* Authentic CMYK Registration Marks 1 */}
                         <div className="hidden sm:flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
                         </div>
 
-                        {/* Dot Group 2 */}
+                        {/* Authentic CMYK Registration Marks 2 */}
                         <div className="hidden md:flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
                         </div>
 
-                        {/* Dot Group 3 */}
+                        {/* Authentic CMYK Registration Marks 3 */}
                         <div className="flex gap-1.5 md:gap-2 items-center">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00aeef]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#ec008c]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fff200]"></div>
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#000000]"></div>
                             <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
-                        </div>
-
-                        {/* Dot Group 4 */}
-                        <div className="hidden sm:flex gap-1.5 md:gap-2 items-center">
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#9ca3af]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#e5e7eb]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#38bdf8]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#f472b6]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#fcd34d]"></div>
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#111827]"></div>
+                            <div className="w-16 md:w-24 h-3 md:h-4 bg-gradient-to-r from-black via-gray-500 to-gray-100"></div>
                         </div>
 
                         {/* Right Socials */}
