@@ -4,9 +4,9 @@ import { toJpeg } from 'html-to-image';
 import { FaInstagram, FaFacebook, FaFacebookF, FaWhatsapp, FaYoutube, FaTumblr, FaXTwitter, FaPinterest, FaLinkedin, FaGlobe } from 'react-icons/fa6';
 
 const SUDOKU_PUZZLES = [
-  "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
-  "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
-  "100489006730000040000001295007120600500703008006095700914600000020000037800512004"
+    "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
+    "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
+    "100489006730000040000001295007120600500703008006095700914600000020000037800512004"
 ];
 
 const NewspaperGame = () => {
@@ -17,22 +17,22 @@ const NewspaperGame = () => {
     const [isWon, setIsWon] = useState(false);
 
     const isValidForSolve = (grid, r, c, n) => {
-        for(let i=0; i<9; i++) {
-            if(grid[r][i] === n) return false;
-            if(grid[i][c] === n) return false;
-            if(grid[3*Math.floor(r/3) + Math.floor(i/3)][3*Math.floor(c/3) + (i%3)] === n) return false;
+        for (let i = 0; i < 9; i++) {
+            if (grid[r][i] === n) return false;
+            if (grid[i][c] === n) return false;
+            if (grid[3 * Math.floor(r / 3) + Math.floor(i / 3)][3 * Math.floor(c / 3) + (i % 3)] === n) return false;
         }
         return true;
     };
 
     const solveGrid = (grid) => {
-        for(let r=0; r<9; r++) {
-            for(let c=0; c<9; c++) {
-                if(grid[r][c] === null) {
-                    for(let n=1; n<=9; n++) {
-                        if(isValidForSolve(grid, r, c, n)) {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === null) {
+                    for (let n = 1; n <= 9; n++) {
+                        if (isValidForSolve(grid, r, c, n)) {
                             grid[r][c] = n;
-                            if(solveGrid(grid)) return true;
+                            if (solveGrid(grid)) return true;
                             grid[r][c] = null;
                         }
                     }
@@ -46,22 +46,22 @@ const NewspaperGame = () => {
     const initGame = () => {
         const puzzle = SUDOKU_PUZZLES[Math.floor(Math.random() * SUDOKU_PUZZLES.length)];
         const grid = [];
-        for (let r=0; r<9; r++) {
+        for (let r = 0; r < 9; r++) {
             const row = [];
-            for (let c=0; c<9; c++) {
-                const char = puzzle[r*9 + c];
+            for (let c = 0; c < 9; c++) {
+                const char = puzzle[r * 9 + c];
                 row.push(char === '0' ? null : parseInt(char));
             }
             grid.push(row);
         }
         setInitialBoard(grid);
         setBoard(JSON.parse(JSON.stringify(grid)));
-        
+
         // Generate solution for instant validation
         const solved = JSON.parse(JSON.stringify(grid));
         solveGrid(solved);
         setSolutionBoard(solved);
-        
+
         setSelectedCell(null);
         setIsWon(false);
     };
@@ -69,7 +69,7 @@ const NewspaperGame = () => {
     useEffect(() => { initGame(); }, []);
 
     const handleCellClick = (r, c) => {
-        if (!initialBoard[r][c]) setSelectedCell({r, c});
+        if (!initialBoard[r][c]) setSelectedCell({ r, c });
     };
 
     const handleNumberClick = (num) => {
@@ -77,11 +77,11 @@ const NewspaperGame = () => {
         const newBoard = [...board];
         newBoard[selectedCell.r][selectedCell.c] = num;
         setBoard(newBoard);
-        
+
         if (newBoard.every(row => row.every(cell => cell !== null))) {
             let won = true;
-            for (let r=0; r<9; r++) {
-                for (let c=0; c<9; c++) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
                     if (newBoard[r][c] !== solutionBoard[r][c]) won = false;
                 }
             }
@@ -100,7 +100,7 @@ const NewspaperGame = () => {
                 <span className="text-sm sm:text-base font-serif font-black text-gray-900 border-b-[1.5px] border-gray-900 pb-1 mb-3 w-full max-w-[350px] text-center tracking-widest uppercase">
                     {isWon ? 'बधाई हो! हल हो गया 🎉' : 'सुडोकू'}
                 </span>
-                
+
                 <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full mb-3">
                     <div className="border-[1.5px] border-gray-900 bg-gray-400 gap-px grid grid-cols-9 w-[180px] sm:w-[220px] aspect-square shadow-sm">
                         {board.map((row, r) => (
@@ -110,22 +110,22 @@ const NewspaperGame = () => {
                                 const isSameRowCol = selectedCell && (selectedCell.r === r || selectedCell.c === c);
                                 const isCorrect = !isInit && cell !== null && cell === solutionBoard[r][c];
                                 const isWrong = !isInit && cell !== null && cell !== solutionBoard[r][c];
-                                
+
                                 const borderRight = c % 3 === 2 && c !== 8 ? 'border-r-[1.5px] border-gray-900' : '';
                                 const borderBottom = r % 3 === 2 && r !== 8 ? 'border-b-[1.5px] border-gray-900' : '';
-                                
+
                                 let bgColor = 'bg-white';
                                 if (isSelected) bgColor = 'bg-yellow-300 ring-2 ring-yellow-500 z-10 relative shadow-sm';
                                 else if (isSameRowCol) bgColor = 'bg-yellow-50';
-                                
+
                                 let textColor = 'text-gray-900';
                                 if (!isInit) {
                                     if (isCorrect) textColor = 'text-green-800 font-black text-[15px] sm:text-[18px] drop-shadow-sm';
                                     else if (isWrong) textColor = 'text-red-700 font-black text-[15px] sm:text-[18px] drop-shadow-sm';
                                 }
-                                
+
                                 return (
-                                    <div 
+                                    <div
                                         key={`${r}-${c}`}
                                         onClick={() => handleCellClick(r, c)}
                                         className={`flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer transition-colors ${borderRight} ${borderBottom} ${bgColor} ${textColor}`}
@@ -141,8 +141,8 @@ const NewspaperGame = () => {
                         <div className="flex flex-col items-center">
                             <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 mb-1 border-b border-gray-300 pb-0.5 whitespace-nowrap">नंबर भरें 👇</span>
                             <div className="grid grid-cols-2 gap-1 sm:gap-2">
-                                {[1,2,3,4,5,6,7,8,9, 'X'].map((num, idx) => (
-                                    <button 
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'X'].map((num, idx) => (
+                                    <button
                                         key={idx}
                                         onClick={() => num === 'X' ? handleNumberClick(null) : handleNumberClick(num)}
                                         className={`font-bold py-1 px-3 rounded shadow-sm text-[10px] sm:text-xs transition-colors ${num === 'X' ? 'bg-red-100 hover:bg-red-200 text-red-800 border border-red-300' : 'bg-white hover:bg-gray-100 border border-gray-300 text-gray-800'}`}
@@ -211,18 +211,18 @@ export default function Epaper() {
                 const res = await fetch(__API_URL__ + '/api/news');
                 if (res.ok) {
                     const data = await res.json();
-                    
+
                     // Get all e-paper news sorted by newest
                     const allEpaperNews = data
                         .filter(item => item.isEpaper)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                        
+
                     // Calculate timestamp for 4 days ago
                     const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
-                    
+
                     // Filter for news in the last 4 days
                     const recentEpaperNews = allEpaperNews.filter(item => new Date(item.createdAt) >= fourDaysAgo);
-                    
+
                     // If no news updated in the last 4 days, show old news so it doesn't stay empty!
                     if (recentEpaperNews.length > 0) {
                         setNews(recentEpaperNews);
@@ -285,40 +285,43 @@ export default function Epaper() {
             container.style.padding = '20px'; // Outer padding for the black border
             container.style.boxSizing = 'border-box';
             container.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
-            
+
             const innerBorder = document.createElement('div');
             innerBorder.style.border = 'none';
             innerBorder.style.padding = '20px';
             container.appendChild(innerBorder);
-            
+
             // 1. Top Row: Category and Brand
             const catTagRow = document.createElement('div');
             catTagRow.style.display = 'flex';
             catTagRow.style.alignItems = 'center';
             catTagRow.style.marginTop = '-5px';
-            catTagRow.style.marginBottom = '8px';
+            catTagRow.style.marginBottom = '16px';
             catTagRow.style.fontFamily = 'sans-serif';
-            catTagRow.style.fontSize = '14px';
+            catTagRow.style.fontSize = '12px';
             catTagRow.style.fontWeight = 'bold';
 
             const catBlock = document.createElement('div');
             catBlock.style.backgroundColor = '#000000';
             catBlock.style.color = '#fef08a'; // yellow-200
-            catBlock.style.padding = '3px 10px';
+            catBlock.style.padding = '2px 8px';
             catBlock.style.textTransform = 'uppercase';
             catBlock.style.letterSpacing = '0.5px';
             catBlock.innerText = catHindi || 'न्यूज़';
-            
+
             const separator = document.createElement('span');
             separator.innerText = '|';
             separator.style.color = '#dc2626'; // red-600
             separator.style.margin = '0 8px';
-            separator.style.fontSize = '16px';
-            
+            separator.style.fontSize = '22px';
+            separator.style.lineHeight = '1';
+            separator.style.marginTop = '-4px';
+
             const tagLine = document.createElement('span');
             tagLine.innerText = 'दैनिक सबसे तेज़';
             tagLine.style.color = '#dc2626';
             tagLine.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
+            tagLine.style.fontSize = '11px';
 
             catTagRow.appendChild(catBlock);
             catTagRow.appendChild(separator);
@@ -353,11 +356,11 @@ export default function Epaper() {
             metaRow.style.fontSize = '16px';
             metaRow.style.fontWeight = 'bold';
             metaRow.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
-            
+
             let authorName = ['admin', 'एडमिन'].includes(item.author?.toLowerCase()) ? 'विशेष संवाददाता' : (item.author || 'विशेष संवाददाता');
-            
-            metaRow.innerHTML = `<span style="color: #dc2626;">${item.location || 'नई दिल्ली'}</span> <span style="color: #9ca3af; margin: 0 8px; font-weight: normal;">|</span> <span style="color: #6b7280;">${authorName}</span>`;
-            
+
+            metaRow.innerHTML = `<span style="color: #dc2626;">${item.location || 'नई दिल्ली'}</span> <span style="color: #9ca3af; margin: 0 8px; font-weight: normal;">|</span> <span style="color: #6b7280; font-size: 14px; font-weight: 600;">${authorName}</span>`;
+
             // Global styles to prevent right overflow from WYSIWYG content
             const styleFix = document.createElement('style');
             styleFix.innerHTML = `
@@ -402,7 +405,7 @@ export default function Epaper() {
             if (isFullArticle) {
                 const parser = new DOMParser();
                 doc = parser.parseFromString(item.content, 'text/html');
-                
+
                 // Clean up empty tags and <br>s from WYSIWYG that cause extra spacing
                 doc.querySelectorAll('p, div, span').forEach(el => {
                     if (!el.textContent.trim() && !el.querySelector('img')) {
@@ -410,22 +413,22 @@ export default function Epaper() {
                     }
                 });
                 doc.querySelectorAll('br').forEach(br => br.remove());
-                
+
                 // Flatten paragraphs into a single continuous block of text
                 doc.querySelectorAll('p, div').forEach(el => {
                     const space = document.createTextNode(' ');
                     el.appendChild(space);
-                    while(el.firstChild) {
+                    while (el.firstChild) {
                         el.parentNode.insertBefore(el.firstChild, el);
                     }
                     el.remove();
                 });
-                
+
                 totalLength = doc.body.textContent.length;
-                
+
                 const flexContainer = document.createElement('div');
                 flexContainer.style.display = 'flow-root';
-                
+
                 const leftCol = document.createElement('div');
                 leftCol.style.float = 'left';
                 leftCol.style.width = '32%';
@@ -433,14 +436,14 @@ export default function Epaper() {
                 leftCol.style.boxSizing = 'border-box';
                 leftCol.id = 'leftCol-measure';
                 leftCol.appendChild(metaRow);
-                
+
                 const hr = document.createElement('hr');
                 hr.style.border = 'none';
                 hr.style.borderTop = '1px solid #d1d5db';
                 hr.style.marginBottom = '15px';
                 hr.style.marginTop = '10px';
                 leftCol.appendChild(hr);
-                
+
                 leftContent = document.createElement('div');
                 leftContent.className = 'classic-cutting-content';
                 leftContent.style.textAlign = 'justify';
@@ -448,12 +451,12 @@ export default function Epaper() {
                 leftContent.style.lineHeight = '1.6';
                 leftContent.style.fontFamily = 'inherit';
                 leftCol.appendChild(leftContent);
-                
+
                 const rightCol = document.createElement('div');
                 rightCol.style.float = 'right';
                 rightCol.style.width = '68%';
                 rightCol.id = 'rightCol-measure';
-                
+
                 if (item.image) {
                     const imgDiv = document.createElement('div');
                     imgDiv.style.marginTop = '20px';
@@ -461,10 +464,10 @@ export default function Epaper() {
                     imgDiv.innerHTML = imgHTML;
                     rightCol.appendChild(imgDiv);
                 }
-                
+
                 const rightSplitter = document.createElement('div');
                 rightSplitter.style.display = 'flow-root';
-                
+
                 midContent = document.createElement('div');
                 midContent.className = 'classic-cutting-content';
                 midContent.style.float = 'left';
@@ -476,7 +479,7 @@ export default function Epaper() {
                 midContent.style.fontSize = '16px';
                 midContent.style.lineHeight = '1.6';
                 midContent.style.fontFamily = 'inherit';
-                
+
                 rightContent = document.createElement('div');
                 rightContent.className = 'classic-cutting-content';
                 rightContent.style.float = 'right';
@@ -487,11 +490,11 @@ export default function Epaper() {
                 rightContent.style.fontSize = '16px';
                 rightContent.style.lineHeight = '1.6';
                 rightContent.style.fontFamily = 'inherit';
-                
+
                 rightSplitter.appendChild(midContent);
                 rightSplitter.appendChild(rightContent);
                 rightCol.appendChild(rightSplitter);
-                
+
                 flexContainer.appendChild(leftCol);
                 flexContainer.appendChild(rightCol);
                 innerBorder.appendChild(flexContainer);
@@ -534,7 +537,7 @@ export default function Epaper() {
             });
 
             document.getElementById('root').appendChild(container);
-            
+
             // Wait for image to load to ensure correct container height!
             const imgs = Array.from(container.querySelectorAll('img'));
             await Promise.all(imgs.map(img => {
@@ -553,37 +556,37 @@ export default function Epaper() {
                 let bestLeftHTML = '';
                 let bestMidHTML = '';
                 let bestRightHTML = '';
-                
+
                 const lColMeasure = document.getElementById('leftCol-measure');
                 const rColMeasure = document.getElementById('rightCol-measure');
-                
+
                 if (lColMeasure && rColMeasure) {
                     for (let i = 0; i < 7; i++) {
                         let mid = (low + high) / 2;
                         let target1 = totalLength * mid;
                         let remaining = totalLength - target1;
                         let target2 = target1 + (remaining / 2); // Split remaining 50/50
-                        
+
                         let currentLength = 0;
                         let state = 1; // 1: left, 2: mid, 3: right
-                        
+
                         const doc1 = document.createElement('div');
                         const doc2 = document.createElement('div');
                         const doc3 = document.createElement('div');
-                        
+
                         function traverse3(node, p1, p2, p3) {
                             if (node.nodeType === Node.TEXT_NODE) {
                                 const text = node.textContent;
                                 let remainingText = text;
-                                
-                                while(remainingText.length > 0) {
+
+                                while (remainingText.length > 0) {
                                     let currentTarget = state === 1 ? target1 : (state === 2 ? target2 : Infinity);
-                                    
+
                                     if (currentLength + remainingText.length <= currentTarget) {
                                         if (state === 1) p1.appendChild(document.createTextNode(remainingText));
                                         else if (state === 2) p2.appendChild(document.createTextNode(remainingText));
                                         else p3.appendChild(document.createTextNode(remainingText));
-                                        
+
                                         currentLength += remainingText.length;
                                         remainingText = '';
                                     } else {
@@ -591,14 +594,14 @@ export default function Epaper() {
                                         let spaceIndex = remainingText.indexOf(' ', splitIndex);
                                         if (spaceIndex === -1) spaceIndex = splitIndex;
                                         if (spaceIndex === 0 && remainingText.length > 0) spaceIndex = 1;
-                                        
+
                                         const chunk = remainingText.substring(0, spaceIndex);
                                         remainingText = remainingText.substring(spaceIndex);
-                                        
+
                                         if (state === 1) p1.appendChild(document.createTextNode(chunk));
                                         else if (state === 2) p2.appendChild(document.createTextNode(chunk));
                                         else p3.appendChild(document.createTextNode(chunk));
-                                        
+
                                         currentLength += chunk.length;
                                         state++;
                                     }
@@ -607,17 +610,17 @@ export default function Epaper() {
                                 const c1 = node.cloneNode(false);
                                 const c2 = node.cloneNode(false);
                                 const c3 = node.cloneNode(false);
-                                
+
                                 if (state <= 1) p1.appendChild(c1);
                                 if (state <= 2) p2.appendChild(c2);
                                 p3.appendChild(c3);
-                                
+
                                 Array.from(node.childNodes).forEach(child => traverse3(child, c1, c2, c3));
                             }
                         }
-                        
+
                         Array.from(doc.body.childNodes).forEach(child => traverse3(child, doc1, doc2, doc3));
-                        
+
                         // Clean up empty tags generated by the traverse clone logic
                         [doc1, doc2, doc3].forEach(d => {
                             Array.from(d.querySelectorAll('p, div, span')).reverse().forEach(el => {
@@ -626,11 +629,11 @@ export default function Epaper() {
                                 }
                             });
                         });
-                        
+
                         leftContent.innerHTML = doc1.innerHTML;
                         midContent.innerHTML = doc2.innerHTML;
                         rightContent.innerHTML = doc3.innerHTML;
-                        
+
                         let diff = lColMeasure.offsetHeight - rColMeasure.offsetHeight;
                         if (Math.abs(diff) < bestDiff) {
                             bestDiff = Math.abs(diff);
@@ -638,16 +641,16 @@ export default function Epaper() {
                             bestMidHTML = doc2.innerHTML;
                             bestRightHTML = doc3.innerHTML;
                         }
-                        
+
                         if (diff < 0) {
                             low = mid; // left is shorter
                         } else {
                             high = mid; // left is taller
                         }
                     }
-                leftContent.innerHTML = bestLeftHTML;
-                midContent.innerHTML = bestMidHTML;
-                rightContent.innerHTML = bestRightHTML;
+                    leftContent.innerHTML = bestLeftHTML;
+                    midContent.innerHTML = bestMidHTML;
+                    rightContent.innerHTML = bestRightHTML;
                 }
             }
 
@@ -671,18 +674,18 @@ export default function Epaper() {
 
             // Extra wait for layout stabilization
             await new Promise(resolve => setTimeout(resolve, 500));
-            
+
             const dataUrl = await toJpeg(container, {
                 quality: 0.95,
                 backgroundColor: '#ffffff',
                 pixelRatio: 2
             });
-            
+
             // Re-enable stylesheets
             badLinks.forEach(link => link.removeAttribute('disabled'));
-            
+
             document.getElementById('root').removeChild(container);
-            
+
             const link = document.createElement('a');
             link.href = dataUrl;
             const cleanTitle = item.title.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_').substring(0, 30);
@@ -708,7 +711,7 @@ export default function Epaper() {
         const mastheadElement = document.getElementById('epaper-masthead');
         const footerElement = document.getElementById('epaper-footer');
         if (!articleElement || !mastheadElement) return;
-        
+
         try {
             // Create a temporary container
             const tempContainer = document.createElement('div');
@@ -734,12 +737,12 @@ export default function Epaper() {
                 el.classList.remove('shadow-sm');
                 el.style.boxShadow = 'none';
             });
-            
+
             // 1. Force hidden desktop elements to show (including sm: and md: breakpoints)
             mastheadClone.querySelectorAll('.hidden.md\\:flex').forEach(el => { el.classList.remove('hidden', 'md:flex'); el.style.display = 'flex'; });
             mastheadClone.querySelectorAll('.hidden.sm\\:inline').forEach(el => { el.classList.remove('hidden', 'sm:inline'); el.style.display = 'inline'; });
             mastheadClone.querySelectorAll('.hidden.sm\\:block').forEach(el => { el.classList.remove('hidden', 'sm:block'); el.style.display = 'block'; });
-            
+
             // 2. Hide mobile-only elements
             mastheadClone.querySelectorAll('.sm\\:hidden').forEach(el => { el.style.display = 'none'; });
 
@@ -748,11 +751,11 @@ export default function Epaper() {
             mastheadClone.querySelectorAll('.md\\:items-end').forEach(el => { el.style.alignItems = 'flex-end'; });
             mastheadClone.querySelectorAll('.md\\:justify-start').forEach(el => { el.style.justifyContent = 'flex-start'; });
             mastheadClone.querySelectorAll('.md\\:justify-end').forEach(el => { el.style.justifyContent = 'flex-end'; });
-            mastheadClone.querySelectorAll('.md\\:w-\\[220px\\]').forEach(el => { 
-                el.style.width = '220px'; 
+            mastheadClone.querySelectorAll('.md\\:w-\\[220px\\]').forEach(el => {
+                el.style.width = '220px';
                 el.style.minWidth = '220px'; // Prevent squishing
             });
-            
+
             // 3.5. Fix html-to-image flex-col wrapping overlap bug
             mastheadClone.querySelectorAll('.flex.flex-col.items-end.text-right').forEach(el => {
                 el.style.display = 'block'; // Replace flex-col with block to fix height calc bug
@@ -763,10 +766,10 @@ export default function Epaper() {
             mastheadClone.querySelectorAll('.tracking-tight.leading-tight').forEach(el => {
                 el.style.whiteSpace = 'nowrap'; // Prevent tithi from wrapping and causing height bugs
             });
-            
+
             mastheadClone.querySelectorAll('.md\\:grid').forEach(el => { el.classList.remove('flex'); el.style.display = 'grid'; });
             mastheadClone.querySelectorAll('.md\\:grid-cols-3').forEach(el => { el.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))'; });
-            
+
             // 4. Fix text sizes, margins, and gaps that use md: directly
             const h1El = mastheadClone.querySelector('h1');
             if (h1El) h1El.style.fontSize = '68px';
@@ -784,14 +787,14 @@ export default function Epaper() {
             mastheadClone.querySelectorAll('.md\\:mt-4').forEach(el => el.style.marginTop = '1rem');
             mastheadClone.querySelectorAll('.md\\:-mb-2').forEach(el => el.style.marginBottom = '12px');
             mastheadClone.querySelectorAll('.md\\:px-10').forEach(el => { el.style.paddingLeft = '2.5rem'; el.style.paddingRight = '2.5rem'; });
-            
+
             // Clone article and clean it up
             const articleClone = articleElement.cloneNode(true);
             const cuttingBtn = articleClone.querySelector('.cutting-btn');
             if (cuttingBtn) cuttingBtn.remove();
             const gameEl = articleClone.querySelector('.newspaper-game');
             if (gameEl) gameEl.remove();
-            
+
             // Enhance article styling for standalone download
             articleClone.style.border = 'none';
             articleClone.style.padding = '0px 40px'; // Add horizontal padding since container padding was removed
@@ -808,7 +811,7 @@ export default function Epaper() {
                 container.style.float = 'left';
                 container.style.width = '45%';
                 container.style.marginRight = '20px';
-                                        container.style.marginBottom = '12px';
+                container.style.marginBottom = '12px';
             });
 
             const textContainersGroup = articleClone.querySelectorAll('.text-gray-800');
@@ -828,7 +831,7 @@ export default function Epaper() {
                 img.classList.remove('grayscale', 'aspect-[16/9]', 'object-cover');
                 img.style.filter = 'none';
                 img.style.height = 'auto';
-                                img.style.maxHeight = 'none';
+                img.style.maxHeight = 'none';
                 img.style.objectFit = 'contain';
                 img.style.width = '100%';
             });
@@ -870,7 +873,7 @@ export default function Epaper() {
 
             tempContainer.appendChild(mastheadClone);
             tempContainer.appendChild(articleClone);
-            
+
             if (footerElement) {
                 const footerClone = footerElement.cloneNode(true);
                 // Make sure hidden dot groups show up on download
@@ -884,7 +887,7 @@ export default function Epaper() {
                 footerClone.style.borderTop = '1px solid rgba(0,0,0,0.2)';
                 tempContainer.appendChild(footerClone);
             }
-            
+
             // Stop Google Translate from processing the clone
             tempContainer.setAttribute('translate', 'no');
             tempContainer.classList.add('skiptranslate');
@@ -906,25 +909,25 @@ export default function Epaper() {
             tempContainer.appendChild(fontStyle);
 
             // Temporarily disable remote translate stylesheets to prevent cssRules SecurityError
-            const badLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).filter(link => 
+            const badLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).filter(link =>
                 link.href.includes('translate')
             );
             badLinks.forEach(link => link.setAttribute('disabled', 'true'));
 
             // Wait for browser to calculate layout of the new cloned DOM
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             const dataUrl = await toJpeg(tempContainer, {
                 quality: 0.95,
                 backgroundColor: '#fef7e6',
                 pixelRatio: 2
             });
-            
+
             // Re-enable stylesheets
             badLinks.forEach(link => link.removeAttribute('disabled'));
 
             document.getElementById('root').removeChild(tempContainer);
-            
+
             const link = document.createElement('a');
             link.href = dataUrl;
             const cleanTitle = title.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_').substring(0, 30);
@@ -963,7 +966,7 @@ export default function Epaper() {
                     <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-4 w-full">
                         <div className="hidden md:flex w-full md:w-[220px] justify-center md:justify-start shrink-0 mb-auto pt-2 md:pt-4">
                             <div className="flex flex-col items-center text-center">
-                                <h3 className="text-3xl md:text-4xl font-normal text-[#a61c1c] mb-1 drop-shadow-sm" style={{fontFamily: "'Yatra One', cursive"}}>सुविचार</h3>
+                                <h3 className="text-3xl md:text-4xl font-normal text-[#a61c1c] mb-1 drop-shadow-sm" style={{ fontFamily: "'Yatra One', cursive" }}>सुविचार</h3>
                                 <p className="text-[13px] md:text-[15px] font-bold text-gray-800 leading-snug tracking-tight max-w-[180px]">{suvicharText}</p>
                             </div>
                         </div>
@@ -989,7 +992,7 @@ export default function Epaper() {
                         <div className="hidden md:flex w-full md:w-[220px] justify-center md:justify-end shrink-0 mb-auto pt-2 md:pt-4">
                             <div className="flex flex-col items-end text-right border-r-[3px] border-[#a61c1c] pr-4 opacity-95">
                                 <div className="flex items-center gap-2 mb-1.5 text-[#a61c1c]">
-                                    <span className="text-[22px] md:text-[26px] font-black" style={{fontFamily: "'Yatra One', cursive"}}>ॐ</span>
+                                    <span className="text-[22px] md:text-[26px] font-black" style={{ fontFamily: "'Yatra One', cursive" }}>ॐ</span>
                                     <span className="text-[14px] md:text-[16px] font-bold tracking-widest uppercase border-b-2 border-[#a61c1c]/30 pb-0.5">आज का पंचांग</span>
                                 </div>
                                 <div className="text-[18px] md:text-[20px] font-black text-gray-900 tracking-tight leading-tight">{panchangData.tithi}</div>
@@ -1063,8 +1066,8 @@ export default function Epaper() {
                                 <div className="h-full -m-4 rounded transition-colors hover:bg-black/5">
                                     <article id={`article-${item._id}`} className="h-full flex flex-col p-4 relative">
                                         {/* Download Cutting Button - Visible on mobile, hover on desktop */}
-                                        <button 
-                                            onClick={() => setCuttingModalData({id: item._id, title: item.title, item: item, catHindi: catHindi})}
+                                        <button
+                                            onClick={() => setCuttingModalData({ id: item._id, title: item.title, item: item, catHindi: catHindi })}
                                             className="cutting-btn absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
                                             title="न्यूज़ की कटिंग डाउनलोड करें"
                                         >
@@ -1073,81 +1076,81 @@ export default function Epaper() {
 
                                         {/* category stripe */}
                                         <div className="mb-2 flex items-center gap-2 pr-20">
-                                        <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 tracking-wider">
-                                            {catHindi}
-                                        </span>
-                                        {style === 'headline' && (
-                                            <span className="text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2">
-                                                दैनिक सबसे तेज़
+                                            <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 tracking-wider">
+                                                {catHindi}
                                             </span>
-                                        )}
-                                    </div>
+                                            {style === 'headline' && (
+                                                <span className="text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2">
+                                                    दैनिक सबसे तेज़
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    {/* Headline */}
-                                    <h2
-                                        className={`font-black leading-snug pb-1 mb-2 hover:text-red-700 transition ${style === 'headline'
+                                        {/* Headline */}
+                                        <h2
+                                            className={`font-black leading-snug pb-1 mb-2 hover:text-red-700 transition ${style === 'headline'
                                                 ? 'text-4xl md:text-5xl'
                                                 : style === 'double-column'
                                                     ? 'text-2xl md:text-3xl'
                                                     : 'text-xl'
-                                            }`}
-                                    >
-                                        <Link to={`/news/${item.slug || item._id}`}>{item.title}</Link>
-                                    </h2>
-
-                                    {/* Byline */}
-                                    <div className="flex items-center gap-2 text-[12px] font-medium text-gray-700 mb-3 border-b border-gray-200/50 pb-1 self-start">
-                                        <span className="font-bold text-[#da0000] uppercase tracking-wide">{item.location || 'नई दिल्ली'}</span>
-                                        <span className="text-gray-400">|</span>
-                                        <span className="text-gray-600">
-                                            {['admin', 'एडमिन'].includes(item.author?.toLowerCase()) ? 'विशेष संवाददाता' : (item.author || 'विशेष संवाददाता')}
-                                        </span>
-                                    </div>
-
-                                    {/* Image – only if not text-only and exists */}
-                                    {item.image && (
-                                        <div className="mb-3 overflow-hidden border border-black/10 bg-white shadow-sm">
-                                            {item.image && !item.image.includes('chatgpt.com') ? (
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.title}
-                                                    className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
-                                                    loading="lazy"
-                                                    crossOrigin="anonymous"
-                                                />
-                                            ) : (
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.title}
-                                                    className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
-                                                    loading="lazy"
-                                                />
-                                            )}
-                                            {style === 'headline' && (
-                                                <p className="text-[9px] font-mono bg-gray-100 p-1 text-center border-t border-black/10">
-                                                    📸 सांकेतिक तस्वीर | फोटो: HBN News 24
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Article text with real dropcap on headline */}
-                                    <div className={`text-gray-800 text-left md:text-justify break-words flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
-                                        <p
-                                            className={`text-sm leading-relaxed break-words ${style === 'headline'
-                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[25]'
-                                                    : style === 'double-column'
-                                                    ? 'line-clamp-[16]'
-                                                    : 'line-clamp-[14]'
                                                 }`}
                                         >
-                                            {plainText}
-                                        </p>
-                                    </div>
+                                            <Link to={`/news/${item.slug || item._id}`}>{item.title}</Link>
+                                        </h2>
 
-                                    {/* Auto-filler Game for empty space on right side */}
-                                    {style === 'double-column' && <NewspaperGame />}
-                                </article>
+                                        {/* Byline */}
+                                        <div className="flex items-center gap-2 text-[12px] font-medium text-gray-700 mb-3 border-b border-gray-200/50 pb-1 self-start">
+                                            <span className="font-bold text-[#da0000] uppercase tracking-wide">{item.location || 'नई दिल्ली'}</span>
+                                            <span className="text-gray-400">|</span>
+                                            <span className="text-gray-600">
+                                                {['admin', 'एडमिन'].includes(item.author?.toLowerCase()) ? 'विशेष संवाददाता' : (item.author || 'विशेष संवाददाता')}
+                                            </span>
+                                        </div>
+
+                                        {/* Image – only if not text-only and exists */}
+                                        {item.image && (
+                                            <div className="mb-3 overflow-hidden border border-black/10 bg-white shadow-sm">
+                                                {item.image && !item.image.includes('chatgpt.com') ? (
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.title}
+                                                        className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
+                                                        loading="lazy"
+                                                        crossOrigin="anonymous"
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.title}
+                                                        className="w-full aspect-[16/9] object-cover transition duration-500 grayscale group-hover:grayscale-0"
+                                                        loading="lazy"
+                                                    />
+                                                )}
+                                                {style === 'headline' && (
+                                                    <p className="text-[9px] font-mono bg-gray-100 p-1 text-center border-t border-black/10">
+                                                        📸 सांकेतिक तस्वीर | फोटो: HBN News 24
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Article text with real dropcap on headline */}
+                                        <div className={`text-gray-800 text-left md:text-justify break-words flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
+                                            <p
+                                                className={`text-sm leading-relaxed break-words ${style === 'headline'
+                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[25]'
+                                                    : style === 'double-column'
+                                                        ? 'line-clamp-[16]'
+                                                        : 'line-clamp-[14]'
+                                                    }`}
+                                            >
+                                                {plainText}
+                                            </p>
+                                        </div>
+
+                                        {/* Auto-filler Game for empty space on right side */}
+                                        {style === 'double-column' && <NewspaperGame />}
+                                    </article>
                                 </div>
                             </div>
                         );
@@ -1241,9 +1244,9 @@ export default function Epaper() {
                     <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4 text-center">कटिंग की थीम चुनें</h3>
                         <p className="text-sm text-gray-600 mb-6 text-center">आप किस स्टाइल में न्यूज़ कटिंग डाउनलोड करना चाहते हैं?</p>
-                        
+
                         <div className="flex flex-col gap-4">
-                            <button 
+                            <button
                                 onClick={() => {
                                     downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'default', cuttingModalData.catHindi);
                                     setCuttingModalData(null);
@@ -1257,7 +1260,7 @@ export default function Epaper() {
                                 </div>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => {
                                     downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'classic', cuttingModalData.catHindi);
                                     setCuttingModalData(null);
@@ -1271,7 +1274,7 @@ export default function Epaper() {
                                 </div>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => {
                                     downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'classic-full', cuttingModalData.catHindi);
                                     setCuttingModalData(null);
@@ -1285,8 +1288,8 @@ export default function Epaper() {
                                 </div>
                             </button>
                         </div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => setCuttingModalData(null)}
                             className="w-full mt-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
                         >
