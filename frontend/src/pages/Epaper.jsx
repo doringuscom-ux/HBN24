@@ -295,6 +295,7 @@ export default function Epaper() {
             const catTagRow = document.createElement('div');
             catTagRow.style.display = 'flex';
             catTagRow.style.alignItems = 'center';
+            catTagRow.style.marginTop = '-5px';
             catTagRow.style.marginBottom = '8px';
             catTagRow.style.fontFamily = 'sans-serif';
             catTagRow.style.fontSize = '14px';
@@ -311,7 +312,7 @@ export default function Epaper() {
             const separator = document.createElement('span');
             separator.innerText = '|';
             separator.style.color = '#dc2626'; // red-600
-            separator.style.margin = '0 10px';
+            separator.style.margin = '0 8px';
             separator.style.fontSize = '16px';
             
             const tagLine = document.createElement('span');
@@ -341,13 +342,13 @@ export default function Epaper() {
             titleEl.style.textAlign = 'left';
             titleEl.style.color = '#000000';
             titleEl.style.marginTop = '0px';
-            titleEl.style.marginBottom = '-2px';
+            titleEl.style.marginBottom = '4px';
             titleEl.innerText = item.title;
             innerBorder.appendChild(titleEl);
 
             // 3. Location and Author Row
             const metaRow = document.createElement('div');
-            metaRow.style.marginTop = '-5px';
+            metaRow.style.marginTop = '0px';
             metaRow.style.marginBottom = '10px';
             metaRow.style.fontSize = '16px';
             metaRow.style.fontWeight = 'bold';
@@ -361,11 +362,11 @@ export default function Epaper() {
             const styleFix = document.createElement('style');
             styleFix.innerHTML = `
                 .classic-cutting-content * {
-                    max-width: 100% !important;
                     height: auto !important;
                     word-wrap: break-word !important;
-                    overflow-wrap: anywhere !important;
                     word-break: break-word !important;
+                    hyphens: auto !important;
+                    -webkit-hyphens: auto !important;
                     white-space: normal !important;
                     box-sizing: border-box !important;
                 }
@@ -442,8 +443,8 @@ export default function Epaper() {
                 
                 leftContent = document.createElement('div');
                 leftContent.className = 'classic-cutting-content';
-                leftContent.style.textAlign = 'left';
-                leftContent.style.fontSize = '18px';
+                leftContent.style.textAlign = 'justify';
+                leftContent.style.fontSize = '16px';
                 leftContent.style.lineHeight = '1.6';
                 leftContent.style.fontFamily = 'inherit';
                 leftCol.appendChild(leftContent);
@@ -471,8 +472,8 @@ export default function Epaper() {
                 midContent.style.paddingRight = '25px';
                 midContent.style.boxSizing = 'border-box';
                 midContent.style.borderRight = '1px solid #d1d5db';
-                midContent.style.textAlign = 'left';
-                midContent.style.fontSize = '18px';
+                midContent.style.textAlign = 'justify';
+                midContent.style.fontSize = '16px';
                 midContent.style.lineHeight = '1.6';
                 midContent.style.fontFamily = 'inherit';
                 
@@ -482,8 +483,8 @@ export default function Epaper() {
                 rightContent.style.width = '48%';
                 rightContent.style.paddingLeft = '5px';
                 rightContent.style.boxSizing = 'border-box';
-                rightContent.style.textAlign = 'left';
-                rightContent.style.fontSize = '18px';
+                rightContent.style.textAlign = 'justify';
+                rightContent.style.fontSize = '16px';
                 rightContent.style.lineHeight = '1.6';
                 rightContent.style.fontFamily = 'inherit';
                 
