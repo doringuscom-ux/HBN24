@@ -26,21 +26,28 @@ const upload = multer({ storage: storage });
 // @route   POST /api/upload
 // @desc    Upload an image to Cloudinary and return the URL
 // @access  Private (Admin only)
-router.post('/', authMiddleware, upload.single('image'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
+router.post('/', authMiddleware, (req, res) => {
+    upload.single('image')(req, res, function (err) {
+        if (err) {
+            console.error('Multer Upload Error:', err);
+            return res.status(500).json({ message: 'Error uploading file: ' + err.message });
         }
         
-        // Return the secure URL from Cloudinary
-        res.json({ 
-            message: 'Upload successful', 
-            imageUrl: req.file.path 
-        });
-    } catch (error) {
-        console.error('Upload Error:', error);
-        res.status(500).json({ message: 'Server error during upload' });
-    }
+        try {
+            if (!req.file) {
+                return res.status(400).json({ message: 'No file uploaded' });
+            }
+            
+            // Return the secure URL from Cloudinary
+            res.json({ 
+                message: 'Upload successful', 
+                imageUrl: req.file.path 
+            });
+        } catch (error) {
+            console.error('Upload Process Error:', error);
+            res.status(500).json({ message: 'Server error during upload processing' });
+        }
+    });
 });
 
 module.exports = router;

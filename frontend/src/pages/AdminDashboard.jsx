@@ -72,19 +72,19 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) =>
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-4 sm:p-6 bg-gray-100 flex flex-col items-center justify-center min-h-[300px] overflow-auto">
+                <div className="p-4 sm:p-6 bg-gray-100 flex flex-col items-center justify-center flex-1 overflow-hidden relative" style={{ minHeight: '50vh', maxHeight: '70vh' }}>
                     <ReactCrop
                         crop={crop}
                         onChange={c => setCrop(c)}
                         onComplete={c => setCompletedCrop(c)}
                         aspect={16 / 9}
-                        style={{ maxWidth: '100%' }}
+                        style={{ maxWidth: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         <img
                             ref={imageRef}
                             src={imageSrc}
                             alt="Crop me"
-                            style={{ maxWidth: '100%', maxHeight: '60vh', display: 'block', margin: '0 auto' }}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }}
                             onLoad={e => {
                                 setCrop({
                                     unit: '%',

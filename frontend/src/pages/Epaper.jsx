@@ -95,7 +95,7 @@ const NewspaperGame = () => {
     if (board.length === 0) return null;
 
     return (
-        <div className="flex-1 w-full flex flex-col pt-4 pb-2">
+        <div className="newspaper-game flex-1 w-full flex flex-col pt-4 pb-2">
             <div className="w-full border-y border-dashed border-gray-400 py-3 px-2 sm:px-4 bg-[#fcf9f2]/40 flex flex-col items-center justify-center">
                 <span className="text-sm sm:text-base font-serif font-black text-gray-900 border-b-[1.5px] border-gray-900 pb-1 mb-3 w-full max-w-[350px] text-center tracking-widest uppercase">
                     {isWon ? 'बधाई हो! हल हो गया 🎉' : 'सुडोकू'}
@@ -167,6 +167,7 @@ export default function Epaper() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [cuttingModalData, setCuttingModalData] = useState(null);
     const [suvicharText, setSuvicharText] = useState('मंजिलें क्या हैं, रास्ता क्या है? हौसला हो तो फासला क्या है?');
     const [panchangData, setPanchangData] = useState({
         tithi: "ज्येष्ठ कृष्ण पक्ष, तृतीया",
@@ -257,7 +258,6 @@ export default function Epaper() {
 
     const stripHtml = (html) => {
         if (!html) return '';
-        // Pre-clean to catch any double-encoded entities
         const cleanHtml = html.replace(/&amp;nbsp;/gi, ' ').replace(/&nbsp;/gi, ' ');
         const doc = new DOMParser().parseFromString(cleanHtml, 'text/html');
         const text = doc.body.textContent || doc.body.innerText || '';
@@ -273,7 +273,436 @@ export default function Epaper() {
     const currentHour = new Date().getHours();
     const timeIcon = (currentHour >= 6 && currentHour < 18) ? '☀️' : '🌙';
 
-    const downloadNewsCutting = async (id, title) => {
+    const generateClassicCutting = async (item, catHindi, bannerColor = '#0284c7', isFullArticle = false) => {
+        try {
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '0';
+            container.style.top = '0';
+            container.style.zIndex = '-9999';
+            container.style.width = '1000px';
+            container.style.backgroundColor = '#ffffff'; // White background
+            container.style.padding = '20px'; // Outer padding for the black border
+            container.style.boxSizing = 'border-box';
+            container.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
+            
+            const innerBorder = document.createElement('div');
+            innerBorder.style.border = 'none';
+            innerBorder.style.padding = '20px';
+            container.appendChild(innerBorder);
+            
+            // 1. Top Row: Category and Brand
+            const catTagRow = document.createElement('div');
+            catTagRow.style.display = 'flex';
+            catTagRow.style.alignItems = 'center';
+            catTagRow.style.marginBottom = '8px';
+            catTagRow.style.fontFamily = 'sans-serif';
+            catTagRow.style.fontSize = '14px';
+            catTagRow.style.fontWeight = 'bold';
+
+            const catBlock = document.createElement('div');
+            catBlock.style.backgroundColor = '#000000';
+            catBlock.style.color = '#fef08a'; // yellow-200
+            catBlock.style.padding = '3px 10px';
+            catBlock.style.textTransform = 'uppercase';
+            catBlock.style.letterSpacing = '0.5px';
+            catBlock.innerText = catHindi || 'न्यूज़';
+            
+            const separator = document.createElement('span');
+            separator.innerText = '|';
+            separator.style.color = '#dc2626'; // red-600
+            separator.style.margin = '0 10px';
+            separator.style.fontSize = '16px';
+            
+            const tagLine = document.createElement('span');
+            tagLine.innerText = 'दैनिक सबसे तेज़';
+            tagLine.style.color = '#dc2626';
+            tagLine.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
+
+            catTagRow.appendChild(catBlock);
+            catTagRow.appendChild(separator);
+            catTagRow.appendChild(tagLine);
+            innerBorder.appendChild(catTagRow);
+
+            // 2. Title (Aligned left, bold, large with dynamic font size)
+            const titleEl = document.createElement('h1');
+            const titleLen = item.title.length;
+            let dynamicFontSize = '42px';
+            if (titleLen > 140) {
+                dynamicFontSize = '30px';
+            } else if (titleLen > 110) {
+                dynamicFontSize = '34px';
+            } else if (titleLen > 80) {
+                dynamicFontSize = '38px';
+            }
+            titleEl.style.fontSize = dynamicFontSize;
+            titleEl.style.fontWeight = '900';
+            titleEl.style.lineHeight = '1.05';
+            titleEl.style.textAlign = 'left';
+            titleEl.style.color = '#000000';
+            titleEl.style.marginTop = '0px';
+            titleEl.style.marginBottom = '-2px';
+            titleEl.innerText = item.title;
+            innerBorder.appendChild(titleEl);
+
+            // 3. Location and Author Row
+            const metaRow = document.createElement('div');
+            metaRow.style.marginTop = '-5px';
+            metaRow.style.marginBottom = '10px';
+            metaRow.style.fontSize = '16px';
+            metaRow.style.fontWeight = 'bold';
+            metaRow.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
+            
+            let authorName = ['admin', 'एडमिन'].includes(item.author?.toLowerCase()) ? 'विशेष संवाददाता' : (item.author || 'विशेष संवाददाता');
+            
+            metaRow.innerHTML = `<span style="color: #dc2626;">${item.location || 'नई दिल्ली'}</span> <span style="color: #9ca3af; margin: 0 8px; font-weight: normal;">|</span> <span style="color: #6b7280;">${authorName}</span>`;
+            
+            // Global styles to prevent right overflow from WYSIWYG content
+            const styleFix = document.createElement('style');
+            styleFix.innerHTML = `
+                .classic-cutting-content * {
+                    max-width: 100% !important;
+                    height: auto !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: anywhere !important;
+                    word-break: break-word !important;
+                    white-space: normal !important;
+                    box-sizing: border-box !important;
+                }
+                .classic-cutting-content p {
+                    margin-top: 0 !important;
+                    margin-bottom: 6px !important;
+                    padding: 0 !important;
+                    line-height: 1.4 !important;
+                }
+                .classic-cutting-content br {
+                    display: none !important;
+                }
+                .classic-cutting-content div {
+                    margin-top: 0 !important;
+                    margin-bottom: 6px !important;
+                }
+                .classic-cutting-content img {
+                    display: block;
+                    margin: 10px auto;
+                }
+            `;
+            container.appendChild(styleFix);
+
+            // Image
+            let imgHTML = '';
+            if (item.image) {
+                const crossOrigin = !item.image.includes('chatgpt.com') ? 'crossOrigin="anonymous"' : '';
+                imgHTML = `<div style="margin-bottom: 25px !important; break-inside: avoid;"><img src="${item.image}" style="width: 100%; max-height: 500px; object-fit: cover; border: 1px solid #000; display: block;" ${crossOrigin} /></div>`;
+            }
+
+            let leftContent, midContent, rightContent, doc, totalLength;
+
+            if (isFullArticle) {
+                const parser = new DOMParser();
+                doc = parser.parseFromString(item.content, 'text/html');
+                
+                // Clean up empty tags and <br>s from WYSIWYG that cause extra spacing
+                doc.querySelectorAll('p, div, span').forEach(el => {
+                    if (!el.textContent.trim() && !el.querySelector('img')) {
+                        el.remove();
+                    }
+                });
+                doc.querySelectorAll('br').forEach(br => br.remove());
+                
+                // Flatten paragraphs into a single continuous block of text
+                doc.querySelectorAll('p, div').forEach(el => {
+                    const space = document.createTextNode(' ');
+                    el.appendChild(space);
+                    while(el.firstChild) {
+                        el.parentNode.insertBefore(el.firstChild, el);
+                    }
+                    el.remove();
+                });
+                
+                totalLength = doc.body.textContent.length;
+                
+                const flexContainer = document.createElement('div');
+                flexContainer.style.display = 'flow-root';
+                
+                const leftCol = document.createElement('div');
+                leftCol.style.float = 'left';
+                leftCol.style.width = '32%';
+                leftCol.style.paddingRight = '25px';
+                leftCol.style.boxSizing = 'border-box';
+                leftCol.id = 'leftCol-measure';
+                leftCol.appendChild(metaRow);
+                
+                const hr = document.createElement('hr');
+                hr.style.border = 'none';
+                hr.style.borderTop = '1px solid #d1d5db';
+                hr.style.marginBottom = '15px';
+                hr.style.marginTop = '10px';
+                leftCol.appendChild(hr);
+                
+                leftContent = document.createElement('div');
+                leftContent.className = 'classic-cutting-content';
+                leftContent.style.textAlign = 'left';
+                leftContent.style.fontSize = '18px';
+                leftContent.style.lineHeight = '1.6';
+                leftContent.style.fontFamily = 'inherit';
+                leftCol.appendChild(leftContent);
+                
+                const rightCol = document.createElement('div');
+                rightCol.style.float = 'right';
+                rightCol.style.width = '68%';
+                rightCol.id = 'rightCol-measure';
+                
+                if (item.image) {
+                    const imgDiv = document.createElement('div');
+                    imgDiv.style.marginTop = '20px';
+                    imgDiv.style.marginBottom = '18px';
+                    imgDiv.innerHTML = imgHTML;
+                    rightCol.appendChild(imgDiv);
+                }
+                
+                const rightSplitter = document.createElement('div');
+                rightSplitter.style.display = 'flow-root';
+                
+                midContent = document.createElement('div');
+                midContent.className = 'classic-cutting-content';
+                midContent.style.float = 'left';
+                midContent.style.width = '48%';
+                midContent.style.paddingRight = '25px';
+                midContent.style.boxSizing = 'border-box';
+                midContent.style.borderRight = '1px solid #d1d5db';
+                midContent.style.textAlign = 'left';
+                midContent.style.fontSize = '18px';
+                midContent.style.lineHeight = '1.6';
+                midContent.style.fontFamily = 'inherit';
+                
+                rightContent = document.createElement('div');
+                rightContent.className = 'classic-cutting-content';
+                rightContent.style.float = 'right';
+                rightContent.style.width = '48%';
+                rightContent.style.paddingLeft = '5px';
+                rightContent.style.boxSizing = 'border-box';
+                rightContent.style.textAlign = 'left';
+                rightContent.style.fontSize = '18px';
+                rightContent.style.lineHeight = '1.6';
+                rightContent.style.fontFamily = 'inherit';
+                
+                rightSplitter.appendChild(midContent);
+                rightSplitter.appendChild(rightContent);
+                rightCol.appendChild(rightSplitter);
+                
+                flexContainer.appendChild(leftCol);
+                flexContainer.appendChild(rightCol);
+                innerBorder.appendChild(flexContainer);
+            } else {
+                innerBorder.appendChild(metaRow);
+                const colsContainer = document.createElement('div');
+                colsContainer.className = 'classic-cutting-content';
+                colsContainer.style.columnCount = '3';
+                colsContainer.style.columnGap = '25px';
+                colsContainer.style.columnRule = '1px solid #d1d5db';
+                colsContainer.style.textAlign = 'justify';
+                colsContainer.style.fontSize = '18px';
+                colsContainer.style.lineHeight = '1.6';
+                colsContainer.innerHTML = `${imgHTML} <p style="margin: 0; display: inline;">${stripHtml(item.content)}</p>`;
+                innerBorder.appendChild(colsContainer);
+            }
+
+            // Footer
+            const footer = document.createElement('div');
+            footer.style.clear = 'both';
+            footer.style.marginTop = '25px';
+            footer.style.paddingTop = '10px';
+            footer.style.borderTop = '2px solid #000';
+            footer.style.display = 'flex';
+            footer.style.justifyContent = 'space-between';
+            footer.style.fontSize = '14px';
+            footer.style.fontWeight = 'bold';
+            footer.innerHTML = `<span>दैनिक सबसे तेज़ • सच्ची खबर, बेबाक नजर</span> <span>www.hbnnews24.com</span>`;
+            innerBorder.appendChild(footer);
+
+            // Stop Google Translate from processing the clone
+            container.setAttribute('translate', 'no');
+            container.classList.add('skiptranslate');
+
+            // Remove translation elements BEFORE appending to avoid html-to-image bugs
+            container.querySelectorAll('.skiptranslate:not([translate="no"]), iframe, #google_translate_element').forEach(el => el.remove());
+            container.querySelectorAll('font').forEach(el => {
+                const textNode = document.createTextNode(el.innerText || '');
+                el.parentNode.replaceChild(textNode, el);
+            });
+
+            document.getElementById('root').appendChild(container);
+            
+            // Wait for image to load to ensure correct container height!
+            const imgs = Array.from(container.querySelectorAll('img'));
+            await Promise.all(imgs.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                });
+            }));
+
+            // BINARY SEARCH HEIGHT BALANCING WITH 3-WAY SPLIT
+            if (isFullArticle && leftContent && midContent && rightContent && doc && totalLength) {
+                let low = 0.2;
+                let high = 0.8;
+                let bestDiff = Infinity;
+                let bestLeftHTML = '';
+                let bestMidHTML = '';
+                let bestRightHTML = '';
+                
+                const lColMeasure = document.getElementById('leftCol-measure');
+                const rColMeasure = document.getElementById('rightCol-measure');
+                
+                if (lColMeasure && rColMeasure) {
+                    for (let i = 0; i < 7; i++) {
+                        let mid = (low + high) / 2;
+                        let target1 = totalLength * mid;
+                        let remaining = totalLength - target1;
+                        let target2 = target1 + (remaining / 2); // Split remaining 50/50
+                        
+                        let currentLength = 0;
+                        let state = 1; // 1: left, 2: mid, 3: right
+                        
+                        const doc1 = document.createElement('div');
+                        const doc2 = document.createElement('div');
+                        const doc3 = document.createElement('div');
+                        
+                        function traverse3(node, p1, p2, p3) {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                const text = node.textContent;
+                                let remainingText = text;
+                                
+                                while(remainingText.length > 0) {
+                                    let currentTarget = state === 1 ? target1 : (state === 2 ? target2 : Infinity);
+                                    
+                                    if (currentLength + remainingText.length <= currentTarget) {
+                                        if (state === 1) p1.appendChild(document.createTextNode(remainingText));
+                                        else if (state === 2) p2.appendChild(document.createTextNode(remainingText));
+                                        else p3.appendChild(document.createTextNode(remainingText));
+                                        
+                                        currentLength += remainingText.length;
+                                        remainingText = '';
+                                    } else {
+                                        const splitIndex = currentTarget - currentLength;
+                                        let spaceIndex = remainingText.indexOf(' ', splitIndex);
+                                        if (spaceIndex === -1) spaceIndex = splitIndex;
+                                        if (spaceIndex === 0 && remainingText.length > 0) spaceIndex = 1;
+                                        
+                                        const chunk = remainingText.substring(0, spaceIndex);
+                                        remainingText = remainingText.substring(spaceIndex);
+                                        
+                                        if (state === 1) p1.appendChild(document.createTextNode(chunk));
+                                        else if (state === 2) p2.appendChild(document.createTextNode(chunk));
+                                        else p3.appendChild(document.createTextNode(chunk));
+                                        
+                                        currentLength += chunk.length;
+                                        state++;
+                                    }
+                                }
+                            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                const c1 = node.cloneNode(false);
+                                const c2 = node.cloneNode(false);
+                                const c3 = node.cloneNode(false);
+                                
+                                if (state <= 1) p1.appendChild(c1);
+                                if (state <= 2) p2.appendChild(c2);
+                                p3.appendChild(c3);
+                                
+                                Array.from(node.childNodes).forEach(child => traverse3(child, c1, c2, c3));
+                            }
+                        }
+                        
+                        Array.from(doc.body.childNodes).forEach(child => traverse3(child, doc1, doc2, doc3));
+                        
+                        // Clean up empty tags generated by the traverse clone logic
+                        [doc1, doc2, doc3].forEach(d => {
+                            Array.from(d.querySelectorAll('p, div, span')).reverse().forEach(el => {
+                                if (!el.textContent.trim() && !el.querySelector('img')) {
+                                    el.remove();
+                                }
+                            });
+                        });
+                        
+                        leftContent.innerHTML = doc1.innerHTML;
+                        midContent.innerHTML = doc2.innerHTML;
+                        rightContent.innerHTML = doc3.innerHTML;
+                        
+                        let diff = lColMeasure.offsetHeight - rColMeasure.offsetHeight;
+                        if (Math.abs(diff) < bestDiff) {
+                            bestDiff = Math.abs(diff);
+                            bestLeftHTML = doc1.innerHTML;
+                            bestMidHTML = doc2.innerHTML;
+                            bestRightHTML = doc3.innerHTML;
+                        }
+                        
+                        if (diff < 0) {
+                            low = mid; // left is shorter
+                        } else {
+                            high = mid; // left is taller
+                        }
+                    }
+                leftContent.innerHTML = bestLeftHTML;
+                midContent.innerHTML = bestMidHTML;
+                rightContent.innerHTML = bestRightHTML;
+                }
+            }
+
+            // Inject Google Fonts directly to ensure html-to-image embeds them properly
+            const fontStyle = document.createElement('style');
+            fontStyle.innerHTML = `@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;900&family=Yatra+One&display=swap');`;
+            container.appendChild(fontStyle);
+
+            // Safely disable any cross-origin stylesheets that prevent cssRules access
+            const allLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+            const badLinks = allLinks.filter(link => {
+                try {
+                    // This will throw a SecurityError if the stylesheet is cross-origin without CORS
+                    const rules = link.sheet ? link.sheet.cssRules : null;
+                    return false; // It's accessible
+                } catch (e) {
+                    return true; // It threw an error, so it's a bad link
+                }
+            });
+            badLinks.forEach(link => link.setAttribute('disabled', 'true'));
+
+            // Extra wait for layout stabilization
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const dataUrl = await toJpeg(container, {
+                quality: 0.95,
+                backgroundColor: '#ffffff',
+                pixelRatio: 2
+            });
+            
+            // Re-enable stylesheets
+            badLinks.forEach(link => link.removeAttribute('disabled'));
+            
+            document.getElementById('root').removeChild(container);
+            
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            const cleanTitle = item.title.replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_').substring(0, 30);
+            link.download = `HBN24_Classic_Cutting_${cleanTitle}.jpg`;
+            link.click();
+        } catch (error) {
+            console.error("Error generating classic cutting:", error);
+            alert("Failed to download cutting: " + (error.message || error));
+            const temp = document.getElementById('root').querySelector('div[style*="-9999"]');
+            if (temp) document.getElementById('root').removeChild(temp);
+        }
+    };
+
+    const downloadNewsCutting = async (id, title, item, theme = 'default', catHindi = '', bannerColor = '#0284c7') => {
+        if (theme === 'classic' && item) {
+            return generateClassicCutting(item, catHindi, bannerColor, false);
+        }
+        if (theme === 'classic-full' && item) {
+            return generateClassicCutting(item, catHindi, bannerColor, true);
+        }
+
         const articleElement = document.getElementById(`article-${id}`);
         const mastheadElement = document.getElementById('epaper-masthead');
         const footerElement = document.getElementById('epaper-footer');
@@ -288,32 +717,109 @@ export default function Epaper() {
             tempContainer.style.zIndex = '-9999'; // Hide behind current UI
             tempContainer.style.width = '1200px'; // Force desktop width
             tempContainer.style.backgroundColor = '#fef7e6';
-            tempContainer.style.backgroundImage = 'url("https://www.transparenttextures.com/patterns/old-paper-texture.png")';
-            tempContainer.style.padding = '20px 40px';
+            tempContainer.style.padding = '0'; // Remove padding so masthead and footer are full width
             tempContainer.style.boxSizing = 'border-box';
             tempContainer.style.display = 'flex';
             tempContainer.style.flexDirection = 'column';
-            tempContainer.style.gap = '30px';
+            tempContainer.style.gap = '0px';
 
-            // Clone masthead and force desktop visibility
+            // Clone masthead and force desktop visibility & layout
             const mastheadClone = mastheadElement.cloneNode(true);
-            const hiddenElements = mastheadClone.querySelectorAll('.hidden.md\\:flex');
-            hiddenElements.forEach(el => {
-                el.classList.remove('hidden', 'md:flex');
-                el.style.display = 'flex';
+
+            // Remove borders and shadows for the downloaded cutting
+            mastheadClone.classList.remove('border-b-[6px]', 'border-black/20');
+            mastheadClone.style.borderBottom = 'none';
+            mastheadClone.querySelectorAll('.shadow-sm').forEach(el => {
+                el.classList.remove('shadow-sm');
+                el.style.boxShadow = 'none';
             });
+            
+            // 1. Force hidden desktop elements to show (including sm: and md: breakpoints)
+            mastheadClone.querySelectorAll('.hidden.md\\:flex').forEach(el => { el.classList.remove('hidden', 'md:flex'); el.style.display = 'flex'; });
+            mastheadClone.querySelectorAll('.hidden.sm\\:inline').forEach(el => { el.classList.remove('hidden', 'sm:inline'); el.style.display = 'inline'; });
+            mastheadClone.querySelectorAll('.hidden.sm\\:block').forEach(el => { el.classList.remove('hidden', 'sm:block'); el.style.display = 'block'; });
+            
+            // 2. Hide mobile-only elements
+            mastheadClone.querySelectorAll('.sm\\:hidden').forEach(el => { el.style.display = 'none'; });
+
+            // 3. Force desktop flex/grid directions and alignments
+            mastheadClone.querySelectorAll('.md\\:flex-row').forEach(el => { el.style.flexDirection = 'row'; });
+            mastheadClone.querySelectorAll('.md\\:items-end').forEach(el => { el.style.alignItems = 'flex-end'; });
+            mastheadClone.querySelectorAll('.md\\:justify-start').forEach(el => { el.style.justifyContent = 'flex-start'; });
+            mastheadClone.querySelectorAll('.md\\:justify-end').forEach(el => { el.style.justifyContent = 'flex-end'; });
+            mastheadClone.querySelectorAll('.md\\:w-\\[220px\\]').forEach(el => { 
+                el.style.width = '220px'; 
+                el.style.minWidth = '220px'; // Prevent squishing
+            });
+            
+            // 3.5. Fix html-to-image flex-col wrapping overlap bug
+            mastheadClone.querySelectorAll('.flex.flex-col.items-end.text-right').forEach(el => {
+                el.style.display = 'block'; // Replace flex-col with block to fix height calc bug
+                el.querySelectorAll('.flex.items-center').forEach(child => {
+                    child.style.justifyContent = 'flex-end'; // Keep header right aligned
+                });
+            });
+            mastheadClone.querySelectorAll('.tracking-tight.leading-tight').forEach(el => {
+                el.style.whiteSpace = 'nowrap'; // Prevent tithi from wrapping and causing height bugs
+            });
+            
+            mastheadClone.querySelectorAll('.md\\:grid').forEach(el => { el.classList.remove('flex'); el.style.display = 'grid'; });
+            mastheadClone.querySelectorAll('.md\\:grid-cols-3').forEach(el => { el.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))'; });
+            
+            // 4. Fix text sizes, margins, and gaps that use md: directly
+            const h1El = mastheadClone.querySelector('h1');
+            if (h1El) h1El.style.fontSize = '68px';
+            mastheadClone.querySelectorAll('.md\\:text-\\[13px\\]').forEach(el => el.style.fontSize = '13px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[14px\\]').forEach(el => el.style.fontSize = '14px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[15px\\]').forEach(el => el.style.fontSize = '15px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[16px\\]').forEach(el => el.style.fontSize = '16px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[18px\\]').forEach(el => el.style.fontSize = '18px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[20px\\]').forEach(el => el.style.fontSize = '20px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[26px\\]').forEach(el => el.style.fontSize = '26px');
+            mastheadClone.querySelectorAll('.md\\:text-\\[4xl\\]').forEach(el => el.style.fontSize = '36px');
+            mastheadClone.querySelectorAll('.md\\:gap-2').forEach(el => el.style.gap = '0.5rem');
+            mastheadClone.querySelectorAll('.md\\:gap-4').forEach(el => el.style.gap = '1rem');
+            mastheadClone.querySelectorAll('.md\\:-mt-4').forEach(el => el.style.marginTop = '-0.2rem');
+            mastheadClone.querySelectorAll('.md\\:mt-4').forEach(el => el.style.marginTop = '1rem');
+            mastheadClone.querySelectorAll('.md\\:-mb-2').forEach(el => el.style.marginBottom = '12px');
+            mastheadClone.querySelectorAll('.md\\:px-10').forEach(el => { el.style.paddingLeft = '2.5rem'; el.style.paddingRight = '2.5rem'; });
             
             // Clone article and clean it up
             const articleClone = articleElement.cloneNode(true);
             const cuttingBtn = articleClone.querySelector('.cutting-btn');
             if (cuttingBtn) cuttingBtn.remove();
+            const gameEl = articleClone.querySelector('.newspaper-game');
+            if (gameEl) gameEl.remove();
             
             // Enhance article styling for standalone download
             articleClone.style.border = 'none';
-            articleClone.style.padding = '20px';
+            articleClone.style.padding = '0px 40px'; // Add horizontal padding since container padding was removed
             articleClone.style.backgroundColor = 'transparent'; // Let the newspaper background show
             articleClone.style.boxShadow = 'none';
             articleClone.style.width = '100%';
+
+            // Float image for text wrapping
+            articleClone.classList.remove('flex', 'flex-col');
+            articleClone.style.display = 'block';
+
+            const imgContainers = articleClone.querySelectorAll('.mb-3.overflow-hidden.border');
+            imgContainers.forEach(container => {
+                container.style.float = 'left';
+                container.style.width = '45%';
+                container.style.marginRight = '20px';
+                                        container.style.marginBottom = '12px';
+            });
+
+            const textContainersGroup = articleClone.querySelectorAll('.text-gray-800');
+            textContainersGroup.forEach(tc => {
+                tc.classList.remove('flex', 'flex-col', 'flex-1');
+                tc.style.display = 'block';
+                tc.style.textAlign = 'left';
+                tc.querySelectorAll('p').forEach(p => {
+                    p.style.setProperty('font-size', '16px', 'important');
+                    p.style.setProperty('line-height', '1.6', 'important');
+                });
+            });
 
             // Force all images to be in full color and show fully without cropping
             const images = articleClone.querySelectorAll('img');
@@ -321,24 +827,33 @@ export default function Epaper() {
                 img.classList.remove('grayscale', 'aspect-[16/9]', 'object-cover');
                 img.style.filter = 'none';
                 img.style.height = 'auto';
-                img.style.maxHeight = '600px';
+                                img.style.maxHeight = 'none';
                 img.style.objectFit = 'contain';
+                img.style.width = '100%';
             });
 
             // Show full article text by removing line clamps
-            const paragraphs = articleClone.querySelectorAll('p');
-            paragraphs.forEach(p => {
-                p.className = p.className.replace(/line-clamp-\[\d+\]/g, '');
-                p.style.display = 'block';
+            const textContainers = articleClone.querySelectorAll('[class*="line-clamp-"]');
+            textContainers.forEach(el => {
+                if (el.className && typeof el.className === 'string') {
+                    el.className = el.className.replace(/line-clamp-\[\d+\]/g, '').replace(/line-clamp-\d/g, '');
+                }
+                el.style.display = 'block';
+                el.style.webkitLineClamp = 'unset';
+                el.style.maxHeight = 'none';
             });
 
             // Make all titles uniform large size for downloaded cutting
             const titleHeading = articleClone.querySelector('h2');
             if (titleHeading) {
-                titleHeading.classList.remove('text-4xl', 'md:text-5xl', 'text-2xl', 'md:text-3xl', 'text-xl', 'text-3xl');
-                titleHeading.classList.add('text-4xl', 'md:text-5xl');
+                titleHeading.classList.remove('text-4xl', 'md:text-5xl', 'text-2xl', 'md:text-3xl', 'text-xl', 'text-3xl', 'mb-2', 'pb-1');
+                // Ensure a uniform large font size for the downloaded cutting
+                titleHeading.style.fontSize = '2.5rem';
+                titleHeading.style.lineHeight = '1.15';
+                titleHeading.style.fontWeight = 'bold';
+                titleHeading.style.marginBottom = '-2px'; // Tighter gap
+                titleHeading.style.paddingBottom = '0px';
             }
-
             // Ensure "दैनिक सबसे तेज़" tag is visible on ALL cuttings
             const categorySpan = articleClone.querySelector('span.bg-black.text-white');
             if (categorySpan) {
@@ -364,30 +879,49 @@ export default function Epaper() {
                     el.style.display = 'flex';
                 });
                 footerClone.style.backgroundColor = 'transparent';
+                // footerClone.classList.remove('border-t', 'border-black/20');
                 footerClone.style.borderTop = '1px solid rgba(0,0,0,0.2)';
                 tempContainer.appendChild(footerClone);
             }
             
+            // Stop Google Translate from processing the clone
+            tempContainer.setAttribute('translate', 'no');
+            tempContainer.classList.add('skiptranslate');
+
+            // Remove translation elements BEFORE appending to avoid html-to-image bugs
+            tempContainer.querySelectorAll('.skiptranslate:not([translate="no"]), iframe, #google_translate_element').forEach(el => el.remove());
+            // Remove Google Translate injected `<font>` tags but keep their text
+            tempContainer.querySelectorAll('font').forEach(el => {
+                const textNode = document.createTextNode(el.innerText || '');
+                el.parentNode.replaceChild(textNode, el);
+            });
+
             // Append to the root so styles apply perfectly
             document.getElementById('root').appendChild(tempContainer);
 
+            // Inject Google Fonts directly to ensure html-to-image embeds them properly
+            const fontStyle = document.createElement('style');
+            fontStyle.innerHTML = `@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;900&family=Yatra+One&display=swap');`;
+            tempContainer.appendChild(fontStyle);
+
+            // Temporarily disable remote translate stylesheets to prevent cssRules SecurityError
+            const badLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).filter(link => 
+                link.href.includes('translate')
+            );
+            badLinks.forEach(link => link.setAttribute('disabled', 'true'));
+
             // Wait for browser to calculate layout of the new cloned DOM
             await new Promise(resolve => setTimeout(resolve, 300));
-
-            const filter = (node) => {
-                if (node.tagName === 'IFRAME') return false;
-                if (node.classList && node.classList.contains('skiptranslate')) return false;
-                if (node.id === 'google_translate_element') return false;
-                return true;
-            };
-
+            
             const dataUrl = await toJpeg(tempContainer, {
                 quality: 0.95,
                 backgroundColor: '#fef7e6',
-                pixelRatio: 2,
-                filter: filter
+                pixelRatio: 2
             });
             
+            // Re-enable stylesheets
+            badLinks.forEach(link => link.removeAttribute('disabled'));
+
             document.getElementById('root').removeChild(tempContainer);
             
             const link = document.createElement('a');
@@ -397,7 +931,7 @@ export default function Epaper() {
             link.click();
         } catch (error) {
             console.error("Error generating cutting:", error);
-            alert("Failed to download cutting. Please try again.");
+            alert("Failed to download cutting: " + (error.message || error));
             // Clean up
             const temp = document.getElementById('root').querySelector('div[style*="-9999"]');
             if (temp) document.getElementById('root').removeChild(temp);
@@ -438,8 +972,8 @@ export default function Epaper() {
                                     A Unit of HBN News 24
                                 </div>
                                 <h1
-                                    className="text-[36px] sm:text-5xl md:text-[68px] lg:text-[90px] font-black tracking-tight leading-tight md:leading-[1.1] text-slate-900 uppercase whitespace-nowrap drop-shadow-sm"
-                                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", letterSpacing: '-0.02em' }}
+                                    className="text-[44px] min-[375px]:text-[48px] min-[400px]:text-[52px] sm:text-5xl md:text-[68px] lg:text-[90px] font-black tracking-tight leading-tight md:leading-[1.1] text-slate-900 uppercase whitespace-nowrap drop-shadow-sm w-full text-center"
+                                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", letterSpacing: '-0.03em' }}
                                 >
                                     दैनिक सबसे तेज़
                                 </h1>
@@ -462,7 +996,7 @@ export default function Epaper() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex justify-between md:grid md:grid-cols-3 gap-1 md:gap-2 text-[12px] md:text-[14px] font-semibold border-y-[3px] border-[#801515] py-2.5 mt-4 bg-gradient-to-r from-[#801515] via-[#a61c1c] to-[#801515] text-white px-2 md:px-4 items-center shadow-sm">
+                    <div className="flex justify-between md:grid md:grid-cols-3 gap-1 md:gap-2 text-[12px] md:text-[14px] font-semibold border-y-[3px] border-[#801515] py-2.5 mt-4 bg-gradient-to-r from-[#801515] via-[#a61c1c] to-[#801515] text-white px-6 md:px-10 items-center shadow-sm -mx-6">
                         <a href="https://hbnnews24.com/" target="_blank" rel="noreferrer" className="text-left font-sans font-bold uppercase tracking-[0.02em] sm:tracking-[0.15em] text-[10px] md:text-[13px] whitespace-nowrap flex items-center gap-1.5 opacity-95 hover:text-gray-200 transition-colors">
                             <FaGlobe className="text-[12px] md:text-[15px] opacity-90 shrink-0" /> <span className="hidden sm:inline">www.hbnnews24.com</span><span className="sm:hidden">hbnnews24.com</span>
                         </a>
@@ -529,7 +1063,7 @@ export default function Epaper() {
                                     <article id={`article-${item._id}`} className="h-full flex flex-col p-4 relative">
                                         {/* Download Cutting Button - Visible on mobile, hover on desktop */}
                                         <button 
-                                            onClick={() => downloadNewsCutting(item._id, item.title)}
+                                            onClick={() => setCuttingModalData({id: item._id, title: item.title, item: item, catHindi: catHindi})}
                                             className="cutting-btn absolute top-2 right-2 z-10 bg-white/90 border border-gray-300 text-gray-700 text-[10px] px-2 py-1 rounded shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:bg-red-50 hover:text-red-700 font-bold"
                                             title="न्यूज़ की कटिंग डाउनलोड करें"
                                         >
@@ -699,6 +1233,67 @@ export default function Epaper() {
                     </div>
                 )}
             </div>
+
+            {/* Cutting Theme Modal */}
+            {cuttingModalData && (
+                <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4 text-center">कटिंग की थीम चुनें</h3>
+                        <p className="text-sm text-gray-600 mb-6 text-center">आप किस स्टाइल में न्यूज़ कटिंग डाउनलोड करना चाहते हैं?</p>
+                        
+                        <div className="flex flex-col gap-4">
+                            <button 
+                                onClick={() => {
+                                    downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'default', cuttingModalData.catHindi);
+                                    setCuttingModalData(null);
+                                }}
+                                className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors text-left"
+                            >
+                                <div className="text-2xl">📱</div>
+                                <div>
+                                    <div className="font-bold text-gray-800">सिंगल कॉलम (Single Column)</div>
+                                    <div className="text-xs text-gray-500">वेबसाइट जैसा डिफ़ॉल्ट डिज़ाइन (Full Article)</div>
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={() => {
+                                    downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'classic', cuttingModalData.catHindi);
+                                    setCuttingModalData(null);
+                                }}
+                                className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors text-left"
+                            >
+                                <div className="text-2xl">📰</div>
+                                <div>
+                                    <div className="font-bold text-gray-800">क्लासिक (Classic Newspaper)</div>
+                                    <div className="text-xs text-gray-500">कॉलम वाला पारंपरिक डिज़ाइन (सारांश)</div>
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={() => {
+                                    downloadNewsCutting(cuttingModalData.id, cuttingModalData.title, cuttingModalData.item, 'classic-full', cuttingModalData.catHindi);
+                                    setCuttingModalData(null);
+                                }}
+                                className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-200 transition-colors text-left"
+                            >
+                                <div className="text-2xl">📜</div>
+                                <div>
+                                    <div className="font-bold text-gray-800">क्लासिक - पूरा लेख (Classic Full)</div>
+                                    <div className="text-xs text-gray-500">पारंपरिक डिज़ाइन लेकिन पूरे पैराग्राफ के साथ</div>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <button 
+                            onClick={() => setCuttingModalData(null)}
+                            className="w-full mt-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
+                        >
+                            रद्द करें (Cancel)
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
