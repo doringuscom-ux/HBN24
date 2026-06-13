@@ -169,9 +169,13 @@ export default function Epaper() {
     const [currentPage, setCurrentPage] = useState(1);
     const [cuttingModalData, setCuttingModalData] = useState(null);
     const [suvicharText, setSuvicharText] = useState('मंजिलें क्या हैं, रास्ता क्या है? हौसला हो तो फासला क्या है?');
-    const [panchangData, setPanchangData] = useState({
-        tithi: "ज्येष्ठ कृष्ण पक्ष, तृतीया",
-        samvat: "विक्रम संवत 2083 • बुधवार"
+    const [panchangData, setPanchangData] = useState(() => {
+        const daysInHindi = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+        const todayHindi = daysInHindi[new Date().getDay()];
+        return {
+            tithi: "लोड हो रहा है...",
+            samvat: `विक्रम संवत 2083 • ${todayHindi}`
+        };
     });
     const itemsPerPage = 11; // 11 stories per page to allow the last one to be wide
 
@@ -197,7 +201,15 @@ export default function Epaper() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.tithi) {
-                        setPanchangData(data);
+                        const daysInHindi = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+                        const todayHindi = daysInHindi[new Date().getDay()];
+                        let samvatText = data.samvat || '';
+                        if (samvatText.includes('•')) {
+                            samvatText = samvatText.split('•')[0].trim() + ' • ' + todayHindi;
+                        } else {
+                            samvatText = samvatText + ' • ' + todayHindi;
+                        }
+                        setPanchangData({ tithi: data.tithi, samvat: samvatText });
                     }
                 }
             } catch (error) {
@@ -281,7 +293,7 @@ export default function Epaper() {
             container.style.top = '0';
             container.style.zIndex = '-9999';
             container.style.width = '1000px';
-            container.style.backgroundColor = '#ffffff'; // White background
+            container.style.backgroundColor = '#D9D9D9'; // Newspaper grey background
             container.style.padding = '20px'; // Outer padding for the black border
             container.style.boxSizing = 'border-box';
             container.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
@@ -677,7 +689,7 @@ export default function Epaper() {
 
             const dataUrl = await toJpeg(container, {
                 quality: 0.95,
-                backgroundColor: '#ffffff',
+                backgroundColor: '#D9D9D9',
                 pixelRatio: 2
             });
 
