@@ -293,7 +293,7 @@ export default function Epaper() {
             container.style.top = '0';
             container.style.zIndex = '-9999';
             container.style.width = '1000px';
-            container.style.backgroundColor = '#D9D9D9'; // Newspaper grey background
+            container.style.backgroundColor = '#FFFFFA'; // Newspaper grey background
             container.style.padding = '20px'; // Outer padding for the black border
             container.style.boxSizing = 'border-box';
             container.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
@@ -316,7 +316,7 @@ export default function Epaper() {
             const catBlock = document.createElement('div');
             catBlock.style.backgroundColor = '#000000';
             catBlock.style.color = '#fef08a'; // yellow-200
-            catBlock.style.padding = '2px 8px';
+            catBlock.style.padding = '4px 10px';
             catBlock.style.textTransform = 'uppercase';
             catBlock.style.letterSpacing = '0.5px';
             catBlock.innerText = catHindi || 'न्यूज़';
@@ -333,7 +333,10 @@ export default function Epaper() {
             tagLine.innerText = 'दैनिक सबसे तेज़';
             tagLine.style.color = '#dc2626';
             tagLine.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
-            tagLine.style.fontSize = '11px';
+            tagLine.style.fontSize = '18px';
+            tagLine.style.fontWeight = 'bold';
+            tagLine.style.lineHeight = '1';
+            tagLine.style.marginTop = '2px';
 
             catTagRow.appendChild(catBlock);
             catTagRow.appendChild(separator);
@@ -518,7 +521,7 @@ export default function Epaper() {
                 colsContainer.style.columnGap = '25px';
                 colsContainer.style.columnRule = '1px solid #d1d5db';
                 colsContainer.style.textAlign = 'justify';
-                colsContainer.style.fontSize = '18px';
+                colsContainer.style.fontSize = '22px';
                 colsContainer.style.lineHeight = '1.6';
                 colsContainer.innerHTML = `${imgHTML} <p style="margin: 0; display: inline;">${stripHtml(item.content)}</p>`;
                 innerBorder.appendChild(colsContainer);
@@ -689,7 +692,7 @@ export default function Epaper() {
 
             const dataUrl = await toJpeg(container, {
                 quality: 0.95,
-                backgroundColor: '#D9D9D9',
+                backgroundColor: '#FFFFFA',
                 pixelRatio: 2
             });
 
@@ -732,7 +735,7 @@ export default function Epaper() {
             tempContainer.style.top = '0';
             tempContainer.style.zIndex = '-9999'; // Hide behind current UI
             tempContainer.style.width = '1200px'; // Force desktop width
-            tempContainer.style.backgroundColor = '#fef7e6';
+            tempContainer.style.backgroundColor = '#FFFFFA';
             tempContainer.style.padding = '0'; // Remove padding so masthead and footer are full width
             tempContainer.style.boxSizing = 'border-box';
             tempContainer.style.display = 'flex';
@@ -935,7 +938,7 @@ export default function Epaper() {
 
             const dataUrl = await toJpeg(tempContainer, {
                 quality: 0.95,
-                backgroundColor: '#fef7e6',
+                backgroundColor: '#FFFFFA',
                 pixelRatio: 2
             });
 
@@ -971,7 +974,7 @@ export default function Epaper() {
         <div className="min-h-screen bg-[#c9c1ae] py-6 px-4 md:px-8 selection:bg-yellow-900 selection:text-white">
             {/* Main newspaper wrapper with aged paper look */}
             <div id="epaper-page"
-                className="max-w-[1300px] mx-auto bg-[#fef7e6] shadow-2xl border border-black/20 border-b-[8px] border-b-[#a61c1c]"
+                className="max-w-[1300px] mx-auto bg-[#FFFFFA] shadow-2xl border border-black/20 border-b-[8px] border-b-[#a61c1c]"
                 style={{
                     backgroundImage: 'url("https://www.transparenttextures.com/patterns/old-paper-texture.png")',
                     fontFamily: "'Playfair Display', 'Times New Roman', Times, serif",
