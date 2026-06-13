@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
 // Protected route for admin to fetch all messages
 router.get('/', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
+        if (!req.admin || req.admin.role !== 'admin') {
             return res.status(403).json({ message: 'Access denied. Admin only.' });
         }
         
@@ -45,7 +45,7 @@ router.get('/', auth, async (req, res) => {
 // Protected route to mark message as read
 router.put('/:id/status', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
+        if (!req.admin || req.admin.role !== 'admin') {
             return res.status(403).json({ message: 'Access denied. Admin only.' });
         }
 
@@ -70,7 +70,7 @@ router.put('/:id/status', auth, async (req, res) => {
 // Protected route to delete message
 router.delete('/:id', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
+        if (!req.admin || req.admin.role !== 'admin') {
             return res.status(403).json({ message: 'Access denied. Admin only.' });
         }
 

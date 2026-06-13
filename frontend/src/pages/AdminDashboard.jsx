@@ -300,6 +300,24 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleMarkAsUnread = async (id) => {
+        const token = localStorage.getItem('adminToken');
+        if (!token) return;
+        try {
+            const res = await fetch(__API_URL__ + `/api/contact/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'new' })
+            });
+            if (res.ok) fetchContactMessages();
+        } catch (error) {
+            console.error('Error updating message status:', error);
+        }
+    };
+
     const handleDeleteMessage = async (id) => {
         if (!window.confirm("Are you sure you want to delete this message?")) return;
         const token = localStorage.getItem('adminToken');
@@ -1449,12 +1467,19 @@ export default function AdminDashboard() {
                                                     <p className="text-xs text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
                                                 </div>
                                                 <div className="flex gap-2 w-full sm:w-auto">
-                                                    {msg.status === 'new' && (
+                                                    {msg.status === 'new' ? (
                                                         <button 
                                                             onClick={() => handleMarkAsRead(msg._id)}
                                                             className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded text-sm font-semibold hover:bg-blue-100 transition-colors"
                                                         >
                                                             Mark as Read
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => handleMarkAsUnread(msg._id)}
+                                                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded text-sm font-semibold hover:bg-gray-200 transition-colors"
+                                                        >
+                                                            Mark as Unread
                                                         </button>
                                                     )}
                                                     <button 

@@ -772,7 +772,7 @@ export default function Epaper() {
 
             // 4. Fix text sizes, margins, and gaps that use md: directly
             const h1El = mastheadClone.querySelector('h1');
-            if (h1El) h1El.style.fontSize = '68px';
+            if (h1El) h1El.style.fontSize = '90px';
             mastheadClone.querySelectorAll('.md\\:text-\\[13px\\]').forEach(el => el.style.fontSize = '13px');
             mastheadClone.querySelectorAll('.md\\:text-\\[14px\\]').forEach(el => el.style.fontSize = '14px');
             mastheadClone.querySelectorAll('.md\\:text-\\[15px\\]').forEach(el => el.style.fontSize = '15px');
@@ -785,7 +785,7 @@ export default function Epaper() {
             mastheadClone.querySelectorAll('.md\\:gap-4').forEach(el => el.style.gap = '1rem');
             mastheadClone.querySelectorAll('.md\\:-mt-4').forEach(el => el.style.marginTop = '-0.2rem');
             mastheadClone.querySelectorAll('.md\\:mt-4').forEach(el => el.style.marginTop = '1rem');
-            mastheadClone.querySelectorAll('.md\\:-mb-2').forEach(el => el.style.marginBottom = '12px');
+            mastheadClone.querySelectorAll('.md\\:-mb-2').forEach(el => el.style.marginBottom = '-8px');
             mastheadClone.querySelectorAll('.md\\:px-10').forEach(el => { el.style.paddingLeft = '2.5rem'; el.style.paddingRight = '2.5rem'; });
 
             // Clone article and clean it up
@@ -817,11 +817,15 @@ export default function Epaper() {
             const textContainersGroup = articleClone.querySelectorAll('.text-gray-800');
             textContainersGroup.forEach(tc => {
                 tc.classList.remove('flex', 'flex-col', 'flex-1');
-                tc.style.display = 'block';
-                tc.style.textAlign = 'left';
+                tc.style.setProperty('text-align', 'justify', 'important');
+                tc.style.setProperty('text-justify', 'inter-word', 'important');
                 tc.querySelectorAll('p').forEach(p => {
                     p.style.setProperty('font-size', '16px', 'important');
                     p.style.setProperty('line-height', '1.6', 'important');
+                    p.style.setProperty('text-align', 'justify', 'important');
+                    p.style.setProperty('text-justify', 'inter-word', 'important');
+                    p.style.setProperty('word-break', 'break-word', 'important');
+                    p.style.setProperty('hyphens', 'auto', 'important');
                 });
             });
 
