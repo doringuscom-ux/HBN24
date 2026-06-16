@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../../models/Admin');
+const News = require('../../models/News');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // @route   POST /api/auth/login
@@ -201,12 +202,20 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if (username) {
+        if (username && username !== adminToUpdate.username) {
             const existing = await Admin.findOne({ username });
             if (existing && existing._id.toString() !== req.params.id) {
                 return res.status(400).json({ message: 'Username already taken' });
             }
+            
+            const oldUsername = adminToUpdate.username;
             adminToUpdate.username = username;
+
+            // Update author name in News collection
+            await News.updateMany(
+                { author: oldUsername },
+                { $set: { author: username } }
+            );
         }
 
         if (password) adminToUpdate.password = password;

@@ -1071,15 +1071,15 @@ export default function Epaper() {
 
                         // Dynamic column spans
                         let colSpan = 'col-span-1';
-                        if (style === 'headline') colSpan = 'md:col-span-3 md:border-r-2 border-black/20 md:pr-6 md:pb-6';
-                        if (style === 'double-column') colSpan = 'md:col-span-2 md:border-r border-black/15 md:pr-4 md:pb-6';
+                        if (style === 'headline') colSpan = 'md:col-span-3 md:border-r-2 border-black/20 md:pr-6 md:pb-3';
+                        if (style === 'double-column') colSpan = 'md:col-span-2 md:border-r border-black/15 md:pr-4 md:pb-3';
                         if (style === 'bottom-wide') colSpan = 'md:col-span-2 md:border-l border-black/15 md:pl-4';
                         if (style === 'feature') colSpan = 'md:col-span-1';
 
                         return (
                             <div
                                 key={item._id}
-                                className={`${colSpan} group break-inside-avoid pb-5 ${idx !== paginatedNews.length - 1 ? 'border-b md:border-b-0' : ''
+                                className={`${colSpan} group break-inside-avoid pb-2 ${idx !== paginatedNews.length - 1 ? 'border-b md:border-b-0' : ''
                                     }`}
                             >
                                 <div className="h-full -m-4 rounded transition-colors hover:bg-black/5">
@@ -1108,7 +1108,7 @@ export default function Epaper() {
                                         {/* Headline */}
                                         <h2
                                             className={`font-black leading-snug pb-1 mb-2 hover:text-red-700 transition ${style === 'headline'
-                                                ? 'text-4xl md:text-5xl'
+                                                ? 'text-[28px] md:text-[40px]'
                                                 : style === 'double-column'
                                                     ? 'text-2xl md:text-3xl'
                                                     : 'text-xl'
@@ -1157,10 +1157,12 @@ export default function Epaper() {
                                         <div className={`text-gray-800 text-left md:text-justify break-words flex-1 flex flex-col ${style === 'double-column' ? 'mb-4' : ''}`}>
                                             <p
                                                 className={`text-sm leading-relaxed break-words ${style === 'headline'
-                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[25]'
+                                                    ? 'first-letter:text-6xl first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-red-900 first-letter:leading-[0.8] line-clamp-[8]'
                                                     : style === 'double-column'
-                                                        ? 'line-clamp-[16]'
-                                                        : 'line-clamp-[14]'
+                                                        ? 'line-clamp-[3]'
+                                                        : style === 'bottom-wide'
+                                                            ? 'line-clamp-[14]'
+                                                            : 'line-clamp-[20]'
                                                     }`}
                                             >
                                                 {plainText}
