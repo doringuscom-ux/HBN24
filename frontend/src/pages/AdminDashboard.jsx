@@ -117,6 +117,7 @@ export default function AdminDashboard() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
@@ -800,6 +801,8 @@ export default function AdminDashboard() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         const token = localStorage.getItem('adminToken');
         try {
             if (editingId) {
@@ -839,6 +842,8 @@ export default function AdminDashboard() {
             fetchNews();
         } catch (error) {
             console.error('Error saving news:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -2007,7 +2012,9 @@ export default function AdminDashboard() {
 
                             <div className="mt-8 sm:mt-8 -mx-4 sm:mx-0 p-4 sm:p-0 pt-4 sm:pt-5 bg-white sm:bg-transparent border-t border-gray-200 sticky bottom-0 z-20 flex flex-col-reverse sm:flex-row justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:shadow-none">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
-                                <button type="submit" className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95">{editingId ? 'Save All Changes' : 'Publish Complete Article'}</button>
+                                <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                                    {isSubmitting ? 'Publishing...' : (editingId ? 'Save All Changes' : 'Publish Complete Article')}
+                                </button>
                             </div>
                         </form>
                     </div>

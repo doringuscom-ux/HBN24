@@ -190,15 +190,31 @@ app.get('/api/news/home', async (req, res) => {
         const latestFallback = results[categories.length + 1];
 
         // Apply fallback filling logic
-        const fillNews = (categoryNews) => {
+        const fillNews = (categoryNews, excludeIds = new Set()) => {
             if (categoryNews.length >= 12) return categoryNews;
-            const borrowed = latestFallback.filter(n => !categoryNews.some(cn => cn._id.equals(n._id)));
+            const borrowed = latestFallback.filter(n => {
+                if (categoryNews.some(cn => cn._id.equals(n._id))) return false;
+                if (excludeIds.has(n._id.toString())) return false;
+                return true;
+            });
             return [...categoryNews, ...borrowed].slice(0, 12);
         };
 
-        homeData.mixNews = fillNews(homeData.mixNews);
+        // Fill top sections first
+        homeData.superfast = fillNews(homeData.superfast);
+        homeData.featured = fillNews(homeData.featured);
+
+        // Collect IDs to exclude from lower sections
+        const topNewsIds = new Set();
+        homeData.superfast.forEach(n => topNewsIds.add(n._id.toString()));
+        homeData.featured.forEach(n => topNewsIds.add(n._id.toString()));
+
+        // Fill remaining sections excluding top news
+        homeData.mixNews = fillNews(homeData.mixNews, topNewsIds);
         categories.forEach(cat => {
-            homeData[cat] = fillNews(homeData[cat]);
+            if (cat !== 'superfast' && cat !== 'featured') {
+                homeData[cat] = fillNews(homeData[cat], topNewsIds);
+            }
         });
         
         homeData.latestNews = latestFallback;
