@@ -272,6 +272,18 @@ app.get('/api/news/search', async (req, res) => {
     }
 });
 
+app.get('/api/news/author/:authorName', async (req, res) => {
+    try {
+        const { authorName } = req.params;
+        // Search case insensitively
+        const newsList = await News.find({ author: new RegExp('^' + authorName + '$', 'i') }).sort({ createdAt: -1 });
+        res.json(newsList);
+    } catch (error) {
+        console.error('Error fetching news by author:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/news/:category', async (req, res) => {
     try {
         const { category } = req.params;

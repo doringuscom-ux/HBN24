@@ -18,6 +18,7 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Epaper = lazy(() => import('./pages/Epaper'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Search = lazy(() => import('./pages/Search'));
+const ReporterProfile = lazy(() => import('./pages/ReporterProfile'));
 
 // Policy Pages
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -182,6 +183,7 @@ function AppContent() {
             <Route path="/education" element={<Education />} />
             <Route path="/epaper" element={<Epaper />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/reporter/:name" element={<ReporterProfile />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsConditions />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
