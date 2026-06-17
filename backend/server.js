@@ -275,8 +275,9 @@ app.get('/api/news/search', async (req, res) => {
 app.get('/api/news/author/:authorName', async (req, res) => {
     try {
         const { authorName } = req.params;
-        // Search case insensitively
-        const newsList = await News.find({ author: new RegExp('^' + authorName + '$', 'i') }).sort({ createdAt: -1 });
+        // Search case insensitively, replace hyphens with spaces for slug matching
+        const searchName = authorName.replace(/-/g, ' ');
+        const newsList = await News.find({ author: new RegExp('^' + searchName + '$', 'i') }).sort({ createdAt: -1 });
         res.json(newsList);
     } catch (error) {
         console.error('Error fetching news by author:', error);

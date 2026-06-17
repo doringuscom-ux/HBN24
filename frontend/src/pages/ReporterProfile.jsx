@@ -6,8 +6,12 @@ export default function ReporterProfile() {
     const [newsData, setNewsData] = useState([]);
     const [latestNewsData, setLatestNewsData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [profileImage, setProfileImage] = useState('');
 
-    const authorBio = `${name} is a dedicated journalist and reporter for HBN News 24, committed to bringing you the most accurate and fastest news updates from ground zero.`;
+    const displayName = newsData.length > 0 && newsData[0].author 
+        ? newsData[0].author 
+        : name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const authorBio = `${displayName} is a dedicated journalist and reporter for HBN News 24, committed to bringing you the most accurate and fastest news updates from ground zero.`;
     
     const getInitials = (fullName) => {
         if (!fullName) return '';
@@ -19,6 +23,19 @@ export default function ReporterProfile() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
+                // Fetch profile data
+                try {
+                    const profileRes = await fetch(__API_URL__ + `/api/auth/profile/${encodeURIComponent(name)}`);
+                    if (profileRes.ok) {
+                        const profileData = await profileRes.json();
+                        if (profileData.profileImage) {
+                            setProfileImage(profileData.profileImage);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error fetching profile:", e);
+                }
+
                 const authorRes = await fetch(__API_URL__ + `/api/news/author/${encodeURIComponent(name)}`);
                 const authorData = await authorRes.json();
                 
@@ -47,11 +64,15 @@ export default function ReporterProfile() {
             {/* Author Header Banner */}
             <div className="w-full bg-white border-b border-gray-200 py-10 px-4">
                 <div className="max-w-[1270px] mx-auto flex items-center gap-6">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#cc0000] flex items-center justify-center shadow-md flex-shrink-0">
-                        <span className="text-white text-3xl sm:text-4xl font-semibold tracking-wider">{getInitials(name)}</span>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#cc0000] flex items-center justify-center shadow-md flex-shrink-0 overflow-hidden border-2 border-white">
+                        {profileImage ? (
+                            <img src={profileImage} alt={displayName} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-white text-3xl sm:text-4xl font-semibold tracking-wider">{getInitials(displayName)}</span>
+                        )}
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{name}</h1>
+                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{displayName}</h1>
                         <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-3xl">
                             {authorBio}
                         </p>
@@ -66,7 +87,7 @@ export default function ReporterProfile() {
                     <div className="w-full lg:w-[70%]">
                         <div className="flex items-center gap-2 mb-6 border-b-[2px] border-gray-100 pb-2">
                             <div className="w-0 h-0 border-t-[10px] border-t-[#d91f26] border-l-[10px] border-l-transparent"></div>
-                            <h2 className="text-[20px] font-black text-black uppercase tracking-wide">Articles by {name}</h2>
+                            <h2 className="text-[20px] font-black text-black uppercase tracking-wide">Articles by {displayName}</h2>
                         </div>
 
                         {newsData.length === 0 ? (

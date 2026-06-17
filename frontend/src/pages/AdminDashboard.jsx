@@ -5,15 +5,19 @@ import JoditEditor from 'jodit-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) => {
-    const [crop, setCrop] = useState({ unit: '%', x: 0, y: 0, width: 100, height: 100 * (9 / 16), aspect: 16 / 9 });
+const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading, aspectRatio = 16 / 9, title = "Crop Image" }) => {
+    const [crop, setCrop] = useState({ unit: '%', x: 0, y: 0, width: 100, height: 100 / aspectRatio, aspect: aspectRatio });
     const [completedCrop, setCompletedCrop] = useState(null);
+    const [mode, setMode] = useState('crop'); // 'crop' or 'blur'
+    const [zoom, setZoom] = useState(100);
     const imageRef = useRef(null);
 
     useEffect(() => {
         if (isOpen) {
-            setCrop({ unit: '%', x: 0, y: 0, width: 100, height: 100 * (9 / 16), aspect: 16 / 9 });
+            setCrop({ unit: '%', x: 0, y: 0, width: 100, height: 100 / aspectRatio, aspect: aspectRatio });
             setCompletedCrop(null);
+            setMode('crop');
+            setZoom(100);
         }
     }, [isOpen]);
 
@@ -21,23 +25,49 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) =>
         try {
             const image = imageRef.current;
             const canvas = document.createElement('canvas');
-            const scaleX = image.naturalWidth / image.width;
-            const scaleY = image.naturalHeight / image.height;
-            canvas.width = completedCrop.width;
-            canvas.height = completedCrop.height;
-            const ctx = canvas.getContext('2d');
-
-            ctx.drawImage(
-                image,
-                completedCrop.x * scaleX,
-                completedCrop.y * scaleY,
-                completedCrop.width * scaleX,
-                completedCrop.height * scaleY,
-                0,
-                0,
-                completedCrop.width,
-                completedCrop.height
-            );
+            
+            if (mode === 'blur') {
+                const size = Math.max(image.naturalWidth, image.naturalHeight);
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw blurred background
+                ctx.filter = 'blur(30px) brightness(0.8)';
+                const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+                const w = image.naturalWidth * scale;
+                const h = image.naturalHeight * scale;
+                const x = (size - w) / 2;
+                const y = (size - h) / 2;
+                ctx.drawImage(image, x, y, w, h);
+                
+                // Draw sharp original image centered
+                ctx.filter = 'none';
+                const containScale = Math.min(size / image.naturalWidth, size / image.naturalHeight) * (zoom / 100);
+                const cw = image.naturalWidth * containScale;
+                const ch = image.naturalHeight * containScale;
+                const cx = (size - cw) / 2;
+                const cy = (size - ch) / 2;
+                ctx.drawImage(image, cx, cy, cw, ch);
+            } else {
+                const scaleX = image.naturalWidth / image.width;
+                const scaleY = image.naturalHeight / image.height;
+                canvas.width = completedCrop.width;
+                canvas.height = completedCrop.height;
+                const ctx = canvas.getContext('2d');
+    
+                ctx.drawImage(
+                    image,
+                    completedCrop.x * scaleX,
+                    completedCrop.y * scaleY,
+                    completedCrop.width * scaleX,
+                    completedCrop.height * scaleY,
+                    0,
+                    0,
+                    completedCrop.width,
+                    completedCrop.height
+                );
+            }
 
             return new Promise((resolve, reject) => {
                 canvas.toBlob((blob) => {
@@ -54,7 +84,8 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) =>
     };
 
     const handleCropUploadLocal = async () => {
-        if (!completedCrop || !imageRef.current) return;
+        if (mode === 'crop' && (!completedCrop || !imageRef.current)) return;
+        if (mode === 'blur' && !imageRef.current) return;
         const croppedBlob = await getCroppedImg();
         if (croppedBlob) {
             onUpload(croppedBlob);
@@ -65,45 +96,65 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading }) =>
 
     return (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <h3 className="text-xl font-bold text-gray-900">Crop Image (16:9)</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative">
+                <div className="flex justify-between items-center p-4 border-b border-gray-100">
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                        {aspectRatio === 1 && (
+                            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg self-start">
+                                <button onClick={() => setMode('crop')} className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${mode === 'crop' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    Manual Crop
+                                </button>
+                                <button onClick={() => setMode('blur')} className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${mode === 'blur' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    Fit & Blur
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200 self-start">
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-4 sm:p-6 bg-gray-100 flex flex-col items-center justify-center flex-1 overflow-hidden relative" style={{ minHeight: '50vh', maxHeight: '70vh' }}>
-                    <ReactCrop
-                        crop={crop}
-                        onChange={c => setCrop(c)}
-                        onComplete={c => setCompletedCrop(c)}
-                        aspect={16 / 9}
-                        style={{ maxWidth: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                        <img
-                            ref={imageRef}
-                            src={imageSrc}
-                            alt="Crop me"
-                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }}
-                            onLoad={e => {
-                                setCrop({
-                                    unit: '%',
-                                    x: 0,
-                                    y: 0,
-                                    width: 100,
-                                    height: 100 * (9 / 16),
-                                    aspect: 16 / 9,
-                                });
-                            }}
-                        />
-                    </ReactCrop>
+                <div className="p-4 sm:p-6 bg-gray-100 flex flex-col items-center justify-center flex-1 overflow-auto relative" style={{ minHeight: '50vh', maxHeight: '70vh' }}>
+                    {mode === 'crop' ? (
+                        <ReactCrop
+                            crop={crop}
+                            onChange={c => setCrop(c)}
+                            onComplete={c => setCompletedCrop(c)}
+                            aspect={aspectRatio}
+                            className="max-w-full max-h-full shadow-lg"
+                        >
+                            <img
+                                ref={imageRef}
+                                src={imageSrc}
+                                alt="Crop me"
+                                className="max-w-full object-contain"
+                                style={{ maxHeight: '60vh' }}
+                            />
+                        </ReactCrop>
+                    ) : (
+                        <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+                            <div className="relative w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] rounded-full overflow-hidden shadow-2xl bg-black border-4 border-white">
+                                <img src={imageSrc} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-70 scale-110" alt="blur background" />
+                                <img ref={imageRef} src={imageSrc} className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl transition-transform" style={{ transform: `scale(${zoom / 100})` }} alt="original" />
+                            </div>
+                            <div className="w-full bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                                <div className="flex justify-between mb-2">
+                                    <label className="text-sm font-bold text-gray-700">Zoom Out Image</label>
+                                    <span className="text-sm font-semibold text-red-600">{zoom}%</span>
+                                </div>
+                                <input type="range" min="40" max="100" value={zoom} onChange={(e) => setZoom(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600" />
+                                <p className="text-xs text-gray-500 mt-2 text-center">Adjust this if the logo corners are getting cut by the circle.</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
                     <button onClick={onClose} className="px-6 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>
-                    <button onClick={handleCropUploadLocal} disabled={isUploading || !completedCrop?.width || !completedCrop?.height} className="px-6 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center justify-center min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed">
-                        {isUploading ? 'Uploading...' : 'Crop & Upload'}
+                    <button onClick={handleCropUploadLocal} disabled={isUploading || (mode === 'crop' && (!completedCrop?.width || !completedCrop?.height))} className="px-6 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center justify-center min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isUploading ? 'Uploading...' : mode === 'blur' ? 'Save & Upload' : 'Crop & Upload'}
                     </button>
                 </div>
             </div>
@@ -122,6 +173,7 @@ export default function AdminDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
     const [cropImageSrc, setCropImageSrc] = useState('');
+    const [cropType, setCropType] = useState('news');
     const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
     const [isGeneratingRashifal, setIsGeneratingRashifal] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -143,19 +195,22 @@ export default function AdminDashboard() {
     const [selectedPageSeoUrl, setSelectedPageSeoUrl] = useState('');
     const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
 
-    const [currentView, setCurrentView] = useState('all'); // 'all', 'epaper', 'rashifal', 'seo', 'users', 'messages'
+    const [currentView, setCurrentView] = useState('all');
     const [contactMessages, setContactMessages] = useState([]);
     const [userRole, setUserRole] = useState('user');
+    const [currentUsername, setCurrentUsername] = useState('');
     const [usersList, setUsersList] = useState([]);
-    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', email: '', phone: '' });
+    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', email: '', phone: '', profileImage: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-    const [editUserData, setEditUserData] = useState({ id: '', username: '', role: '', email: '', phone: '', password: '' });
+    const [editUserData, setEditUserData] = useState({ id: '', username: '', role: '', email: '', phone: '', password: '', profileImage: '' });
     const [showEditPassword, setShowEditPassword] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [rashifalData, setRashifalData] = useState([]);
     const [suvicharText, setSuvicharText] = useState('');
     const [isGeneratingSuvichar, setIsGeneratingSuvichar] = useState(false);
+    const [myProfileData, setMyProfileData] = useState({ username: '', password: '', email: '', phone: '', profileImage: '' });
+    const [activityLogs, setActivityLogs] = useState([]);
     const [seoData, setSeoData] = useState({
         googleAnalyticsId: '',
         liveTvUrl: '',
@@ -179,7 +234,6 @@ export default function AdminDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
 
-    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -232,6 +286,7 @@ export default function AdminDashboard() {
                 
                 if (data.role === 'admin') {
                     fetchUsers();
+                    fetchActivityLogs();
                 }
                 if (data.role !== 'user') {
                     fetchNews();
@@ -239,6 +294,7 @@ export default function AdminDashboard() {
                     fetchSuvichar();
                     fetchSeo();
                 }
+                fetchMyProfile(data.username || localStorage.getItem('adminUsername'));
             } catch (error) {
                 console.error('Verify error:', error);
             }
@@ -264,6 +320,44 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error('Error fetching users:', error);
+        }
+    };
+
+    const fetchMyProfile = async (username) => {
+        if (!username) return;
+        setCurrentUsername(username);
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + `/api/auth/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMyProfileData({
+                    username: data.username || '',
+                    password: '',
+                    email: data.email || '',
+                    phone: data.phone || '',
+                    profileImage: data.profileImage || ''
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const fetchActivityLogs = async () => {
+        const token = localStorage.getItem('adminToken');
+        try {
+            const res = await fetch(__API_URL__ + '/api/auth/logs', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setActivityLogs(data);
+            }
+        } catch (error) {
+            console.error('Error fetching logs:', error);
         }
     };
 
@@ -347,7 +441,7 @@ export default function AdminDashboard() {
             });
             if (res.ok) {
                 alert('User created successfully');
-                setNewUser({ username: '', password: '', role: 'user', email: '', phone: '' });
+                setNewUser({ username: '', password: '', role: 'user', email: '', phone: '', profileImage: '' });
                 fetchUsers();
             } else {
                 const err = await res.json();
@@ -365,9 +459,23 @@ export default function AdminDashboard() {
             role: u.role || 'user',
             email: u.email || '',
             phone: u.phone || '',
-            password: ''
+            password: '',
+            profileImage: u.profileImage || ''
         });
         setIsEditUserModalOpen(true);
+    };
+
+    const handleProfileImageUpload = async (e, isEdit) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            setCropImageSrc(reader.result);
+            setCropType(isEdit ? 'editProfile' : 'newProfile');
+            setIsCropModalOpen(true);
+        });
+        reader.readAsDataURL(file);
     };
 
     const handleEditUserSubmit = async (e) => {
@@ -417,6 +525,38 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             alert('Error deleting user');
+        }
+    };
+
+    const handleUpdateMyProfile = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('adminToken');
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(__API_URL__ + `/api/auth/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(myProfileData)
+            });
+            if (res.ok) {
+                alert('Profile updated successfully');
+                if (myProfileData.username && myProfileData.username !== currentUsername) {
+                    localStorage.setItem('adminUsername', myProfileData.username);
+                    setCurrentUsername(myProfileData.username);
+                }
+                fetchMyProfile(myProfileData.username || currentUsername);
+                setMyProfileData(prev => ({...prev, password: ''}));
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Error updating profile');
+            }
+        } catch (error) {
+            alert('Error updating profile');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -475,7 +615,6 @@ export default function AdminDashboard() {
                 }
                 const data = await res.json();
                 setBulkStatus(prev => {
-                    // If it was running and now it's not, it means it finished. Refresh data.
                     if (prev.isRunning && !data.isRunning) {
                         fetchMissingCount();
                         fetchNews();
@@ -755,7 +894,6 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
-            // Sort by newest first assuming _id contains timestamp
             const sortedData = data.sort((a, b) => (a._id < b._id ? 1 : -1));
             setNews(sortedData);
             setLoading(false);
@@ -769,14 +907,12 @@ export default function AdminDashboard() {
         const { name, value, type, checked } = e.target;
         let finalValue = type === 'checkbox' ? checked : value;
         
-        // Auto-format slug if user types directly into it
         if (name === 'slug' && typeof finalValue === 'string') {
             finalValue = finalValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
         }
 
         setFormData(prev => {
             const updated = { ...prev, [name]: finalValue };
-            // Auto-generate slug from title if slug is empty and user is typing title
             if (name === 'title' && !prev.slug) {
                 updated.slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
             }
@@ -806,7 +942,6 @@ export default function AdminDashboard() {
         const token = localStorage.getItem('adminToken');
         try {
             if (editingId) {
-                // Update
                 const res = await fetch(`${API_URL}/${editingId}`, {
                     method: 'PUT',
                     headers: { 
@@ -817,11 +952,10 @@ export default function AdminDashboard() {
                 });
                 if (res.status === 401) {
                     localStorage.removeItem('adminToken');
-                navigate('/admin/login');
+                    navigate('/admin/login');
                     return;
                 }
             } else {
-                // Create
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 
@@ -832,7 +966,7 @@ export default function AdminDashboard() {
                 });
                 if (res.status === 401) {
                     localStorage.removeItem('adminToken');
-                navigate('/admin/login');
+                    navigate('/admin/login');
                     return;
                 }
             }
@@ -943,7 +1077,7 @@ export default function AdminDashboard() {
                 });
                 if (res.status === 401) {
                     localStorage.removeItem('adminToken');
-                navigate('/admin/login');
+                    navigate('/admin/login');
                     return;
                 }
                 fetchNews();
@@ -964,6 +1098,7 @@ export default function AdminDashboard() {
             const reader = new FileReader();
             reader.addEventListener('load', () => {
                 setCropImageSrc(reader.result);
+                setCropType('news');
                 setIsCropModalOpen(true);
             });
             reader.readAsDataURL(e.target.files[0]);
@@ -971,8 +1106,9 @@ export default function AdminDashboard() {
     };
 
     const handleCropUpload = async (croppedBlob) => {
-        setIsUploading(true);
+        if (!croppedBlob) return;
         setIsCropModalOpen(false);
+        setIsUploading(true);
 
         const token = localStorage.getItem('adminToken');
         const formDataUpload = new FormData();
@@ -1111,6 +1247,12 @@ export default function AdminDashboard() {
                     >
                         <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
                     </button>
+                    <button 
+                        onClick={() => setCurrentView('profile')}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'profile' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <Users size={20} className={currentView === 'profile' ? 'text-red-500' : ''} /> My Profile
+                    </button>
                     {userRole === 'admin' && (
                         <>
                             <button 
@@ -1124,6 +1266,12 @@ export default function AdminDashboard() {
                                 className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'messages' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                             >
                                 <MessageSquare size={20} className={currentView === 'messages' ? 'text-red-500' : ''} /> Contact Messages
+                            </button>
+                            <button 
+                                onClick={() => { setCurrentView('logs'); fetchActivityLogs(); }}
+                                className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'logs' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                            >
+                                <FileText size={20} className={currentView === 'logs' ? 'text-red-500' : ''} /> Activity Logs
                             </button>
                         </>
                     )}
@@ -1148,10 +1296,10 @@ export default function AdminDashboard() {
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'suvichar' ? 'Suvichar Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : 'News Management'}
+                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'suvichar' ? 'Suvichar Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : currentView === 'profile' ? 'My Profile' : currentView === 'logs' ? 'Activity Logs' : 'News Management'}
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'suvichar' ? 'Manage daily thought of the day' : currentView === 'seo' ? 'Manage global website SEO settings' : 'Manage and publish news articles'}
+                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'suvichar' ? 'Manage daily thought of the day' : currentView === 'seo' ? 'Manage global website SEO settings' : currentView === 'profile' ? 'Edit your profile details' : currentView === 'logs' ? 'View user activity logs' : 'Manage and publish news articles'}
                             </p>
                         </div>
                     </div>
@@ -1503,6 +1651,87 @@ export default function AdminDashboard() {
                                 </div>
                             )}
                         </div>
+                    ) : currentView === 'profile' ? (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full max-w-2xl mx-auto mt-8">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">My Profile</h2>
+                            <form onSubmit={handleUpdateMyProfile} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+                                    <input type="text" required value={myProfileData.username} onChange={e => setMyProfileData({...myProfileData, username: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter username" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                                    <input type="email" value={myProfileData.email} onChange={e => setMyProfileData({...myProfileData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter email" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                                    <input type="text" value={myProfileData.phone} onChange={e => setMyProfileData({...myProfileData, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter phone" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">New Password <span className="text-gray-400 font-normal">(Leave empty to keep current)</span></label>
+                                    <input type="password" value={myProfileData.password} onChange={e => setMyProfileData({...myProfileData, password: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter new password" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Image</label>
+                                    <div className="flex gap-4 items-center">
+                                        <input type="file" accept="image/*" onChange={async (e) => {
+                                            const file = e.target.files[0];
+                                            if(!file) return;
+                                            
+                                            // Open cropper instead of direct upload
+                                            const reader = new FileReader();
+                                            reader.addEventListener('load', () => {
+                                                setCropImageSrc(reader.result);
+                                                setCropType('profile');
+                                                setIsCropModalOpen(true);
+                                            });
+                                            reader.readAsDataURL(file);
+                                        }} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" />
+                                        {myProfileData.profileImage && (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <img src={myProfileData.profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover border" />
+                                                <button type="button" onClick={() => setMyProfileData({...myProfileData, profileImage: ''})} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex justify-end">
+                                    <button type="submit" disabled={isSubmitting || isUploading} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md disabled:opacity-50">
+                                        {isSubmitting ? 'Saving...' : 'Save Profile'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    ) : currentView === 'logs' ? (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Activity Logs</h2>
+                            {activityLogs.length === 0 ? (
+                                <p className="text-gray-500 text-center py-10">No recent activity.</p>
+                            ) : (
+                                <div className="overflow-x-auto border rounded-lg">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50/80">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">User</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Action</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Details</th>
+                                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {activityLogs.map((log) => (
+                                                <tr key={log._id} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 text-sm font-semibold text-gray-800">{log.username}</td>
+                                                    <td className="px-4 py-3 text-sm text-gray-600"><span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium border border-blue-100">{log.action}</span></td>
+                                                    <td className="px-4 py-3 text-sm text-gray-600">{log.details}</td>
+                                                    <td className="px-4 py-3 text-xs text-gray-500">{new Date(log.createdAt).toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     ) : currentView === 'users' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Manage Users & Roles</h2>
@@ -1574,9 +1803,21 @@ export default function AdminDashboard() {
                                             placeholder="Enter phone number" 
                                         />
                                     </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Profile Image (Optional)</label>
+                                        <div className="flex gap-2 items-center">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => handleProfileImageUpload(e, false)} 
+                                                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" 
+                                            />
+                                            {newUser.profileImage && <img src={newUser.profileImage} alt="Profile" className="w-10 h-10 rounded-full object-cover" />}
+                                        </div>
+                                    </div>
                                     <div className="w-full sm:w-auto">
-                                        <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md">
-                                            Create User
+                                        <button type="submit" disabled={isUploading} className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md disabled:opacity-50">
+                                            {isUploading ? 'Uploading...' : 'Create User'}
                                         </button>
                                     </div>
                                 </div>
@@ -1699,6 +1940,23 @@ export default function AdminDashboard() {
                                                         className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
                                                     />
                                                 </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Image (Optional)</label>
+                                                    <div className="flex gap-2 items-center">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*"
+                                                            onChange={(e) => handleProfileImageUpload(e, true)} 
+                                                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                                                        />
+                                                        {editUserData.profileImage && (
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <img src={editUserData.profileImage} alt="Profile" className="w-10 h-10 rounded-full object-cover border" />
+                                                                <button type="button" onClick={() => setEditUserData({...editUserData, profileImage: ''})} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </form>
                                         </div>
                                         <div className="p-5 border-t bg-gray-50 flex justify-end gap-3 mt-auto">
@@ -1711,9 +1969,10 @@ export default function AdminDashboard() {
                                             <button 
                                                 type="submit" 
                                                 form="edit-user-form"
-                                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+                                                disabled={isUploading}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
                                             >
-                                                Save Changes
+                                                {isUploading ? 'Uploading...' : 'Save Changes'}
                                             </button>
                                         </div>
                                     </div>
@@ -1859,8 +2118,51 @@ export default function AdminDashboard() {
                 isOpen={isCropModalOpen} 
                 onClose={() => { setIsCropModalOpen(false); setCropImageSrc(''); }} 
                 imageSrc={cropImageSrc} 
-                onUpload={handleCropUpload} 
+                onUpload={async (croppedBlob) => {
+                    if (cropType === 'news') {
+                        await handleCropUpload(croppedBlob);
+                    } else if (cropType === 'profile') {
+                        setIsCropModalOpen(false);
+                        setIsUploading(true);
+                        const token = localStorage.getItem('adminToken');
+                        const fd = new FormData(); 
+                        fd.append('image', croppedBlob, 'profile_cropped.jpg');
+                        try {
+                            const res = await fetch(__API_URL__+'/api/upload', {method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd});
+                            const data = await res.json();
+                            if(res.ok) setMyProfileData({...myProfileData, profileImage: data.imageUrl});
+                        } catch(err) {} finally { setIsUploading(false); }
+                    } else if (cropType === 'newProfile' || cropType === 'editProfile') {
+                        setIsCropModalOpen(false);
+                        setIsUploading(true);
+                        const token = localStorage.getItem('adminToken');
+                        const fd = new FormData(); 
+                        fd.append('image', croppedBlob, 'user_profile_cropped.jpg');
+                        try {
+                            const res = await fetch(__API_URL__+'/api/upload', {method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd});
+                            if (res.status === 401) {
+                                localStorage.removeItem('adminToken');
+                                navigate('/admin/login');
+                                return;
+                            }
+                            const data = await res.json();
+                            if (res.ok) {
+                                if (cropType === 'editProfile') {
+                                    setEditUserData(prev => ({ ...prev, profileImage: data.imageUrl }));
+                                } else {
+                                    setNewUser(prev => ({ ...prev, profileImage: data.imageUrl }));
+                                }
+                            } else {
+                                alert(data.message || 'Image upload failed');
+                            }
+                        } catch(err) {
+                            alert('Error uploading image');
+                        } finally { setIsUploading(false); }
+                    }
+                }} 
                 isUploading={isUploading} 
+                aspectRatio={cropType.toLowerCase().includes('profile') ? 1 : 16/9}
+                title={cropType.toLowerCase().includes('profile') ? "Crop Profile Image (1:1)" : "Crop News Image (16:9)"}
             />
 
             {/* Modal */}
