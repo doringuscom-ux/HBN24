@@ -621,8 +621,8 @@ const seedAdmin = async () => {
     }
 };
 
-// Start Server locally
-if (process.env.NODE_ENV !== 'production') {
+// Start Server locally or on Render
+if (process.env.NODE_ENV !== 'production' || process.env.RENDER === 'true') {
     mongoose.connect(MONGODB_URI)
         .then(async () => {
             console.log('Connected to MongoDB successfully (Local)');
