@@ -7,7 +7,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      '__API_URL__': JSON.stringify(mode === 'production' ? 'https://hbn-24.vercel.app' : '')
+      '__API_URL__': JSON.stringify(mode === 'production' ? 'https://hbn24.onrender.com' : '')
     },
 
     server: {
