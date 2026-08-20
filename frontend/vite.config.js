@@ -15,6 +15,26 @@ export default defineConfig(({ command, mode }) => {
         '/api': 'http://localhost:5000',
         '/sitemap.xml': 'http://localhost:5000'
       }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor';
+              }
+              if (id.includes('lucide-react') || id.includes('react-icons')) {
+                return 'icons';
+              }
+              if (id.includes('jodit-react')) {
+                return 'editor';
+              }
+            }
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000
     }
   }
 })

@@ -25,13 +25,13 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading, aspe
         try {
             const image = imageRef.current;
             const canvas = document.createElement('canvas');
-            
+
             if (mode === 'blur') {
                 const size = Math.max(image.naturalWidth, image.naturalHeight);
                 canvas.width = size;
                 canvas.height = size;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Draw blurred background
                 ctx.filter = 'blur(30px) brightness(0.8)';
                 const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
@@ -40,7 +40,7 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading, aspe
                 const x = (size - w) / 2;
                 const y = (size - h) / 2;
                 ctx.drawImage(image, x, y, w, h);
-                
+
                 // Draw sharp original image centered
                 ctx.filter = 'none';
                 const containScale = Math.min(size / image.naturalWidth, size / image.naturalHeight) * (zoom / 100);
@@ -55,7 +55,7 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading, aspe
                 canvas.width = completedCrop.width;
                 canvas.height = completedCrop.height;
                 const ctx = canvas.getContext('2d');
-    
+
                 ctx.drawImage(
                     image,
                     completedCrop.x * scaleX,
@@ -244,23 +244,30 @@ export default function AdminDashboard() {
         height: 300,
         placeholder: 'Paste the full article content here...',
         uploader: {
+            insertImageAsBase64URI: false,
             url: __API_URL__ + '/api/upload',
             format: 'json',
             method: 'POST',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
-            filesVariableName: 'image',
+            filesVariableName: function (i) { return 'image'; },
             isSuccess: (resp) => !resp.error && resp.imageUrl,
             process: (resp) => {
                 return {
-                    files: [resp.imageUrl],
-                    path: resp.imageUrl,
+                    files: [resp.imageUrl || ''],
+                    path: resp.imageUrl || '',
                     baseurl: '',
                     error: resp.error ? 1 : 0,
-                    msg: resp.message
+                    msg: resp.message || ''
                 };
             },
             defaultHandlerSuccess: function (data) {
-                this.selection.insertImage(data.files[0]);
+                if (data.files && data.files.length > 0) {
+                    this.selection.insertImage(data.files[0]);
+                }
+            },
+            defaultHandlerError: function (err) {
+                console.error("Jodit upload error:", err);
+                alert("Image upload failed.");
             }
         }
     }), []);
@@ -283,7 +290,7 @@ export default function AdminDashboard() {
                 }
                 const data = await res.json();
                 setUserRole(data.role || 'user');
-                
+
                 if (data.role === 'admin') {
                     fetchUsers();
                     fetchActivityLogs();
@@ -548,7 +555,7 @@ export default function AdminDashboard() {
                     setCurrentUsername(myProfileData.username);
                 }
                 fetchMyProfile(myProfileData.username || currentUsername);
-                setMyProfileData(prev => ({...prev, password: ''}));
+                setMyProfileData(prev => ({ ...prev, password: '' }));
             } else {
                 const err = await res.json();
                 alert(err.message || 'Error updating profile');
@@ -586,7 +593,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         const fetchMissingCount = async () => {
             const token = localStorage.getItem('adminToken');
-            if(!token) return;
+            if (!token) return;
             try {
                 const res = await fetch(__API_URL__ + '/api/seo/missing-count', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -598,12 +605,12 @@ export default function AdminDashboard() {
                 }
                 const data = await res.json();
                 setMissingSeoCount(data.missingCount);
-            } catch(e) {}
+            } catch (e) { }
         };
-        
+
         const fetchBulkStatus = async () => {
             const token = localStorage.getItem('adminToken');
-            if(!token) return;
+            if (!token) return;
             try {
                 const res = await fetch(__API_URL__ + '/api/seo/bulk-status', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -621,7 +628,7 @@ export default function AdminDashboard() {
                     }
                     return data;
                 });
-            } catch(e) {}
+            } catch (e) { }
         };
 
         fetchMissingCount();
@@ -750,7 +757,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(__API_URL__ + '/api/seo', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -789,7 +796,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(__API_URL__ + '/api/rashifal', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -848,7 +855,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(__API_URL__ + '/api/suvichar', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -906,7 +913,7 @@ export default function AdminDashboard() {
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         let finalValue = type === 'checkbox' ? checked : value;
-        
+
         if (name === 'slug' && typeof finalValue === 'string') {
             finalValue = finalValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
         }
@@ -944,7 +951,7 @@ export default function AdminDashboard() {
             if (editingId) {
                 const res = await fetch(`${API_URL}/${editingId}`, {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
@@ -958,7 +965,7 @@ export default function AdminDashboard() {
             } else {
                 const res = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
@@ -992,7 +999,7 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(__API_URL__ + '/api/seo/generate-ai', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -1009,7 +1016,7 @@ export default function AdminDashboard() {
             }
 
             const data = await res.json();
-            
+
             if (res.ok && data) {
                 setFormData(prev => ({
                     ...prev,
@@ -1037,13 +1044,13 @@ export default function AdminDashboard() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            if(res.ok) {
+            if (res.ok) {
                 setBulkStatus(data.status);
                 setIsSeoModalOpen(false);
             } else {
                 alert(data.message);
             }
-        } catch(e) {
+        } catch (e) {
             alert('Failed to start background SEO process.');
         }
     };
@@ -1071,7 +1078,7 @@ export default function AdminDashboard() {
         if (window.confirm('Are you sure you want to delete this news item?')) {
             const token = localStorage.getItem('adminToken');
             try {
-                const res = await fetch(`${API_URL}/${id}`, { 
+                const res = await fetch(`${API_URL}/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1179,7 +1186,10 @@ export default function AdminDashboard() {
         { id: 'international', label: 'अंतर्राष्ट्रीय' },
         { id: 'politics', label: 'राजनीति' },
         { id: 'jobs', label: 'जॉब्स' },
-        { id: 'education', label: 'एजुकेशन' }
+        { id: 'education', label: 'एजुकेशन' },
+        { id: 'punjab', label: 'पंजाब' },
+        { id: 'haryana', label: 'हरियाणा' },
+        { id: 'delhi', label: 'दिल्ली' }
     ];
 
     if (userRole === 'user') {
@@ -1200,7 +1210,7 @@ export default function AdminDashboard() {
         <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-20 lg:hidden"
                     onClick={() => setIsSidebarOpen(false)}
                 />
@@ -1217,37 +1227,37 @@ export default function AdminDashboard() {
                     </button>
                 </div>
                 <div className="flex-1 py-6 flex flex-col gap-2 overflow-y-auto">
-                    <button 
+                    <button
                         onClick={() => setCurrentView('all')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'all' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
                         <LayoutDashboard size={20} className={currentView === 'all' ? 'text-red-500' : ''} /> All News
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentView('epaper')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'epaper' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
                         <FileText size={20} className={currentView === 'epaper' ? 'text-red-500' : ''} /> E-Paper News
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentView('rashifal')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'rashifal' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
                         <Settings size={20} className={currentView === 'rashifal' ? 'text-red-500' : ''} /> Rashifal
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentView('suvichar')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'suvichar' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
                         <FileText size={20} className={currentView === 'suvichar' ? 'text-red-500' : ''} /> Suvichar
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentView('seo')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'seo' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
                         <Globe size={20} className={currentView === 'seo' ? 'text-red-500' : ''} /> Global SEO
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentView('profile')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'profile' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
@@ -1255,19 +1265,19 @@ export default function AdminDashboard() {
                     </button>
                     {userRole === 'admin' && (
                         <>
-                            <button 
+                            <button
                                 onClick={() => setCurrentView('users')}
                                 className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'users' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                             >
                                 <Users size={20} className={currentView === 'users' ? 'text-red-500' : ''} /> Manage Users
                             </button>
-                            <button 
+                            <button
                                 onClick={() => { setCurrentView('messages'); fetchContactMessages(); }}
                                 className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'messages' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                             >
                                 <MessageSquare size={20} className={currentView === 'messages' ? 'text-red-500' : ''} /> Contact Messages
                             </button>
-                            <button 
+                            <button
                                 onClick={() => { setCurrentView('logs'); fetchActivityLogs(); }}
                                 className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'logs' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                             >
@@ -1338,7 +1348,7 @@ export default function AdminDashboard() {
                                     <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2"><Sparkles /> Master SEO Auto-Generator</h2>
                                     <p className="text-purple-100 mt-1 text-sm sm:text-base">Automatically generate intelligent SEO for Static Pages or News Articles using AI.</p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setIsSeoModalOpen(true)}
                                     className="bg-white text-purple-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-bold shadow-sm transition-colors text-base sm:text-lg w-full sm:w-auto text-center flex justify-center items-center gap-2"
                                 >
@@ -1385,7 +1395,7 @@ export default function AdminDashboard() {
                                         Save Page SEO
                                     </button>
                                 </div>
-                                
+
                                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <label className="block text-sm font-bold text-gray-800 mb-2">Select Page to Edit SEO:</label>
                                     <select value={selectedPageSeoUrl} onChange={handleSelectedPageChange} className="w-full md:w-1/2 border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white font-medium">
@@ -1399,8 +1409,13 @@ export default function AdminDashboard() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Title</label>
-                                            <input type="text" name="metaTitle" value={pageSeoData.metaTitle} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="Page specific title..." />
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="block text-sm font-semibold text-gray-700">Meta Title</label>
+                                                <span className={`text-xs font-bold ${pageSeoData.metaTitle?.length >= 50 && pageSeoData.metaTitle?.length <= 60 ? 'text-green-600' : pageSeoData.metaTitle?.length > 60 ? 'text-red-600' : pageSeoData.metaTitle?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                    {pageSeoData.metaTitle?.length || 0} / 60
+                                                </span>
+                                            </div>
+                                            <input type="text" name="metaTitle" value={pageSeoData.metaTitle} onChange={handlePageSeoChange} className={`w-full border rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-colors ${pageSeoData.metaTitle?.length >= 50 && pageSeoData.metaTitle?.length <= 60 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : pageSeoData.metaTitle?.length > 60 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : pageSeoData.metaTitle?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300'}`} placeholder="Page specific title..." />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Keywords</label>
@@ -1409,8 +1424,13 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Description</label>
-                                            <textarea name="metaDescription" value={pageSeoData.metaDescription} onChange={handlePageSeoChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" rows="4" placeholder="Page specific description..."></textarea>
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="block text-sm font-semibold text-gray-700">Meta Description</label>
+                                                <span className={`text-xs font-bold ${pageSeoData.metaDescription?.length >= 145 && pageSeoData.metaDescription?.length <= 155 ? 'text-green-600' : pageSeoData.metaDescription?.length > 155 ? 'text-red-600' : pageSeoData.metaDescription?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                    {pageSeoData.metaDescription?.length || 0} / 155
+                                                </span>
+                                            </div>
+                                            <textarea name="metaDescription" value={pageSeoData.metaDescription} onChange={handlePageSeoChange} className={`w-full border rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-colors ${pageSeoData.metaDescription?.length >= 145 && pageSeoData.metaDescription?.length <= 155 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : pageSeoData.metaDescription?.length > 155 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : pageSeoData.metaDescription?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300'}`} rows="4" placeholder="Page specific description..."></textarea>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Robots Tag</label>
@@ -1534,8 +1554,8 @@ export default function AdminDashboard() {
                                     <p className="text-sm text-gray-500 mt-1">Generate or edit today's horoscope for all 12 zodiac signs.</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                    <button 
-                                        onClick={handleGenerateRashifal} 
+                                    <button
+                                        onClick={handleGenerateRashifal}
                                         disabled={isGeneratingRashifal}
                                         className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
@@ -1576,8 +1596,8 @@ export default function AdminDashboard() {
                                     <p className="text-sm text-gray-500 mt-1">Generate or edit today's Thought of the Day.</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                    <button 
-                                        onClick={handleGenerateSuvichar} 
+                                    <button
+                                        onClick={handleGenerateSuvichar}
                                         disabled={isGeneratingSuvichar}
                                         className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
@@ -1603,7 +1623,7 @@ export default function AdminDashboard() {
                     ) : currentView === 'messages' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Contact Inquiries & Messages</h2>
-                            
+
                             {contactMessages.length === 0 ? (
                                 <p className="text-gray-500 text-center py-10">No messages found.</p>
                             ) : (
@@ -1613,7 +1633,7 @@ export default function AdminDashboard() {
                                             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                                                 <div>
                                                     <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                                                        {msg.subject} 
+                                                        {msg.subject}
                                                         {msg.status === 'new' && <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white">NEW</span>}
                                                     </h3>
                                                     <p className="text-sm text-gray-600 mt-1">From: <span className="font-semibold text-gray-800">{msg.name}</span> ({msg.email})</p>
@@ -1621,21 +1641,21 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="flex gap-2 w-full sm:w-auto">
                                                     {msg.status === 'new' ? (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleMarkAsRead(msg._id)}
                                                             className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded text-sm font-semibold hover:bg-blue-100 transition-colors"
                                                         >
                                                             Mark as Read
                                                         </button>
                                                     ) : (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleMarkAsUnread(msg._id)}
                                                             className="flex-1 sm:flex-none px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded text-sm font-semibold hover:bg-gray-200 transition-colors"
                                                         >
                                                             Mark as Unread
                                                         </button>
                                                     )}
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDeleteMessage(msg._id)}
                                                         className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 text-red-600 border border-gray-200 rounded text-sm font-semibold hover:bg-red-50 hover:border-red-200 transition-colors flex items-center justify-center gap-1"
                                                     >
@@ -1657,27 +1677,27 @@ export default function AdminDashboard() {
                             <form onSubmit={handleUpdateMyProfile} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
-                                    <input type="text" required value={myProfileData.username} onChange={e => setMyProfileData({...myProfileData, username: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter username" />
+                                    <input type="text" required value={myProfileData.username} onChange={e => setMyProfileData({ ...myProfileData, username: e.target.value })} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter username" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                                    <input type="email" value={myProfileData.email} onChange={e => setMyProfileData({...myProfileData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter email" />
+                                    <input type="email" value={myProfileData.email} onChange={e => setMyProfileData({ ...myProfileData, email: e.target.value })} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter email" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                                    <input type="text" value={myProfileData.phone} onChange={e => setMyProfileData({...myProfileData, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter phone" />
+                                    <input type="text" value={myProfileData.phone} onChange={e => setMyProfileData({ ...myProfileData, phone: e.target.value })} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter phone" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">New Password <span className="text-gray-400 font-normal">(Leave empty to keep current)</span></label>
-                                    <input type="password" value={myProfileData.password} onChange={e => setMyProfileData({...myProfileData, password: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter new password" />
+                                    <input type="password" value={myProfileData.password} onChange={e => setMyProfileData({ ...myProfileData, password: e.target.value })} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter new password" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Image</label>
                                     <div className="flex gap-4 items-center">
                                         <input type="file" accept="image/*" onChange={async (e) => {
                                             const file = e.target.files[0];
-                                            if(!file) return;
-                                            
+                                            if (!file) return;
+
                                             // Open cropper instead of direct upload
                                             const reader = new FileReader();
                                             reader.addEventListener('load', () => {
@@ -1690,7 +1710,7 @@ export default function AdminDashboard() {
                                         {myProfileData.profileImage && (
                                             <div className="flex flex-col items-center gap-1">
                                                 <img src={myProfileData.profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover border" />
-                                                <button type="button" onClick={() => setMyProfileData({...myProfileData, profileImage: ''})} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
+                                                <button type="button" onClick={() => setMyProfileData({ ...myProfileData, profileImage: '' })} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
                                             </div>
                                         )}
                                     </div>
@@ -1735,32 +1755,32 @@ export default function AdminDashboard() {
                     ) : currentView === 'users' ? (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Manage Users & Roles</h2>
-                            
+
                             <form onSubmit={handleCreateUser} className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-4">
                                 <div className="flex flex-col sm:flex-row gap-4 items-end">
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            value={newUser.username} 
-                                            onChange={e => setNewUser({...newUser, username: e.target.value})} 
-                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
-                                            placeholder="Enter username" 
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newUser.username}
+                                            onChange={e => setNewUser({ ...newUser, username: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                                            placeholder="Enter username"
                                         />
                                     </div>
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
                                         <div className="relative">
-                                            <input 
-                                                type={showPassword ? "text" : "password"} 
-                                                required 
-                                                value={newUser.password} 
-                                                onChange={e => setNewUser({...newUser, password: e.target.value})} 
-                                                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none pr-10" 
-                                                placeholder="Enter password" 
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                required
+                                                value={newUser.password}
+                                                onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                                                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none pr-10"
+                                                placeholder="Enter password"
                                             />
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -1771,9 +1791,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
-                                        <select 
-                                            value={newUser.role} 
-                                            onChange={e => setNewUser({...newUser, role: e.target.value})} 
+                                        <select
+                                            value={newUser.role}
+                                            onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                                             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white"
                                         >
                                             <option value="user">User</option>
@@ -1785,32 +1805,32 @@ export default function AdminDashboard() {
                                 <div className="flex flex-col sm:flex-row gap-4 items-end">
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email (Optional)</label>
-                                        <input 
-                                            type="email" 
-                                            value={newUser.email} 
-                                            onChange={e => setNewUser({...newUser, email: e.target.value})} 
-                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
-                                            placeholder="Enter email" 
+                                        <input
+                                            type="email"
+                                            value={newUser.email}
+                                            onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                                            placeholder="Enter email"
                                         />
                                     </div>
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone (Optional)</label>
-                                        <input 
-                                            type="text" 
-                                            value={newUser.phone} 
-                                            onChange={e => setNewUser({...newUser, phone: e.target.value})} 
-                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" 
-                                            placeholder="Enter phone number" 
+                                        <input
+                                            type="text"
+                                            value={newUser.phone}
+                                            onChange={e => setNewUser({ ...newUser, phone: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                                            placeholder="Enter phone number"
                                         />
                                     </div>
                                     <div className="flex-1 w-full">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Profile Image (Optional)</label>
                                         <div className="flex gap-2 items-center">
-                                            <input 
-                                                type="file" 
+                                            <input
+                                                type="file"
                                                 accept="image/*"
-                                                onChange={(e) => handleProfileImageUpload(e, false)} 
-                                                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" 
+                                                onChange={(e) => handleProfileImageUpload(e, false)}
+                                                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
                                             />
                                             {newUser.profileImage && <img src={newUser.profileImage} alt="Profile" className="w-10 h-10 rounded-full object-cover" />}
                                         </div>
@@ -1843,7 +1863,7 @@ export default function AdminDashboard() {
                                                     {!u.email && !u.phone && <span className="text-gray-400">N/A</span>}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-gray-600">
-                                                    <select 
+                                                    <select
                                                         value={u.role || 'user'}
                                                         onChange={(e) => handleChangeRole(u._id, e.target.value)}
                                                         className="border border-gray-300 rounded p-1 text-sm bg-white focus:ring-2 focus:ring-red-500 outline-none"
@@ -1883,25 +1903,25 @@ export default function AdminDashboard() {
                                             <form id="edit-user-form" onSubmit={handleEditUserSubmit} className="space-y-4">
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
-                                                    <input 
-                                                        type="text" 
-                                                        required 
-                                                        value={editUserData.username} 
-                                                        onChange={e => setEditUserData({...editUserData, username: e.target.value})} 
-                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={editUserData.username}
+                                                        onChange={e => setEditUserData({ ...editUserData, username: e.target.value })}
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none"
                                                     />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">New Password <span className="text-gray-400 font-normal">(Leave empty to keep current)</span></label>
                                                     <div className="relative">
-                                                        <input 
-                                                            type={showEditPassword ? "text" : "password"} 
-                                                            value={editUserData.password} 
-                                                            onChange={e => setEditUserData({...editUserData, password: e.target.value})} 
-                                                            className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none pr-10" 
+                                                        <input
+                                                            type={showEditPassword ? "text" : "password"}
+                                                            value={editUserData.password}
+                                                            onChange={e => setEditUserData({ ...editUserData, password: e.target.value })}
+                                                            className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none pr-10"
                                                             placeholder="Enter new password"
                                                         />
-                                                        <button 
+                                                        <button
                                                             type="button"
                                                             onClick={() => setShowEditPassword(!showEditPassword)}
                                                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -1912,9 +1932,9 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
-                                                    <select 
-                                                        value={editUserData.role} 
-                                                        onChange={e => setEditUserData({...editUserData, role: e.target.value})} 
+                                                    <select
+                                                        value={editUserData.role}
+                                                        onChange={e => setEditUserData({ ...editUserData, role: e.target.value })}
                                                         className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none bg-white"
                                                     >
                                                         <option value="user">User</option>
@@ -1924,35 +1944,35 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                                                    <input 
-                                                        type="email" 
-                                                        value={editUserData.email} 
-                                                        onChange={e => setEditUserData({...editUserData, email: e.target.value})} 
-                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    <input
+                                                        type="email"
+                                                        value={editUserData.email}
+                                                        onChange={e => setEditUserData({ ...editUserData, email: e.target.value })}
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none"
                                                     />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={editUserData.phone} 
-                                                        onChange={e => setEditUserData({...editUserData, phone: e.target.value})} 
-                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none" 
+                                                    <input
+                                                        type="text"
+                                                        value={editUserData.phone}
+                                                        onChange={e => setEditUserData({ ...editUserData, phone: e.target.value })}
+                                                        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none"
                                                     />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Image (Optional)</label>
                                                     <div className="flex gap-2 items-center">
-                                                        <input 
-                                                            type="file" 
+                                                        <input
+                                                            type="file"
                                                             accept="image/*"
-                                                            onChange={(e) => handleProfileImageUpload(e, true)} 
-                                                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                                                            onChange={(e) => handleProfileImageUpload(e, true)}
+                                                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                                         />
                                                         {editUserData.profileImage && (
                                                             <div className="flex flex-col items-center gap-1">
                                                                 <img src={editUserData.profileImage} alt="Profile" className="w-10 h-10 rounded-full object-cover border" />
-                                                                <button type="button" onClick={() => setEditUserData({...editUserData, profileImage: ''})} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
+                                                                <button type="button" onClick={() => setEditUserData({ ...editUserData, profileImage: '' })} className="text-xs text-red-600 font-medium hover:underline">Remove</button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -1960,14 +1980,14 @@ export default function AdminDashboard() {
                                             </form>
                                         </div>
                                         <div className="p-5 border-t bg-gray-50 flex justify-end gap-3 mt-auto">
-                                            <button 
-                                                onClick={() => setIsEditUserModalOpen(false)} 
+                                            <button
+                                                onClick={() => setIsEditUserModalOpen(false)}
                                                 className="px-5 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
                                             >
                                                 Cancel
                                             </button>
-                                            <button 
-                                                type="submit" 
+                                            <button
+                                                type="submit"
                                                 form="edit-user-form"
                                                 disabled={isUploading}
                                                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
@@ -1982,142 +2002,142 @@ export default function AdminDashboard() {
                     ) : (
                         <>
                             {/* Stats & Filters */}
-                    <div className="mb-6 flex flex-col gap-4">
-                        <div className="flex flex-wrap gap-2">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setFilterCategory(cat.id)}
-                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${filterCategory === cat.id ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="text-sm text-gray-500 font-medium">
-                            Showing <span className="text-gray-900 font-bold">{filteredNews.length}</span> news items {filterCategory !== 'all' && `in ${categories.find(c => c.id === filterCategory)?.label}`}
-                        </div>
-                    </div>
-
-                    {loading ? (
-                        <div className="flex justify-center py-20">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50/80">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-24">Image</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Category</th>
-                                            <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-100">
-                                        {paginatedNews.map((item) => (
-                                            <tr key={item._id} className="hover:bg-red-50/30 transition-colors group">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="h-14 w-20 bg-gray-100 rounded-md overflow-hidden border border-gray-200 shadow-sm">
-                                                        <img src={item.image} alt="" className="h-full w-full object-cover" />
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-red-700 transition-colors">{item.title}</div>
-                                                    {item.isEpaper && (
-                                                        <span className="inline-block mt-1 text-[10px] bg-red-100 text-red-800 border border-red-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                                                            Active on E-Paper
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100 capitalize">
-                                                        {Array.isArray(item.category) ? item.category.join(', ') : item.category}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit">
-                                                            <Pencil size={18} />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(item._id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete">
-                                                            <Trash2 size={18} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {paginatedNews.length === 0 && (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-16 text-center text-gray-500">
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <FileText size={32} className="text-gray-300" />
-                                                        <p className="text-lg font-medium">No news found</p>
-                                                        <p className="text-sm">Try adjusting your filters or search query.</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                            <div className="mb-6 flex flex-col gap-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setFilterCategory(cat.id)}
+                                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${filterCategory === cat.id ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                                        >
+                                            {cat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Showing <span className="text-gray-900 font-bold">{filteredNews.length}</span> news items {filterCategory !== 'all' && `in ${categories.find(c => c.id === filterCategory)?.label}`}
+                                </div>
                             </div>
 
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                                    <div className="text-sm text-gray-600">
-                                        Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-gray-900">{Math.min(currentPage * itemsPerPage, filteredNews.length)}</span> of <span className="font-semibold text-gray-900">{filteredNews.length}</span> entries
+                            {loading ? (
+                                <div className="flex justify-center py-20">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50/80">
+                                                <tr>
+                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-24">Image</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Category</th>
+                                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-100">
+                                                {paginatedNews.map((item) => (
+                                                    <tr key={item._id} className="hover:bg-red-50/30 transition-colors group">
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="h-14 w-20 bg-gray-100 rounded-md overflow-hidden border border-gray-200 shadow-sm">
+                                                                <img src={item.image} alt="" className="h-full w-full object-cover" />
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-red-700 transition-colors">{item.title}</div>
+                                                            {item.isEpaper && (
+                                                                <span className="inline-block mt-1 text-[10px] bg-red-100 text-red-800 border border-red-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                                                    Active on E-Paper
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100 capitalize">
+                                                                {Array.isArray(item.category) ? item.category.join(', ') : item.category}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <div className="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                                                <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit">
+                                                                    <Pencil size={18} />
+                                                                </button>
+                                                                <button onClick={() => handleDelete(item._id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete">
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {paginatedNews.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="4" className="px-6 py-16 text-center text-gray-500">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                                <FileText size={32} className="text-gray-300" />
+                                                                <p className="text-lg font-medium">No news found</p>
+                                                                <p className="text-sm">Try adjusting your filters or search query.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className="p-1.5 rounded border border-gray-300 text-gray-500 hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
-                                        >
-                                            <ChevronLeft size={18} />
-                                        </button>
-                                        <div className="flex items-center gap-1">
-                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                                                // Simple logic to show limited pages
-                                                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                                                    return (
-                                                        <button
-                                                            key={page}
-                                                            onClick={() => setCurrentPage(page)}
-                                                            className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${currentPage === page ? 'bg-red-600 text-white border-transparent' : 'border border-gray-300 text-gray-700 hover:bg-white'}`}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    );
-                                                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                                                    return <span key={page} className="text-gray-400">...</span>;
-                                                }
-                                                return null;
-                                            })}
+
+                                    {/* Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                                            <div className="text-sm text-gray-600">
+                                                Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-gray-900">{Math.min(currentPage * itemsPerPage, filteredNews.length)}</span> of <span className="font-semibold text-gray-900">{filteredNews.length}</span> entries
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="p-1.5 rounded border border-gray-300 text-gray-500 hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                                                >
+                                                    <ChevronLeft size={18} />
+                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                                        // Simple logic to show limited pages
+                                                        if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                                            return (
+                                                                <button
+                                                                    key={page}
+                                                                    onClick={() => setCurrentPage(page)}
+                                                                    className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${currentPage === page ? 'bg-red-600 text-white border-transparent' : 'border border-gray-300 text-gray-700 hover:bg-white'}`}
+                                                                >
+                                                                    {page}
+                                                                </button>
+                                                            );
+                                                        } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                                            return <span key={page} className="text-gray-400">...</span>;
+                                                        }
+                                                        return null;
+                                                    })}
+                                                </div>
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="p-1.5 rounded border border-gray-300 text-gray-500 hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                                                >
+                                                    <ChevronRight size={18} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                            className="p-1.5 rounded border border-gray-300 text-gray-500 hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
-                                        >
-                                            <ChevronRight size={18} />
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
-                    </>
+                        </>
                     )}
                 </main>
             </div>
 
             {/* Crop Modal */}
-            <ImageCropModal 
-                isOpen={isCropModalOpen} 
-                onClose={() => { setIsCropModalOpen(false); setCropImageSrc(''); }} 
-                imageSrc={cropImageSrc} 
+            <ImageCropModal
+                isOpen={isCropModalOpen}
+                onClose={() => { setIsCropModalOpen(false); setCropImageSrc(''); }}
+                imageSrc={cropImageSrc}
                 onUpload={async (croppedBlob) => {
                     if (cropType === 'news') {
                         await handleCropUpload(croppedBlob);
@@ -2125,21 +2145,21 @@ export default function AdminDashboard() {
                         setIsCropModalOpen(false);
                         setIsUploading(true);
                         const token = localStorage.getItem('adminToken');
-                        const fd = new FormData(); 
+                        const fd = new FormData();
                         fd.append('image', croppedBlob, 'profile_cropped.jpg');
                         try {
-                            const res = await fetch(__API_URL__+'/api/upload', {method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd});
+                            const res = await fetch(__API_URL__ + '/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
                             const data = await res.json();
-                            if(res.ok) setMyProfileData({...myProfileData, profileImage: data.imageUrl});
-                        } catch(err) {} finally { setIsUploading(false); }
+                            if (res.ok) setMyProfileData({ ...myProfileData, profileImage: data.imageUrl });
+                        } catch (err) { } finally { setIsUploading(false); }
                     } else if (cropType === 'newProfile' || cropType === 'editProfile') {
                         setIsCropModalOpen(false);
                         setIsUploading(true);
                         const token = localStorage.getItem('adminToken');
-                        const fd = new FormData(); 
+                        const fd = new FormData();
                         fd.append('image', croppedBlob, 'user_profile_cropped.jpg');
                         try {
-                            const res = await fetch(__API_URL__+'/api/upload', {method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd});
+                            const res = await fetch(__API_URL__ + '/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
                             if (res.status === 401) {
                                 localStorage.removeItem('adminToken');
                                 navigate('/admin/login');
@@ -2155,13 +2175,13 @@ export default function AdminDashboard() {
                             } else {
                                 alert(data.message || 'Image upload failed');
                             }
-                        } catch(err) {
+                        } catch (err) {
                             alert('Error uploading image');
                         } finally { setIsUploading(false); }
                     }
-                }} 
-                isUploading={isUploading} 
-                aspectRatio={cropType.toLowerCase().includes('profile') ? 1 : 16/9}
+                }}
+                isUploading={isUploading}
+                aspectRatio={cropType.toLowerCase().includes('profile') ? 1 : 16 / 9}
                 title={cropType.toLowerCase().includes('profile') ? "Crop Profile Image (1:1)" : "Crop News Image (16:9)"}
             />
 
@@ -2181,11 +2201,16 @@ export default function AdminDashboard() {
                                 <div className="flex-1 flex flex-col gap-5 lg:mt-2">
                                     <h4 className="text-lg font-bold text-gray-800 border-b pb-2">Main Content</h4>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Headline (Title)</label>
-                                        <textarea required name="title" value={formData.title} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" rows="2" placeholder="Enter an engaging headline..."></textarea>
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <label className="block text-sm font-semibold text-gray-700">Headline (Title)</label>
+                                            <span className={`text-xs font-bold ${formData.title?.length >= 50 && formData.title?.length <= 60 ? 'text-green-600' : formData.title?.length > 60 ? 'text-red-600' : formData.title?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                {formData.title?.length || 0} / 60
+                                            </span>
+                                        </div>
+                                        <textarea required name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 transition-all outline-none ${formData.title?.length >= 50 && formData.title?.length <= 60 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : formData.title?.length > 60 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : formData.title?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300 focus:border-red-500'}`} rows="2" placeholder="Enter an engaging headline..."></textarea>
                                     </div>
                                     <div className="mb-4">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2"><Globe size={16}/> Location (City/Place)</label>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2"><Globe size={16} /> Location (City/Place)</label>
                                         <input type="text" name="location" value={formData.location} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" placeholder="e.g. नई दिल्ली" />
                                     </div>
                                     <div className="flex flex-col gap-2">
@@ -2199,8 +2224,8 @@ export default function AdminDashboard() {
                                                 <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg bg-white max-h-[100px] overflow-y-auto">
                                                     {categories.filter(c => c.id !== 'all').map(cat => (
                                                         <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer bg-gray-50 px-2 py-1 rounded border border-gray-200 hover:bg-red-50 transition-colors">
-                                                            <input 
-                                                                type="checkbox" 
+                                                            <input
+                                                                type="checkbox"
                                                                 checked={(formData.category || []).includes(cat.id)}
                                                                 onChange={() => handleCategoryCheckbox(cat.id)}
                                                                 className="w-3.5 h-3.5 text-red-600 focus:ring-red-500 rounded cursor-pointer"
@@ -2224,7 +2249,7 @@ export default function AdminDashboard() {
                                                 value={formData.content}
                                                 config={joditConfig}
                                                 onBlur={(newContent) => handleContentChange(newContent)}
-                                                onChange={() => {}}
+                                                onChange={() => { }}
                                             />
                                         </div>
                                     </div>
@@ -2234,9 +2259,9 @@ export default function AdminDashboard() {
                                 <div className="w-full lg:w-[380px] flex flex-col gap-5 lg:mt-2">
                                     <div className="flex justify-between items-center border-b pb-2">
                                         <h4 className="text-lg font-bold text-gray-800">Media & SEO</h4>
-                                        <button 
-                                            type="button" 
-                                            onClick={handleAIGenerate} 
+                                        <button
+                                            type="button"
+                                            onClick={handleAIGenerate}
                                             disabled={isGeneratingSeo}
                                             className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50 border border-purple-200 shadow-sm"
                                         >
@@ -2244,10 +2269,10 @@ export default function AdminDashboard() {
                                             {isGeneratingSeo ? 'Generating...' : 'Auto-Generate AI'}
                                         </button>
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Blog Image</label>
-                                        
+
                                         {/* File Upload Area */}
                                         <div className="mb-3">
                                             <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${isUploading ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 hover:bg-gray-100 border-gray-300 hover:border-red-400'}`}>
@@ -2277,18 +2302,33 @@ export default function AdminDashboard() {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image Alt Text (SEO)</label>
-                                        <input type="text" name="imageAlt" value={formData.imageAlt} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" placeholder="Describe the image..." />
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <label className="block text-sm font-semibold text-gray-700">Image Alt Text (SEO)</label>
+                                            <span className={`text-xs font-bold ${formData.imageAlt?.length >= 100 && formData.imageAlt?.length <= 150 ? 'text-green-600' : formData.imageAlt?.length > 150 ? 'text-red-600' : formData.imageAlt?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                {formData.imageAlt?.length || 0} / 150
+                                            </span>
+                                        </div>
+                                        <input type="text" name="imageAlt" value={formData.imageAlt} onChange={handleInputChange} className={`w-full border rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 transition-all outline-none ${formData.imageAlt?.length >= 100 && formData.imageAlt?.length <= 150 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : formData.imageAlt?.length > 150 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : formData.imageAlt?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300 focus:border-red-500'}`} placeholder="Describe the image..." />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Title</label>
-                                        <input type="text" name="metaTitle" value={formData.metaTitle} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" placeholder="Leave empty to use Headline" />
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <label className="block text-sm font-semibold text-gray-700">Meta Title</label>
+                                            <span className={`text-xs font-bold ${formData.metaTitle?.length >= 50 && formData.metaTitle?.length <= 60 ? 'text-green-600' : formData.metaTitle?.length > 60 ? 'text-red-600' : formData.metaTitle?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                {formData.metaTitle?.length || 0} / 60
+                                            </span>
+                                        </div>
+                                        <input type="text" name="metaTitle" value={formData.metaTitle} onChange={handleInputChange} className={`w-full border rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 transition-all outline-none ${formData.metaTitle?.length >= 50 && formData.metaTitle?.length <= 60 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : formData.metaTitle?.length > 60 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : formData.metaTitle?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300 focus:border-red-500'}`} placeholder="Leave empty to use Headline" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Description</label>
-                                        <textarea name="metaDescription" value={formData.metaDescription} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none" rows="2" placeholder="Brief summary for search engines..."></textarea>
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <label className="block text-sm font-semibold text-gray-700">Meta Description</label>
+                                            <span className={`text-xs font-bold ${formData.metaDescription?.length >= 145 && formData.metaDescription?.length <= 155 ? 'text-green-600' : formData.metaDescription?.length > 155 ? 'text-red-600' : formData.metaDescription?.length > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                                {formData.metaDescription?.length || 0} / 155
+                                            </span>
+                                        </div>
+                                        <textarea name="metaDescription" value={formData.metaDescription} onChange={handleInputChange} className={`w-full border rounded-lg shadow-sm p-2.5 text-sm focus:ring-2 focus:ring-red-500 transition-all outline-none ${formData.metaDescription?.length >= 145 && formData.metaDescription?.length <= 155 ? 'bg-green-50 border-green-400 text-green-900 focus:border-green-500' : formData.metaDescription?.length > 155 ? 'bg-red-50 border-red-400 text-red-900 focus:border-red-500' : formData.metaDescription?.length > 0 ? 'bg-orange-50 border-orange-400 text-orange-900 focus:border-orange-500' : 'bg-white border-gray-300 focus:border-red-500'}`} rows="2" placeholder="Brief summary for search engines..."></textarea>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meta Keywords</label>
@@ -2327,14 +2367,14 @@ export default function AdminDashboard() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
-                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Sparkles className="text-purple-600"/> Master Auto-Generate AI</h3>
+                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Sparkles className="text-purple-600" /> Master Auto-Generate AI</h3>
                             <button onClick={() => setIsSeoModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
                                 <X size={24} />
                             </button>
                         </div>
                         <div className="p-8">
                             <p className="text-gray-600 mb-6">What would you like the AI to generate SEO for?</p>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Option 1: Static Pages */}
                                 <div className="border-2 border-blue-100 hover:border-blue-300 rounded-xl p-6 transition-all cursor-pointer hover:shadow-md bg-white group flex flex-col items-center text-center">
@@ -2343,7 +2383,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <h4 className="text-lg font-bold text-gray-900 mb-2">Static Pages</h4>
                                     <p className="text-sm text-gray-500 mb-6 flex-1">Generates unique, URL-based SEO for your main pages like Home, E-Paper, Sports, etc.</p>
-                                    <button 
+                                    <button
                                         onClick={handleGenerateStaticSeo}
                                         disabled={bulkStatus.isRunning}
                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50"
@@ -2359,7 +2399,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <h4 className="text-lg font-bold text-gray-900 mb-2">News Articles</h4>
                                     <p className="text-sm text-gray-500 mb-6 flex-1">Background bulk processor for <strong className="text-purple-700">{missingSeoCount}</strong> news articles missing SEO based on their content.</p>
-                                    <button 
+                                    <button
                                         onClick={handleStartBulk}
                                         disabled={bulkStatus.isRunning || missingSeoCount === 0}
                                         className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50"

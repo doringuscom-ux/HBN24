@@ -236,11 +236,11 @@ export default function Epaper() {
                     const recentEpaperNews = allEpaperNews.filter(item => new Date(item.createdAt) >= fourDaysAgo);
 
                     let displayNews = [...recentEpaperNews];
-                    
+
                     // Ensure minimum 8 pages (8 pages * 11 items = 88 items) without repeating
                     if (displayNews.length < 88) {
                         const usedIds = new Set(displayNews.map(item => item._id));
-                        
+
                         // Pad with older e-paper news
                         for (const item of allEpaperNews) {
                             if (displayNews.length >= 88) break;
@@ -249,7 +249,7 @@ export default function Epaper() {
                                 usedIds.add(item._id);
                             }
                         }
-                        
+
                         // If still less than 88, pad with any other older news
                         if (displayNews.length < 88) {
                             const allSortedNews = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -353,7 +353,7 @@ export default function Epaper() {
             separator.style.marginTop = '-4px';
 
             const tagLine = document.createElement('span');
-            tagLine.innerText = 'दैनिक सबसे तेज़';
+            tagLine.innerText = 'हिंद भारत न्यूज़';
             tagLine.style.color = '#dc2626';
             tagLine.style.fontFamily = "'Noto Sans Devanagari', sans-serif";
             tagLine.style.fontSize = '18px';
@@ -560,7 +560,7 @@ export default function Epaper() {
             footer.style.justifyContent = 'space-between';
             footer.style.fontSize = '14px';
             footer.style.fontWeight = 'bold';
-            footer.innerHTML = `<span>दैनिक सबसे तेज़ • सच्ची खबर, बेबाक नजर</span> <span>www.hbnnews24.com</span>`;
+            footer.innerHTML = `<span>हिंद भारत न्यूज़ • सच्ची खबर, बेबाक नजर</span> <span>www.hbnnews24.com</span>`;
             innerBorder.appendChild(footer);
 
             // Stop Google Translate from processing the clone
@@ -900,15 +900,15 @@ export default function Epaper() {
                 titleHeading.style.marginBottom = '-2px'; // Tighter gap
                 titleHeading.style.paddingBottom = '0px';
             }
-            // Ensure "दैनिक सबसे तेज़" tag is visible on ALL cuttings
+            // Ensure "हिंद भारत न्यूज़" tag is visible on ALL cuttings
             const categorySpan = articleClone.querySelector('span.bg-black.text-white');
             if (categorySpan) {
                 const categoryContainer = categorySpan.parentElement;
-                const hasTag = Array.from(categoryContainer.children).some(el => el.textContent.includes('दैनिक सबसे तेज़'));
+                const hasTag = Array.from(categoryContainer.children).some(el => el.textContent.includes('हिंद भारत न्यूज़'));
                 if (!hasTag) {
                     const tag = document.createElement('span');
                     tag.className = "text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2";
-                    tag.textContent = "दैनिक सबसे तेज़";
+                    tag.textContent = "हिंद भारत न्यूज़";
                     categoryContainer.appendChild(tag);
                 }
             }
@@ -1015,13 +1015,13 @@ export default function Epaper() {
                         <div className="text-center flex-1">
                             <div className="inline-block relative -mt-1 md:mt-4">
                                 <div className="text-center text-[9px] md:text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-0 md:-mb-2 relative z-10 font-sans">
-                                    A Unit of HBN News 24
+                                    A Unit of Digital ORRA
                                 </div>
                                 <h1
                                     className="text-[44px] min-[375px]:text-[48px] min-[400px]:text-[52px] sm:text-5xl md:text-[68px] lg:text-[90px] font-black tracking-tight leading-tight md:leading-[1.1] text-slate-900 uppercase whitespace-nowrap drop-shadow-sm w-full text-center"
                                     style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", letterSpacing: '-0.03em' }}
                                 >
-                                    दैनिक सबसे तेज़
+                                    हिंद भारत न्यूज़
                                 </h1>
                                 <div className="text-center text-[11px] sm:text-[13px] md:text-[16px] font-bold text-[#a61c1c] uppercase -mt-2 md:-mt-4 opacity-90">
                                     सच्ची खबर, बेबाक नजर
@@ -1123,7 +1123,7 @@ export default function Epaper() {
                                             </span>
                                             {style === 'headline' && (
                                                 <span className="text-[10px] font-bold text-red-800 border-l-2 border-red-800 pl-2">
-                                                    दैनिक सबसे तेज़
+                                                    हिंद भारत न्यूज़
                                                 </span>
                                             )}
                                         </div>

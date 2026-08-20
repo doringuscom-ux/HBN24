@@ -366,6 +366,14 @@ export default function SingleArticle() {
     // Removed complex regex cleaner; relying on useEffect DOM cleaner for better accuracy
     let cleanContent = article.content || '';
 
+    // Auto-linkify raw URLs that aren't already part of an HTML tag
+    cleanContent = cleanContent.replace(/<[^>]+>|(\b(https?:\/\/[^\s<]+))/g, (match, url) => {
+        // If it's an HTML tag, leave it alone
+        if (!url) return match;
+        // If it's a URL, wrap it in an anchor tag with blue link styling
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb !important; text-decoration: underline !important; font-weight: 600 !important;">${url}</a>`;
+    });
+
     // Inject related news inside the article content as a horizontal widget
     if (latestNews.length > 0) {
         // Get up to 4 related articles

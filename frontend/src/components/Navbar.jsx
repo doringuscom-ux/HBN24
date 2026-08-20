@@ -245,29 +245,44 @@ export default function AajTakNavbar() {
         { name: "होम", path: "/" },
         { name: "ई-पेपर", path: "/epaper" },
         { 
+            name: "राष्ट्रीय", 
+            path: "/national",
+            hasDropdown: true,
+            subLinks: [
+                { name: "पंजाब", path: "/punjab" },
+                { name: "हरियाणा", path: "/haryana" },
+                { name: "दिल्ली", path: "/delhi" }
+            ]
+        },
+        { name: "अंतरराष्ट्रीय", path: "/international" },
+        { 
             name: "मनोरंजन", 
             path: "/entertainment",
             hasDropdown: true,
             subLinks: [
-                { name: "लाइफस्टाइल", path: "/lifestyle" }
+                { name: "लाइफस्टाइल", path: "/lifestyle" },
+                { name: "खेल", path: "/sports" }
             ]
         },
         { name: "धर्म", path: "/religion" },
-        { name: "खेल", path: "/sports" },
         { 
-            name: "बिजनेस", 
-            path: "/business",
+            name: "एजुकेशन", 
+            path: "/education",
             hasDropdown: true,
             subLinks: [
+                { name: "जॉब्स", path: "/jobs" },
+                { name: "बिजनेस", path: "/business" },
                 { name: "टेक्नोलॉजी", path: "/technology" }
             ]
-        },
-        { name: "जॉब्स", path: "/jobs" },
-        { name: "एजुकेशन", path: "/education" },
+        }
     ];
 
     return (
-        <div className="w-full mt-4 bg-gradient-to-r from-[#02132b] via-[#052b63] to-[#02132b] h-[60px] flex justify-center sticky top-4 z-50 font-sans shadow-lg shadow-[#052b63]/30 border-b border-white/10 backdrop-blur-md">
+        <>
+            {/* White space above nav */}
+            <div className="w-full bg-white h-4 sticky top-0 z-40"></div>
+            
+            <div className="w-full bg-gradient-to-r from-[#02132b] via-[#052b63] to-[#02132b] h-[60px] flex justify-center sticky top-4 z-50 font-sans shadow-lg shadow-[#052b63]/30 border-b border-white/10 backdrop-blur-md">
             <div className="w-full max-w-[1280px] px-4 flex items-center h-full">
 
                 {/* Mobile Menu */}
@@ -530,5 +545,6 @@ export default function AajTakNavbar() {
                 )}
             </div>
         </div>
+        </>
     );
 }

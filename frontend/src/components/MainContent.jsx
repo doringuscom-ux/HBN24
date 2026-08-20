@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import FeaturedNews from './FeaturedNews';
 import NewsGrid from './NewsGrid';
-import SidebarNews from './SidebarNews';
+import SidebarVideos from './SidebarVideos';
 
 const ShortVideos = lazy(() => import('./ShortVideos'));
 const EntertainmentSection = lazy(() => import('./EntertainmentSection'));
@@ -36,18 +36,15 @@ export default function MainContent({ mixNews = [], entertainmentNews = [], vide
                         ) : (
                             <div className="h-64 w-full animate-pulse bg-gray-100 rounded-lg mb-8"></div>
                         )}
-                        <SidebarNews news={superfastNews} />
+                        <SidebarVideos videos={shorts} />
                     </div>
                 </div>
             </div>
 
-            <div className="w-full h-[1px] bg-gray-200"></div>
-
-            {/* Lower Section: ShortVideos + Entertainment (Full Width) */}
+            {/* Lower Section: Entertainment (Full Width) */}
             <div className="w-full flex flex-col gap-8">
                 {loadLazy ? (
                     <Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-100 rounded-xl"></div>}>
-                        <ShortVideos shorts={shorts} />
                         <EntertainmentSection news={entertainmentNews} />
                     </Suspense>
                 ) : (

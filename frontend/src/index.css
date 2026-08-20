@@ -256,12 +256,34 @@ body {
 }
 
 /* Force article content styles to override Rich Text Editor inline styles */
-.force-article-font * {
+.force-article-font {
     font-family: 'Noto Sans Devanagari', sans-serif !important;
     font-size: 21px !important;
     line-height: 1.8 !important;
     font-weight: 500 !important;
     color: #2c2c2c !important;
+}
+
+.force-article-font b,
+.force-article-font strong,
+.jodit-wysiwyg b,
+.jodit-wysiwyg strong {
+    font-weight: bold !important;
+}
+
+.force-article-font a,
+.jodit-wysiwyg a {
+    color: #2563eb !important;
+    text-decoration: underline !important;
+    font-weight: 600 !important;
+}
+
+.force-article-font a:hover {
+    color: #1d4ed8 !important;
+}
+
+.force-article-font * {
+    font-family: 'Noto Sans Devanagari', sans-serif;
 }
 .force-article-font p {
     margin-bottom: 24px !important;

@@ -10,9 +10,9 @@ const AboutUs = () => {
         <div className="w-full max-w-[1270px] mx-auto px-4 py-10">
             <h1 className="text-3xl md:text-4xl font-black mb-6 text-gray-900 border-b pb-4">About Us (हमारे बारे में)</h1>
             <div className="prose max-w-none text-gray-700 leading-relaxed space-y-6">
-                <p className="text-lg font-semibold text-gray-800">Welcome to HBN News 24 – दैनिक सबसे तेज़</p>
+                <p className="text-lg font-semibold text-gray-800">Welcome to HBN News 24 – हिंद भारत न्यूज़</p>
                 <p>HBN News 24 is your most trusted, fastest, and most comprehensive source for news and updates. Founded with the vision of delivering unbiased and accurate reporting, we are dedicated to providing you the very best of news, with an emphasis on speed, reliability, and factual journalism.</p>
-                
+
                 <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Our Mission</h2>
                 <p>Our mission is to bring true, unadulterated, and lightning-fast news to our audience. In an era of misinformation, we strive to be a beacon of truth. We cover a wide range of topics including National Politics, Entertainment, Sports, Technology, Religion, Education, Business, and Lifestyle. We believe in journalism that is free, fair, fearless, and for the people.</p>
 
@@ -35,7 +35,7 @@ const AboutUs = () => {
                 </ul>
 
                 <p className="mt-8">We are constantly evolving and adapting to the latest digital trends to serve you better. We hope you enjoy our platform as much as we enjoy offering it to you. If you have any questions, news tips, or comments, please don't hesitate to contact us.</p>
-                <p className="font-bold mt-4">Sincerely,<br/>The HBN News 24 Team</p>
+                <p className="font-bold mt-4">Sincerely,<br />The HBN News 24 Team</p>
             </div>
         </div>
     );

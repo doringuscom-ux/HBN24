@@ -67,6 +67,12 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
             
             // Inject meta tags right before </head>
             $html = str_replace('</head>', $metaTags . '</head>', $html);
+            
+            // SEO HACK: Inject the article text into the HTML body so Googlebot can read it without JavaScript!
+            $articleHtml = $article['content'] ?? '';
+            // We use position absolute and opacity 0 so normal users don't see a flicker, but Googlebot reads the text.
+            $seoContent = "<div id=\"seo-content\" style=\"position: absolute; opacity: 0; pointer-events: none;\"><h1>$title</h1>$articleHtml</div>";
+            $html = str_replace('<body>', '<body>' . $seoContent, $html);
         }
     }
 }

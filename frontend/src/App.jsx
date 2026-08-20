@@ -12,6 +12,11 @@ const Business = lazy(() => import('./pages/Business'));
 const Technology = lazy(() => import('./pages/Technology'));
 const Jobs = lazy(() => import('./pages/Jobs'));
 const Education = lazy(() => import('./pages/Education'));
+const National = lazy(() => import('./pages/National'));
+const International = lazy(() => import('./pages/International'));
+const Punjab = lazy(() => import('./pages/Punjab'));
+const Haryana = lazy(() => import('./pages/Haryana'));
+const Delhi = lazy(() => import('./pages/Delhi'));
 const SingleArticle = lazy(() => import('./pages/SingleArticle'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
@@ -181,6 +186,11 @@ function AppContent() {
             <Route path="/technology" element={<Technology />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/education" element={<Education />} />
+            <Route path="/national" element={<National />} />
+            <Route path="/international" element={<International />} />
+            <Route path="/punjab" element={<Punjab />} />
+            <Route path="/haryana" element={<Haryana />} />
+            <Route path="/delhi" element={<Delhi />} />
             <Route path="/epaper" element={<Epaper />} />
             <Route path="/search" element={<Search />} />
             <Route path="/reporter/:name" element={<ReporterProfile />} />
