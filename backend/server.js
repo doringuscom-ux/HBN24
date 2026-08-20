@@ -32,6 +32,8 @@ const Subscription = require('./src/models/Subscription');
 const Parser = require('rss-parser');
 const parser = new Parser();
 
+const { notifyGoogleIndexing } = require('./src/utils/googleIndexing');
+
 // Serverless connection middleware
 app.use(async (req, res, next) => {
     try {
@@ -481,6 +483,10 @@ app.post('/api/news', authMiddleware, async (req, res) => {
             });
         });
 
+        // Notify Google Indexing API
+        const articleUrl = `https://hbnnews24.com/news/${savedNews.slug || savedNews._id}`;
+        notifyGoogleIndexing(articleUrl, 'URL_UPDATED');
+
         res.status(201).json(savedNews);
     } catch (error) {
         console.error('Error creating news:', error);
@@ -506,6 +512,11 @@ app.put('/api/news/:id', authMiddleware, async (req, res) => {
         }
 
         const updatedNews = await News.findByIdAndUpdate(id, req.body, { new: true });
+        
+        // Notify Google Indexing API
+        const articleUrl = `https://hbnnews24.com/news/${updatedNews.slug || updatedNews._id}`;
+        notifyGoogleIndexing(articleUrl, 'URL_UPDATED');
+
         res.json(updatedNews);
     } catch (error) {
         console.error('Error updating news:', error);
@@ -518,6 +529,11 @@ app.delete('/api/news/:id', authMiddleware, async (req, res) => {
         const { id } = req.params;
         const deletedNews = await News.findByIdAndDelete(id);
         if (!deletedNews) return res.status(404).json({ message: 'News not found' });
+        
+        // Notify Google Indexing API
+        const articleUrl = `https://hbnnews24.com/news/${deletedNews.slug || deletedNews._id}`;
+        notifyGoogleIndexing(articleUrl, 'URL_DELETED');
+
         res.json({ message: 'News deleted successfully' });
     } catch (error) {
         console.error('Error deleting news:', error);
