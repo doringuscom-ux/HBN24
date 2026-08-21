@@ -54,16 +54,16 @@ router.post('/', authMiddleware, async (req, res) => {
 // @access  Private (Admin only)
 router.post('/generate-ai', authMiddleware, async (req, res) => {
     try {
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+        const apiKey = process.env.GROQ_API_KEY;
+        const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
 
         if (!apiKey) {
-            return res.status(500).json({ message: 'OpenRouter API Key missing' });
+            return res.status(500).json({ message: 'Groq API Key missing' });
         }
 
         const promptText = `Generate a beautiful, inspiring daily thought (Suvichar) in Hindi. Strict rules: It MUST be exactly 15 to 18 words long. It MUST be short enough to fit comfortably in 2 to 3 lines. Only return the pure Hindi text, without any quotes, labels, markdown formatting, or English translations.`;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,

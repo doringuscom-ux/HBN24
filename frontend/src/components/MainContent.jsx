@@ -2,10 +2,10 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import FeaturedNews from './FeaturedNews';
 import NewsGrid from './NewsGrid';
 import SidebarVideos from './SidebarVideos';
+import PollWidget from './PollWidget';
 
 const ShortVideos = lazy(() => import('./ShortVideos'));
 const EntertainmentSection = lazy(() => import('./EntertainmentSection'));
-const LiveTV = lazy(() => import('./LiveTV'));
 
 export default function MainContent({ mixNews = [], entertainmentNews = [], videos = [], shorts = [], superfastNews = [], featuredNews = [] }) {
     const [loadLazy, setLoadLazy] = useState(false);
@@ -29,13 +29,9 @@ export default function MainContent({ mixNews = [], entertainmentNews = [], vide
                 {/* Right Column (30%) - SidebarNews */}
                 <div className="w-full lg:w-[30%]">
                     <div className="sticky top-6">
-                        {loadLazy ? (
-                            <Suspense fallback={<div className="h-64 w-full animate-pulse bg-gray-100 rounded-lg mb-8"></div>}>
-                                <LiveTV />
-                            </Suspense>
-                        ) : (
-                            <div className="h-64 w-full animate-pulse bg-gray-100 rounded-lg mb-8"></div>
-                        )}
+                        <div className="mb-8">
+                            <PollWidget />
+                        </div>
                         <SidebarVideos videos={shorts} />
                     </div>
                 </div>

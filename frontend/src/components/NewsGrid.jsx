@@ -2,18 +2,12 @@ import React from 'react';
 import { Play, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { optimizeImage } from '../utils/imageOptimizer';
-import PollWidget from './PollWidget';
-
 export default function NewsGrid({ news = [] }) {
-    // Show 6 items instead of 8 to make room for poll (which takes up the space of 2 items)
-    const gridItems = news.slice(0, 6);
+    // Show 8 items
+    const gridItems = news.slice(0, 8);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            {/* Poll takes up the space of 2 news items on desktop (1 full row) */}
-            <div className="md:col-span-2 pb-2 border-b border-gray-100 md:border-b-0">
-                <PollWidget />
-            </div>
 
             {gridItems.map((item, index) => (
                 <Link to={`/news/${item.slug || item._id}`} key={item._id || index} className="flex gap-4 group cursor-pointer border-b border-gray-100 pb-4 md:border-b-0 md:pb-0">

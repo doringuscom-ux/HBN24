@@ -67,11 +67,11 @@ router.post('/generate-ai', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Title or Content is required to generate SEO.' });
         }
 
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+        const apiKey = process.env.GROQ_API_KEY;
+        const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
 
         if (!apiKey) {
-            return res.status(500).json({ message: 'OpenRouter API Key is missing in backend configuration.' });
+            return res.status(500).json({ message: 'Groq API Key is missing in backend configuration.' });
         }
 
         // Clean content from HTML tags for better AI understanding
@@ -91,7 +91,7 @@ Return EXACTLY this JSON structure and nothing else:
 }
 `;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
@@ -107,7 +107,7 @@ Return EXACTLY this JSON structure and nothing else:
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('OpenRouter API Error:', errorText);
+            console.error('Groq API Error:', errorText);
             return res.status(500).json({ message: 'Error from AI service.' });
         }
 
@@ -186,8 +186,8 @@ router.post('/start-bulk', authMiddleware, async (req, res) => {
 });
 
 async function processBulkSeo(articles) {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+    const apiKey = process.env.GROQ_API_KEY;
+    const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
 
     if (!apiKey) {
         bulkStatus.isRunning = false;
@@ -220,7 +220,7 @@ Return EXACTLY this JSON structure and nothing else:
   "metaKeywords": "comma, separated, relevant, keywords, max 10"
 }`;
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
@@ -335,8 +335,8 @@ router.post('/generate-static-pages', authMiddleware, async (req, res) => {
 });
 
 async function processStaticPagesSeo(staticPages) {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+    const apiKey = process.env.GROQ_API_KEY;
+    const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
 
     if (!apiKey) {
         bulkStatus.isRunning = false;
@@ -358,7 +358,7 @@ Return EXACTLY this JSON structure:
   "metaKeywords": "comma, separated, relevant, keywords, max 10"
 }`;
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,

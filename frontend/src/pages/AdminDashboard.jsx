@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff, MessageSquare, BarChart2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import ReactCrop from 'react-image-crop';
@@ -216,6 +216,16 @@ export default function AdminDashboard() {
         liveTvUrl: '',
         liveTvType: 'hls'
     });
+    
+    // Poll state
+    const [pollQuestion, setPollQuestion] = useState("क्या भारत को UN सुरक्षा परिषद का स्थायी सदस्य होना चाहिए?");
+    const [pollOptions, setPollOptions] = useState([
+        { id: 1, text: "हाँ", emoji: "👍", initialVotes: 10000, realVotes: 0 },
+        { id: 2, text: "नहीं", emoji: "👎", initialVotes: 2000, realVotes: 0 },
+        { id: 3, text: "कह नहीं सकते", emoji: "🤔", initialVotes: 450, realVotes: 0 }
+    ]);
+    const [isSavingPoll, setIsSavingPoll] = useState(false);
+
     const [formData, setFormData] = useState({
         title: '',
         slug: '',
@@ -365,6 +375,64 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error('Error fetching logs:', error);
+        }
+    };
+
+    const fetchActivePoll = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/poll/active`);
+            if (res.ok) {
+                const data = await res.json();
+                setPollQuestion(data.question);
+                
+                // For the admin dashboard, we want the initialVotes to be editable.
+                // Since the public endpoint doesn't expose initialVotes, we need a private endpoint or we just fetch the original poll data if we add an admin endpoint.
+                // Wait, I didn't add a GET endpoint for admins in pollRoutes.
+                // Actually, I can just use the public endpoint if it returns the data we need. But it doesn't return initialVotes.
+                // Let's modify the route to return initialVotes too, or just reset them for the admin view.
+                // For simplicity, let's just make the admin set a NEW poll every time they save, which overwrites the active one.
+                // So fetchActivePoll just populates the question and text.
+                if (data.options) {
+                    setPollOptions(prevOptions => {
+                        return data.options.map((opt, i) => ({
+                            ...prevOptions[i],
+                            id: opt.id,
+                            text: opt.text,
+                            emoji: opt.emoji,
+                            realVotes: opt.realVotes || 0,
+                            // initialVotes remains whatever is in the state unless we fetch it
+                        }));
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching poll:', error);
+        }
+    };
+
+    const handleSavePoll = async () => {
+        setIsSavingPoll(true);
+        try {
+            const res = await fetch(`${API_URL}/api/poll`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify({ question: pollQuestion, options: pollOptions })
+            });
+
+            if (res.ok) {
+                alert('Poll saved and activated successfully!');
+                fetchActivePoll();
+            } else {
+                alert('Failed to save poll.');
+            }
+        } catch (error) {
+            console.error('Error saving poll:', error);
+            alert('Error saving poll.');
+        } finally {
+            setIsSavingPoll(false);
         }
     };
 
@@ -1252,6 +1320,12 @@ export default function AdminDashboard() {
                         <FileText size={20} className={currentView === 'suvichar' ? 'text-red-500' : ''} /> Suvichar
                     </button>
                     <button
+                        onClick={() => { setCurrentView('poll'); fetchActivePoll(); }}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'poll' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <BarChart2 size={20} className={currentView === 'poll' ? 'text-red-500' : ''} /> Poll
+                    </button>
+                    <button
                         onClick={() => setCurrentView('seo')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'seo' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
@@ -1340,7 +1414,91 @@ export default function AdminDashboard() {
                 </header>
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-8">
-                    {currentView === 'seo' ? (
+                    {currentView === 'poll' ? (
+                        <div className="flex flex-col gap-8 w-full max-w-4xl">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <BarChart2 className="text-red-500" /> Active Poll Settings
+                                </h3>
+                                
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Poll Question</label>
+                                        <input
+                                            type="text"
+                                            value={pollQuestion}
+                                            onChange={(e) => setPollQuestion(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+                                            placeholder="Enter your poll question here..."
+                                        />
+                                    </div>
+
+                                    <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
+                                        <h4 className="font-semibold text-gray-700">Poll Options & Base Votes</h4>
+                                        <p className="text-sm text-gray-500 mb-4">Set the options and their initial (fake/base) votes. Real votes from users will be added on top of these base numbers to calculate the final percentage.</p>
+                                        
+                                        {pollOptions.map((opt, index) => (
+                                            <div key={opt.id} className="flex flex-col sm:flex-row gap-4 items-end bg-white p-4 rounded border border-gray-200 shadow-sm">
+                                                <div className="w-full sm:w-16">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Emoji</label>
+                                                    <input
+                                                        type="text"
+                                                        value={opt.emoji}
+                                                        onChange={(e) => {
+                                                            const newOptions = [...pollOptions];
+                                                            newOptions[index].emoji = e.target.value;
+                                                            setPollOptions(newOptions);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 text-center text-xl"
+                                                    />
+                                                </div>
+                                                <div className="w-full sm:flex-1">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Option Text</label>
+                                                    <input
+                                                        type="text"
+                                                        value={opt.text}
+                                                        onChange={(e) => {
+                                                            const newOptions = [...pollOptions];
+                                                            newOptions[index].text = e.target.value;
+                                                            setPollOptions(newOptions);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500"
+                                                    />
+                                                </div>
+                                                <div className="w-full sm:w-32">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Initial Votes</label>
+                                                    <input
+                                                        type="number"
+                                                        value={opt.initialVotes}
+                                                        onChange={(e) => {
+                                                            const newOptions = [...pollOptions];
+                                                            newOptions[index].initialVotes = parseInt(e.target.value) || 0;
+                                                            setPollOptions(newOptions);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 font-mono"
+                                                    />
+                                                </div>
+                                                <div className="w-full sm:w-24 bg-gray-100 px-3 py-2 rounded text-center border border-gray-200">
+                                                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Real Votes</label>
+                                                    <span className="font-mono font-bold text-gray-700">{opt.realVotes || 0}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex justify-end pt-4">
+                                        <button
+                                            onClick={handleSavePoll}
+                                            disabled={isSavingPoll}
+                                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isSavingPoll ? 'Saving...' : 'Save & Activate Poll'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : currentView === 'seo' ? (
                         <div className="flex flex-col gap-8 w-full">
                             {/* Unified SEO Generator Header */}
                             <div className="bg-purple-600 rounded-xl shadow-md p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

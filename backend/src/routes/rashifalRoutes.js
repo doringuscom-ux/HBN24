@@ -69,11 +69,11 @@ router.post('/', authMiddleware, async (req, res) => {
 // @access  Private (Admin only)
 router.post('/generate-ai', authMiddleware, async (req, res) => {
     try {
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+        const apiKey = process.env.GROQ_API_KEY;
+        const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
 
         if (!apiKey) {
-            return res.status(500).json({ message: 'OpenRouter API Key missing' });
+            return res.status(500).json({ message: 'Groq API Key missing' });
         }
 
         const dateStr = new Date().toLocaleDateString('hi-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -93,7 +93,7 @@ Each object must have this exact structure:
         let lastError = null;
         for (let i = 0; i < 3; i++) {
             try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${apiKey}`,
