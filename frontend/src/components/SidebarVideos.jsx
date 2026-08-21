@@ -3,9 +3,8 @@ import { PlayCircle, VolumeX } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 
 export default function SidebarVideos({ videos = [], title = "ट्रेंडिंग शॉर्ट्स" }) {
-    // Randomly shuffle the videos and pick 7 so they are mixed
     const displayVideos = useMemo(() => {
-        return [...videos].sort(() => Math.random() - 0.5).slice(0, 7);
+        return [...videos].slice(0, 7);
     }, [videos]);
 
     const [playingIndex, setPlayingIndex] = useState(0); // Auto-play first video
@@ -24,8 +23,11 @@ export default function SidebarVideos({ videos = [], title = "ट्रेंड
     const handleVideoEnded = () => {
         setPlayingIndex((prev) => {
             const nextIndex = (prev + 1) % displayVideos.length;
-            if (videoRefs.current[nextIndex]) {
-                videoRefs.current[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (videoRefs.current[nextIndex] && containerRef.current) {
+                containerRef.current.scrollTo({
+                    top: videoRefs.current[nextIndex].offsetTop,
+                    behavior: 'smooth'
+                });
             }
             return nextIndex;
         });
@@ -64,8 +66,11 @@ export default function SidebarVideos({ videos = [], title = "ट्रेंड
             return;
         }
         setPlayingIndex(index);
-        if (videoRefs.current[index]) {
-            videoRefs.current[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (videoRefs.current[index] && containerRef.current) {
+            containerRef.current.scrollTo({
+                top: videoRefs.current[index].offsetTop,
+                behavior: 'smooth'
+            });
         }
     };
 
@@ -83,10 +88,9 @@ export default function SidebarVideos({ videos = [], title = "ट्रेंड
                 </div>
             </div> */}
 
-            {/* Insta-Style Scroll Container */}
             <div
                 ref={containerRef}
-                className="flex flex-col gap-6 max-h-[850px] overflow-y-auto snap-y snap-mandatory pb-6 insta-scroll rounded-xl"
+                className="relative flex flex-col gap-6 max-h-[calc(100vh-350px)] min-h-[400px] overflow-y-auto snap-y snap-mandatory pb-6 insta-scroll rounded-xl"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 <style>{`

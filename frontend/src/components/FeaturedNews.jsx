@@ -57,7 +57,7 @@ export default function FeaturedNews({ news = [] }) {
 
                     return (
                         <div key={featured._id || index} className="w-full flex-shrink-0">
-                            <Link to={`/news/${featured.slug || featured._id}`} className="block w-full cursor-pointer pb-6">
+                            <Link to={`/news/${featured.slug || featured._id}`} className="block w-full cursor-pointer">
                                 <div className="relative overflow-hidden w-full bg-gray-100 flex items-center justify-center">
                                     <img 
                                         src={optimizeImage(featured.image, 800)} 
@@ -67,7 +67,7 @@ export default function FeaturedNews({ news = [] }) {
                                         className="w-full h-auto max-h-[450px] object-contain group-hover:scale-95 transition-transform duration-700 ease-out rounded-[12px] group-hover:rounded-[16px]"
                                     />
                                 </div>
-                                <div className="p-6 pb-2 bg-gradient-to-b from-white to-gray-50/50">
+                                <div className="p-6 bg-gradient-to-b from-white to-gray-50/50">
                                     <h1 className="text-[24px] md:text-[34px] font-black text-[#111] mb-4 group-hover:text-[#da0000] transition-colors leading-[1.25]">
                                         {featured.title}
                                     </h1>
@@ -99,18 +99,6 @@ export default function FeaturedNews({ news = [] }) {
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
-
-                    {/* Indicators */}
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                        {featuredList.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={(e) => { e.preventDefault(); setCurrentIndex(idx); }}
-                                className={`h-2 rounded-full transition-all duration-300 ${currentIndex === idx ? 'bg-[#da0000] w-6' : 'bg-gray-300 w-2 hover:bg-gray-400'}`}
-                                aria-label={`Go to slide ${idx + 1}`}
-                            />
-                        ))}
-                    </div>
                 </>
             )}
         </div>

@@ -543,6 +543,20 @@ app.delete('/api/news/:id', authMiddleware, async (req, res) => {
 
 app.get('/api/youtube', async (req, res) => {
     try {
+        const isWithin5Days = (text) => {
+            if (!text) return false;
+            const lower = text.toLowerCase();
+            if (lower === "recently") return true;
+            if (lower.includes('minute') || lower.includes('hour') || lower.includes('second')) return true;
+            if (lower.includes('day')) {
+                const match = lower.match(/(\d+)/);
+                if (match) {
+                    return parseInt(match[1]) <= 5;
+                }
+            }
+            return false;
+        };
+
         const fetchVideos = async () => {
             const response = await fetch('https://www.youtube.com/@HBNNews24x7/videos');
             const html = await response.text();
@@ -603,7 +617,7 @@ app.get('/api/youtube', async (req, res) => {
                     publishedAt: "Recently",
                     duration: "Short"
                 };
-            }).slice(0, 10);
+            }).slice(0, 6); // Limiting to fewer shorts to roughly approximate 5 days since they lack exact dates
         };
 
         const [videos, shorts, news24Shorts] = await Promise.all([

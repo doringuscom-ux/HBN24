@@ -28,7 +28,7 @@ export default function MainContent({ mixNews = [], entertainmentNews = [], vide
 
                 {/* Right Column (30%) - SidebarNews */}
                 <div className="w-full lg:w-[30%]">
-                    <div className="h-full">
+                    <div className="sticky top-6">
                         {loadLazy ? (
                             <Suspense fallback={<div className="h-64 w-full animate-pulse bg-gray-100 rounded-lg mb-8"></div>}>
                                 <LiveTV />
