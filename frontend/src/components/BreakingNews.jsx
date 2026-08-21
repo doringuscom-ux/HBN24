@@ -4,9 +4,22 @@ import { X } from 'lucide-react';
 
 export default function BreakingNews({ news = [] }) {
     const [isVisible, setIsVisible] = useState(true);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [customNews, setCustomNews] = useState([]);
 
-    const breakingNewsItems = news.slice(0, 5);
+    useEffect(() => {
+        fetch(__API_URL__ + '/api/breaking-news')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    setCustomNews(data);
+                }
+            })
+            .catch(err => console.error('Error fetching breaking news:', err));
+    }, []);
+
+    const breakingNewsItems = customNews.length > 0 ? customNews : news.slice(0, 5);
+
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
         if (breakingNewsItems.length <= 1) return;
@@ -136,20 +149,41 @@ export default function BreakingNews({ news = [] }) {
 
                         {/* Center: Headline (Animated Ticker) */}
                         <div className="flex-1 overflow-hidden relative min-h-[52px] md:min-h-0 md:h-full flex items-center px-3 py-1.5 md:py-0">
-                            {breakingNewsItems.map((item, index) => (
-                                <Link
-                                    key={item._id || index}
-                                    to={`/news/${item.slug || item._id}`}
-                                    className={`block absolute w-[95%] transition-all duration-500 ease-in-out ${index === currentIndex
-                                        ? 'opacity-100 translate-y-0'
-                                        : 'opacity-0 -translate-y-4 pointer-events-none'
-                                        }`}
-                                >
-                                    <p className="text-[13px] md:text-xl font-extrabold line-clamp-2 md:truncate cursor-pointer hover:underline leading-snug">
-                                        {item.title}
-                                    </p>
-                                </Link>
-                            ))}
+                            {breakingNewsItems.map((item, index) => {
+                                const isCustom = !item.slug;
+                                const content = item.text || item.title;
+                                
+                                let slideClass = '';
+                                if (index === currentIndex) {
+                                    slideClass = 'opacity-100 translate-x-0';
+                                } else if (index === (currentIndex - 1 + breakingNewsItems.length) % breakingNewsItems.length) {
+                                    // previous item goes to the left
+                                    slideClass = 'opacity-0 -translate-x-12 pointer-events-none';
+                                } else {
+                                    // next items wait on the right
+                                    slideClass = 'opacity-0 translate-x-12 pointer-events-none';
+                                }
+
+                                const className = `block absolute w-[95%] transition-all duration-500 ease-in-out ${slideClass}`;
+
+                                return isCustom ? (
+                                    <Link key={item._id || index} to="/breaking-news" className={className}>
+                                        <p className="text-[13px] md:text-xl font-extrabold line-clamp-2 md:truncate cursor-pointer hover:underline leading-snug">
+                                            {content}
+                                        </p>
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        key={item._id || index}
+                                        to={`/news/${item.slug || item._id}`}
+                                        className={className}
+                                    >
+                                        <p className="text-[13px] md:text-xl font-extrabold line-clamp-2 md:truncate cursor-pointer hover:underline leading-snug">
+                                            {content}
+                                        </p>
+                                    </Link>
+                                );
+                            })}
                         </div>
 
                         {/* Right Side: Close Button */}

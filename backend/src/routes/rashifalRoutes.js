@@ -70,7 +70,7 @@ router.post('/', authMiddleware, async (req, res) => {
 router.post('/generate-ai', authMiddleware, async (req, res) => {
     try {
         const apiKey = process.env.GROQ_API_KEY;
-        const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
+        const model = process.env.GROQ_MODEL || 'groq/compound';
 
         if (!apiKey) {
             return res.status(500).json({ message: 'Groq API Key missing' });

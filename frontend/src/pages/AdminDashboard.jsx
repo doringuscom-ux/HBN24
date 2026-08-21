@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff, MessageSquare, BarChart2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, LayoutDashboard, Settings, LogOut, FileText, ChevronLeft, ChevronRight, X, Globe, Sparkles, Users, Menu, Eye, EyeOff, MessageSquare, BarChart2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import ReactCrop from 'react-image-crop';
@@ -196,6 +196,77 @@ export default function AdminDashboard() {
     const [pageSeoData, setPageSeoData] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', robots: 'index, follow' });
 
     const [currentView, setCurrentView] = useState('all');
+    const [breakingNewsList, setBreakingNewsList] = useState([]);
+    const [newBreakingNews, setNewBreakingNews] = useState('');
+    const [isFetchingBreakingNews, setIsFetchingBreakingNews] = useState(false);
+
+    const fetchBreakingNews = async () => {
+        setIsFetchingBreakingNews(true);
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + '/api/breaking-news/all', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setBreakingNewsList(data);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        setIsFetchingBreakingNews(false);
+    };
+
+    const handleAddBreakingNews = async (e) => {
+        e.preventDefault();
+        if (!newBreakingNews.trim()) return;
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + '/api/breaking-news', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ text: newBreakingNews })
+            });
+            if (res.ok) {
+                setNewBreakingNews('');
+                fetchBreakingNews();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleToggleBreakingNews = async (id, currentStatus) => {
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + '/api/breaking-news/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ isActive: !currentStatus })
+            });
+            if (res.ok) {
+                fetchBreakingNews();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleDeleteBreakingNews = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this breaking news?')) return;
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch(__API_URL__ + '/api/breaking-news/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchBreakingNews();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
     const [contactMessages, setContactMessages] = useState([]);
     const [userRole, setUserRole] = useState('user');
     const [currentUsername, setCurrentUsername] = useState('');
@@ -225,6 +296,7 @@ export default function AdminDashboard() {
         { id: 3, text: "कह नहीं सकते", emoji: "🤔", initialVotes: 450, realVotes: 0 }
     ]);
     const [isSavingPoll, setIsSavingPoll] = useState(false);
+    const [isPollActive, setIsPollActive] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -380,18 +452,12 @@ export default function AdminDashboard() {
 
     const fetchActivePoll = async () => {
         try {
-            const res = await fetch(`${API_URL}/api/poll/active`);
+            const res = await fetch(`${__API_URL__}/api/poll/active`);
             if (res.ok) {
+                setIsPollActive(true);
                 const data = await res.json();
                 setPollQuestion(data.question);
                 
-                // For the admin dashboard, we want the initialVotes to be editable.
-                // Since the public endpoint doesn't expose initialVotes, we need a private endpoint or we just fetch the original poll data if we add an admin endpoint.
-                // Wait, I didn't add a GET endpoint for admins in pollRoutes.
-                // Actually, I can just use the public endpoint if it returns the data we need. But it doesn't return initialVotes.
-                // Let's modify the route to return initialVotes too, or just reset them for the admin view.
-                // For simplicity, let's just make the admin set a NEW poll every time they save, which overwrites the active one.
-                // So fetchActivePoll just populates the question and text.
                 if (data.options) {
                     setPollOptions(prevOptions => {
                         return data.options.map((opt, i) => ({
@@ -400,20 +466,22 @@ export default function AdminDashboard() {
                             text: opt.text,
                             emoji: opt.emoji,
                             realVotes: opt.realVotes || 0,
-                            // initialVotes remains whatever is in the state unless we fetch it
                         }));
                     });
                 }
+            } else {
+                setIsPollActive(false);
             }
         } catch (error) {
             console.error('Error fetching poll:', error);
+            setIsPollActive(false);
         }
     };
 
     const handleSavePoll = async () => {
         setIsSavingPoll(true);
         try {
-            const res = await fetch(`${API_URL}/api/poll`, {
+            const res = await fetch(`${__API_URL__}/api/poll`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -431,6 +499,32 @@ export default function AdminDashboard() {
         } catch (error) {
             console.error('Error saving poll:', error);
             alert('Error saving poll.');
+        } finally {
+            setIsSavingPoll(false);
+        }
+    };
+
+    const handleDeactivatePoll = async () => {
+        if (!window.confirm("Are you sure you want to turn off the poll? It will be hidden from the public website.")) return;
+        
+        setIsSavingPoll(true);
+        try {
+            const res = await fetch(`${__API_URL__}/api/poll/deactivate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+
+            if (res.ok) {
+                alert('Poll deactivated successfully! It is now hidden.');
+                setIsPollActive(false);
+            } else {
+                alert('Failed to deactivate poll.');
+            }
+        } catch (error) {
+            console.error('Error deactivating poll:', error);
+            alert('Error deactivating poll.');
         } finally {
             setIsSavingPoll(false);
         }
@@ -1326,6 +1420,12 @@ export default function AdminDashboard() {
                         <BarChart2 size={20} className={currentView === 'poll' ? 'text-red-500' : ''} /> Poll
                     </button>
                     <button
+                        onClick={() => { setCurrentView('breaking_news'); fetchBreakingNews(); }}
+                        className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'breaking_news' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    >
+                        <AlertTriangle size={20} className={currentView === 'breaking_news' ? 'text-red-500' : ''} /> Breaking News
+                    </button>
+                    <button
                         onClick={() => setCurrentView('seo')}
                         className={`px-6 py-3 border-l-4 flex items-center gap-3 font-medium transition-colors text-left ${currentView === 'seo' ? 'bg-red-600/10 border-red-500 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     >
@@ -1380,10 +1480,10 @@ export default function AdminDashboard() {
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'suvichar' ? 'Suvichar Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : currentView === 'profile' ? 'My Profile' : currentView === 'logs' ? 'Activity Logs' : 'News Management'}
+                                {currentView === 'epaper' ? 'E-Paper Management' : currentView === 'rashifal' ? 'Rashifal Management' : currentView === 'suvichar' ? 'Suvichar Management' : currentView === 'seo' ? 'Global SEO Manager' : currentView === 'users' ? 'User Management' : currentView === 'profile' ? 'My Profile' : currentView === 'logs' ? 'Activity Logs' : currentView === 'breaking_news' ? 'Breaking News' : 'News Management'}
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'suvichar' ? 'Manage daily thought of the day' : currentView === 'seo' ? 'Manage global website SEO settings' : currentView === 'profile' ? 'Edit your profile details' : currentView === 'logs' ? 'View user activity logs' : 'Manage and publish news articles'}
+                                {currentView === 'epaper' ? 'Manage articles active on the E-Paper page' : currentView === 'rashifal' ? 'Manage daily horoscope for all 12 signs' : currentView === 'suvichar' ? 'Manage daily thought of the day' : currentView === 'seo' ? 'Manage global website SEO settings' : currentView === 'profile' ? 'Edit your profile details' : currentView === 'logs' ? 'View user activity logs' : currentView === 'breaking_news' ? 'Manage scrolling breaking news headlines' : 'Manage and publish news articles'}
                             </p>
                         </div>
                     </div>
@@ -1480,20 +1580,90 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="w-full sm:w-24 bg-gray-100 px-3 py-2 rounded text-center border border-gray-200">
                                                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Real Votes</label>
-                                                    <span className="font-mono font-bold text-gray-700">{opt.realVotes || 0}</span>
+                                                    <span className="font-bold text-lg text-gray-700">{opt.realVotes || 0}</span>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="flex justify-end pt-4">
-                                        <button
-                                            onClick={handleSavePoll}
-                                            disabled={isSavingPoll}
-                                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-                                        >
-                                            {isSavingPoll ? 'Saving...' : 'Save & Activate Poll'}
+                                    <div className="flex justify-end pt-4 gap-4">
+                                            {isPollActive && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDeactivatePoll}
+                                                    disabled={isSavingPoll}
+                                                    className="px-6 py-3 bg-red-600/20 text-red-400 font-semibold rounded-xl hover:bg-red-600/30 transition-all disabled:opacity-50"
+                                                >
+                                                    Turn Poll OFF
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={handleSavePoll}
+                                                disabled={isSavingPoll}
+                                                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {isSavingPoll ? 'Saving...' : 'Save & Activate Poll'}
+                                            </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : currentView === 'breaking_news' ? (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-160px)]">
+                            <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">Breaking News Items</h2>
+                                    <p className="text-sm text-gray-500">Add headlines that will scroll on the website banner.</p>
+                                </div>
+                            </div>
+                            <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
+                                <form onSubmit={handleAddBreakingNews} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-4">
+                                    <h3 className="font-bold text-gray-800">Add New Headline</h3>
+                                    <div className="flex gap-4">
+                                        <input
+                                            type="text"
+                                            value={newBreakingNews}
+                                            onChange={(e) => setNewBreakingNews(e.target.value)}
+                                            placeholder="Enter breaking news text..."
+                                            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:bg-white transition-all"
+                                        />
+                                        <button type="submit" className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap">
+                                            Add Headline
                                         </button>
+                                    </div>
+                                </form>
+                                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex-1 flex flex-col">
+                                    <div className="bg-gray-50 p-4 border-b border-gray-200 font-bold text-gray-700 grid grid-cols-[1fr_100px_80px] gap-4">
+                                        <div>Headline Text</div>
+                                        <div className="text-center">Status</div>
+                                        <div className="text-right">Actions</div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto">
+                                        {isFetchingBreakingNews ? (
+                                            <div className="p-8 text-center text-gray-500">Loading...</div>
+                                        ) : breakingNewsList.length === 0 ? (
+                                            <div className="p-8 text-center text-gray-500">No breaking news added yet.</div>
+                                        ) : (
+                                            breakingNewsList.map((item) => (
+                                                <div key={item._id} className="p-4 border-b border-gray-100 flex items-center grid grid-cols-[1fr_100px_80px] gap-4 hover:bg-gray-50">
+                                                    <div className="text-gray-800 font-medium truncate" title={item.text}>{item.text}</div>
+                                                    <div className="text-center">
+                                                        <button
+                                                            onClick={() => handleToggleBreakingNews(item._id, item.isActive)}
+                                                            className={`px-3 py-1 rounded-full text-xs font-bold ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}
+                                                        >
+                                                            {item.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <button onClick={() => handleDeleteBreakingNews(item._id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             </div>

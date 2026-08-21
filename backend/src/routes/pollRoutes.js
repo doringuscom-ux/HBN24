@@ -115,4 +115,17 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// @route   POST /api/poll/deactivate
+// @desc    Deactivate all polls (Admin)
+// @access  Private
+router.post('/deactivate', authMiddleware, async (req, res) => {
+    try {
+        await Poll.updateMany({}, { isActive: false });
+        res.json({ message: 'All polls deactivated successfully' });
+    } catch (error) {
+        console.error('Error deactivating polls:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;

@@ -23,6 +23,7 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Epaper = lazy(() => import('./pages/Epaper'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Search = lazy(() => import('./pages/Search'));
+const BreakingNewsPage = lazy(() => import('./pages/BreakingNewsPage'));
 const ReporterProfile = lazy(() => import('./pages/ReporterProfile'));
 
 // Policy Pages
@@ -193,6 +194,7 @@ function AppContent() {
             <Route path="/delhi" element={<Delhi />} />
             <Route path="/epaper" element={<Epaper />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/breaking-news" element={<BreakingNewsPage />} />
             <Route path="/reporter/:name" element={<ReporterProfile />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsConditions />} />

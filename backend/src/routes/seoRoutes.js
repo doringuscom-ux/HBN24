@@ -68,7 +68,7 @@ router.post('/generate-ai', authMiddleware, async (req, res) => {
         }
 
         const apiKey = process.env.GROQ_API_KEY;
-        const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
+        const model = process.env.GROQ_MODEL || 'groq/compound';
 
         if (!apiKey) {
             return res.status(500).json({ message: 'Groq API Key is missing in backend configuration.' });
@@ -187,7 +187,7 @@ router.post('/start-bulk', authMiddleware, async (req, res) => {
 
 async function processBulkSeo(articles) {
     const apiKey = process.env.GROQ_API_KEY;
-    const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
+    const model = process.env.GROQ_MODEL || 'groq/compound';
 
     if (!apiKey) {
         bulkStatus.isRunning = false;
@@ -336,7 +336,7 @@ router.post('/generate-static-pages', authMiddleware, async (req, res) => {
 
 async function processStaticPagesSeo(staticPages) {
     const apiKey = process.env.GROQ_API_KEY;
-    const model = process.env.GROQ_MODEL || 'google/gemini-2.5-flash';
+    const model = process.env.GROQ_MODEL || 'groq/compound';
 
     if (!apiKey) {
         bulkStatus.isRunning = false;

@@ -77,16 +77,16 @@ export default function PollWidget() {
                 </h3>
             </div>
             
-            <div className="flex flex-col gap-3 relative z-10">
+            <div className="grid grid-cols-2 gap-3 relative z-10">
                 {pollData.options.map((option) => (
-                    <div key={option.id} className="relative w-full">
+                    <div key={option.id} className="relative w-full col-span-1 last:odd:col-span-2">
                         {!showResults ? (
                             <button
                                 onClick={() => handleVote(option.id)}
-                                className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg hover:border-[#da0000]/50 hover:bg-red-50/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300 font-bold text-gray-700 bg-white"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 rounded-lg hover:border-[#da0000]/50 hover:bg-red-50/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300 font-bold text-gray-700 bg-white"
                             >
                                 <span className="text-left">{option.text}</span>
-                                <span className="text-xl ml-2">{option.emoji}</span>
+                                <span className="text-xl">{option.emoji}</span>
                             </button>
                         ) : (
                             <div className={`w-full bg-white border ${selectedOption === option.id ? 'border-[#da0000]' : 'border-gray-200'} rounded-lg h-12 relative overflow-hidden flex items-center shadow-inner`}>
