@@ -148,6 +148,51 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 });
 
+app.get('/news-sitemap.xml', async (req, res) => {
+    try {
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const newsList = await News.find({ 
+            createdAt: { $gte: fortyEightHoursAgo } 
+        }).sort({ createdAt: -1 });
+
+        const baseUrl = req.query.host || (req.protocol + '://' + req.get('host'));
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
+        xml += '        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n';
+
+        newsList.forEach(news => {
+            const slug = news.slug || news._id;
+            const publicationDate = new Date(news.createdAt).toISOString();
+            const title = (news.title || '').replace(/&/g, '&amp;')
+                                          .replace(/</g, '&lt;')
+                                          .replace(/>/g, '&gt;')
+                                          .replace(/"/g, '&quot;')
+                                          .replace(/'/g, '&apos;');
+            
+            xml += '  <url>\n';
+            xml += `    <loc>${baseUrl}/news/${slug}</loc>\n`;
+            xml += '    <news:news>\n';
+            xml += '      <news:publication>\n';
+            xml += '        <news:name>HBN24</news:name>\n';
+            xml += '        <news:language>hi</news:language>\n';
+            xml += '      </news:publication>\n';
+            xml += `      <news:publication_date>${publicationDate}</news:publication_date>\n`;
+            xml += `      <news:title>${title}</news:title>\n`;
+            xml += '    </news:news>\n';
+            xml += '  </url>\n';
+        });
+
+        xml += '</urlset>';
+
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+    } catch (error) {
+        console.error('Error generating news sitemap:', error);
+        res.status(500).send('Error generating news sitemap');
+    }
+});
+
 app.get('/api/news', async (req, res) => {
     try {
         const newsList = await News.find().sort({ createdAt: -1 });

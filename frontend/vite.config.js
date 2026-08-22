@@ -13,7 +13,8 @@ export default defineConfig(({ command, mode }) => {
     server: {
       proxy: {
         '/api': 'http://localhost:5000',
-        '/sitemap.xml': 'http://localhost:5000'
+        '/sitemap.xml': 'http://localhost:5000',
+        '/news-sitemap.xml': 'http://localhost:5000'
       }
     },
     build: {
