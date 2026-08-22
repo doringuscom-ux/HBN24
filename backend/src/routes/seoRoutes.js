@@ -306,13 +306,30 @@ router.post('/generate-static-pages', authMiddleware, async (req, res) => {
     try {
         const staticPages = [
             { url: '/', title: 'Home Page' },
-            { url: '/entertainment', title: 'Entertainment News' },
-            { url: '/religion', title: 'Religion and Spirituality News' },
-            { url: '/sports', title: 'Sports News' },
-            { url: '/lifestyle', title: 'Lifestyle and Health News' },
-            { url: '/business', title: 'Business and Finance News' },
-            { url: '/technology', title: 'Technology News' },
-            { url: '/epaper', title: 'E-Paper and Print Edition' }
+            { url: '/entertainment', title: 'Entertainment' },
+            { url: '/religion', title: 'Religion' },
+            { url: '/sports', title: 'Sports' },
+            { url: '/lifestyle', title: 'Lifestyle' },
+            { url: '/business', title: 'Business' },
+            { url: '/technology', title: 'Technology' },
+            { url: '/epaper', title: 'E-Paper' },
+            { url: '/breaking-news', title: 'Breaking News' },
+            { url: '/punjab', title: 'Punjab (पंजाब)' },
+            { url: '/haryana', title: 'Haryana (हरियाणा)' },
+            { url: '/delhi', title: 'Delhi (दिल्ली)' },
+            { url: '/jobs', title: 'Jobs' },
+            { url: '/education', title: 'Education' },
+            { url: '/national', title: 'National' },
+            { url: '/international', title: 'International' },
+            { url: '/about', title: 'About Us' },
+            { url: '/contact', title: 'Contact Us' },
+            { url: '/privacy-policy', title: 'Privacy Policy' },
+            { url: '/terms', title: 'Terms & Conditions' },
+            { url: '/disclaimer', title: 'Disclaimer' },
+            { url: '/editorial-policy', title: 'Editorial Policy' },
+            { url: '/fact-check-policy', title: 'Fact Check Policy' },
+            { url: '/authors', title: 'Authors' },
+            { url: '/corrections-policy', title: 'Corrections Policy' }
         ];
 
         bulkStatus = {
@@ -347,6 +364,14 @@ async function processStaticPagesSeo(staticPages) {
         if (!bulkStatus.isRunning) break;
 
         try {
+            // Check if SEO already exists for this page to avoid overwriting old SEO
+            let existingSeo = await PageSeo.findOne({ pageUrl: page.url });
+            if (existingSeo && existingSeo.metaTitle && existingSeo.metaTitle.trim() !== '') {
+                bulkStatus.success++;
+                bulkStatus.processed++;
+                continue;
+            }
+
             const promptText = `You are an expert SEO specialist for a Hindi News Portal named 'HBN24'. 
 Generate SEO metadata for the static page: ${page.title} (URL: ${page.url}).
 Ensure the output is ONLY a valid JSON object without any markdown formatting, code blocks, or extra text.

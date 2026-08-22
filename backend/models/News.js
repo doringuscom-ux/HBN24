@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const newsSchema = new mongoose.Schema({
-    title: { type: String, required: true },
+    title: { type: String, required: false },
     slug: { type: String, required: false },
     previousSlugs: [{ type: String }],
-    image: { type: String, required: true },
+    image: { type: String, required: false },
     imageAlt: { type: String, required: false },
-    category: { type: [String], required: true },
+    category: { type: [String], required: false, default: [] },
     content: { type: String, required: false },
     metaTitle: { type: String, required: false },
     metaDescription: { type: String, required: false },
