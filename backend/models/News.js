@@ -18,6 +18,7 @@ const newsSchema = new mongoose.Schema({
     isEpaper: { type: Boolean, default: false },
     location: { type: String, default: 'नई दिल्ली' },
     author: { type: String, default: 'एडमिन' },
+    status: { type: String, default: 'published' },
     createdAt: { type: Date, default: Date.now }
 });
 

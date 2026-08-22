@@ -164,6 +164,7 @@ const ImageCropModal = ({ isOpen, onClose, imageSrc, onUpload, isUploading, aspe
 
 export default function AdminDashboard() {
     const editor = useRef(null);
+    const submitStatusRef = useRef('published');
     const navigate = useNavigate();
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -387,17 +388,35 @@ export default function AdminDashboard() {
             defaultHandlerSuccess: function (data) {
                 if (data.files && data.files.length > 0) {
                     const imageUrl = data.files[0];
-                    const altText = window.prompt("Enter alt text for this image (Important for SEO):", "");
-                    let imgHtml = "";
-                    if (altText && altText.trim() !== "") {
-                        imgHtml = `<figure style="margin: 10px 0; text-align: center;">
-                                    <img src="${imageUrl}" alt="${altText}" title="${altText}" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" />
-                                    <figcaption style="font-size: 14px; color: #666; margin-top: 6px; font-style: italic;">${altText}</figcaption>
-                                   </figure><p><br></p>`;
-                    } else {
-                        imgHtml = `<img src="${imageUrl}" alt="" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" /><p><br></p>`;
-                    }
-                    this.selection.insertHTML(imgHtml);
+                    
+                    // 1. Insert a temporary marker at the current cursor position BEFORE the prompt
+                    const markerId = 'img-marker-' + Date.now();
+                    this.selection.insertHTML(`<span id="${markerId}"></span>`);
+                    
+                    // 2. Small delay to let DOM update before blocking prompt
+                    setTimeout(() => {
+                        const altText = window.prompt("Enter alt text for this image (Important for SEO):", "");
+                        
+                        let imgHtml = "";
+                        if (altText && altText.trim() !== "") {
+                            imgHtml = `<figure style="margin: 10px 0; text-align: center;">
+                                        <img src="${imageUrl}" alt="${altText}" title="${altText}" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" />
+                                        <figcaption style="font-size: 14px; color: #666; margin-top: 6px; font-style: italic;">${altText}</figcaption>
+                                       </figure><p><br></p>`;
+                        } else {
+                            imgHtml = `<img src="${imageUrl}" alt="" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" /><p><br></p>`;
+                        }
+                        
+                        // 3. Find the marker and replace it with the image
+                        const marker = this.editorDocument.getElementById(markerId);
+                        if (marker) {
+                            marker.outerHTML = imgHtml;
+                            // Manually fire change event so React state updates
+                            this.events.fire('change');
+                        } else {
+                            this.selection.insertHTML(imgHtml);
+                        }
+                    }, 50);
                 }
             },
             defaultHandlerError: function (err) {
@@ -1162,6 +1181,9 @@ export default function AdminDashboard() {
         if (isSubmitting) return;
         setIsSubmitting(true);
         const token = localStorage.getItem('adminToken');
+        
+        const payload = { ...formData, status: submitStatusRef.current };
+
         try {
             if (editingId) {
                 const res = await fetch(`${API_URL}/${editingId}`, {
@@ -1170,7 +1192,7 @@ export default function AdminDashboard() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
                 if (res.status === 401) {
                     localStorage.removeItem('adminToken');
@@ -1184,7 +1206,7 @@ export default function AdminDashboard() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
                 if (res.status === 401) {
                     localStorage.removeItem('adminToken');
@@ -2743,7 +2765,10 @@ export default function AdminDashboard() {
 
                             <div className="mt-8 sm:mt-8 -mx-4 sm:mx-0 p-4 sm:p-0 pt-4 sm:pt-5 bg-white sm:bg-transparent border-t border-gray-200 sticky bottom-0 z-20 flex flex-col-reverse sm:flex-row justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:shadow-none">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
-                                <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                                <button type="submit" onClick={() => submitStatusRef.current = 'draft'} disabled={isSubmitting} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-yellow-100 hover:bg-yellow-200 transition-colors">
+                                    {isSubmitting ? 'Saving...' : 'Save as Draft'}
+                                </button>
+                                <button type="submit" onClick={() => submitStatusRef.current = 'published'} disabled={isSubmitting} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-lg shadow-lg shadow-red-600/30 text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
                                     {isSubmitting ? 'Publishing...' : (editingId ? 'Save All Changes' : 'Publish Complete Article')}
                                 </button>
                             </div>

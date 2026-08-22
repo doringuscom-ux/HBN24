@@ -100,7 +100,7 @@ app.post('/api/notifications/subscribe', async (req, res) => {
 
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const newsList = await News.find().sort({ createdAt: -1 });
+        const newsList = await News.find({ status: { $ne: 'draft' } }).sort({ createdAt: -1 });
         const baseUrl = req.query.host || (req.protocol + '://' + req.get('host'));
 
         const staticPages = [
@@ -152,7 +152,8 @@ app.get('/news-sitemap.xml', async (req, res) => {
     try {
         const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
         const newsList = await News.find({ 
-            createdAt: { $gte: fortyEightHoursAgo } 
+            createdAt: { $gte: fortyEightHoursAgo },
+            status: { $ne: 'draft' } 
         }).sort({ createdAt: -1 });
 
         const baseUrl = req.query.host || (req.protocol + '://' + req.get('host'));
@@ -218,17 +219,17 @@ app.get('/api/news/home', async (req, res) => {
         
         // Fire parallel queries for each category + mix news + fallback news
         const queries = categories.map(cat => 
-            News.find({ category: cat }).sort({ createdAt: -1 }).limit(12)
+            News.find({ category: cat, status: { $ne: 'draft' } }).sort({ createdAt: -1 }).limit(12)
         );
         
         // Get 12 latest mix news (not in the specific categories)
         queries.push(
-            News.find({ category: { $nin: categories } }).sort({ createdAt: -1 }).limit(12)
+            News.find({ category: { $nin: categories }, status: { $ne: 'draft' } }).sort({ createdAt: -1 }).limit(12)
         );
         
         // Get 20 latest general news for fallbacks
         queries.push(
-            News.find().sort({ createdAt: -1 }).limit(20)
+            News.find({ status: { $ne: 'draft' } }).sort({ createdAt: -1 }).limit(20)
         );
 
         const results = await Promise.all(queries);
@@ -304,6 +305,7 @@ app.get('/api/news/search', async (req, res) => {
         const translatedRegex = new RegExp(searchQueryText, 'i');
 
         const searchResults = await News.find({
+            status: { $ne: 'draft' },
             $or: [
                 { title: originalRegex },
                 { shortDescription: originalRegex },
@@ -328,7 +330,7 @@ app.get('/api/news/author/:authorName', async (req, res) => {
         const { authorName } = req.params;
         // Search case insensitively, replace hyphens with spaces for slug matching
         const searchName = authorName.replace(/-/g, ' ');
-        const newsList = await News.find({ author: new RegExp('^' + searchName + '$', 'i') }).sort({ createdAt: -1 });
+        const newsList = await News.find({ author: new RegExp('^' + searchName + '$', 'i'), status: { $ne: 'draft' } }).sort({ createdAt: -1 });
         res.json(newsList);
     } catch (error) {
         console.error('Error fetching news by author:', error);
@@ -339,7 +341,7 @@ app.get('/api/news/author/:authorName', async (req, res) => {
 app.get('/api/news/:category', async (req, res) => {
     try {
         const { category } = req.params;
-        const newsList = await News.find({ category }).sort({ createdAt: -1 });
+        const newsList = await News.find({ category, status: { $ne: 'draft' } }).sort({ createdAt: -1 });
         res.json(newsList);
     } catch (error) {
         console.error('Error fetching news by category:', error);
