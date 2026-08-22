@@ -188,7 +188,11 @@ export default function AdminDashboard() {
         { url: '/lifestyle', title: 'Lifestyle' },
         { url: '/business', title: 'Business' },
         { url: '/technology', title: 'Technology' },
-        { url: '/epaper', title: 'E-Paper' }
+        { url: '/epaper', title: 'E-Paper' },
+        { url: '/breaking-news', title: 'Breaking News' },
+        { url: '/punjab', title: 'Punjab (पंजाब)' },
+        { url: '/haryana', title: 'Haryana (हरियाणा)' },
+        { url: '/delhi', title: 'Delhi (दिल्ली)' }
     ];
 
     const [pageSeoList, setPageSeoList] = useState([]);

@@ -75,6 +75,32 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
             $html = str_replace('<body>', '<body>' . $seoContent, $html);
         }
     }
+} elseif (preg_match('/^\/breaking-news\/?$/', $requestPath)) {
+    // Static OG Tags for Breaking News Page
+    $title = "ब्रेकिंग न्यूज़ | HBN24";
+    $description = "एक क्लिक में पढ़ें दिनभर की अहम और ताज़ा खबरें। देश, दुनिया, राज्य, खेल और राजनीति से जुड़ी हर बड़ी खबर पर हमारी नजर।";
+    $image = "https://res.cloudinary.com/dsd6oj52y/image/upload/v1787380341/hbn24_news/pdhg8ghjjd5fy7bdzkgc.jpg";
+    $url = "https://" . $_SERVER['HTTP_HOST'] . $requestUri;
+
+    $metaTags = "
+    <!-- Dynamic Open Graph Tags added by index.php for Breaking News -->
+    <meta property=\"og:title\" content=\"$title\" />
+    <meta property=\"og:description\" content=\"$description\" />
+    <meta property=\"og:image\" content=\"$image\" />
+    <meta property=\"og:url\" content=\"$url\" />
+    <meta property=\"og:type\" content=\"website\" />
+    <meta name=\"twitter:card\" content=\"summary_large_image\" />
+    <meta name=\"twitter:title\" content=\"$title\" />
+    <meta name=\"twitter:description\" content=\"$description\" />
+    <meta name=\"twitter:image\" content=\"$image\" />
+    <!-- End Dynamic Tags -->
+";
+
+    // Replace the <title> tag
+    $html = preg_replace('/<title>.*?<\/title>/i', "<title>$title</title>", $html);
+    
+    // Inject meta tags right before </head>
+    $html = str_replace('</head>', $metaTags . '</head>', $html);
 }
 
 // Output the final HTML
