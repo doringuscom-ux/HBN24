@@ -41,15 +41,19 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
-// Toggle breaking news active status (Admin)
+// Update breaking news (Admin)
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const { isActive } = req.body;
+        const { isActive, text } = req.body;
         
+        const updateData = {};
+        if (isActive !== undefined) updateData.isActive = isActive;
+        if (text !== undefined) updateData.text = text;
+
         const updatedNews = await BreakingNews.findByIdAndUpdate(
             id,
-            { isActive },
+            updateData,
             { new: true }
         );
         

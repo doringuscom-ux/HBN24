@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, AlertCircle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { FaWhatsapp, FaFacebookF, FaXTwitter, FaInstagram } from 'react-icons/fa6';
 
 export default function BreakingNewsPage() {
     const [news, setNews] = useState([]);
@@ -18,6 +19,13 @@ export default function BreakingNewsPage() {
                 setLoading(false);
             });
     }, []);
+
+    const handleInstaShare = (text) => {
+        const shareText = `BREAKING: ${text} \nRead more at: ${window.location.href}`;
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('News text and link copied! You can now paste it in Instagram.');
+        });
+    };
 
     // Format date as time ago
     const timeAgo = (dateString) => {
@@ -52,7 +60,7 @@ export default function BreakingNewsPage() {
                         <AlertCircle size={400} />
                     </div>
                 </div>
-                
+
                 <div className="max-w-5xl mx-auto relative z-10 flex flex-col items-center text-center">
                     <div className="inline-flex items-center gap-3 mb-4 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-1.5 rounded-full shadow-sm">
                         <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></span>
@@ -94,6 +102,23 @@ export default function BreakingNewsPage() {
                                     </div>
                                 </div>
                                 <p className="text-gray-800 font-bold text-lg leading-relaxed">{item.text}</p>
+
+                                {/* Share Buttons */}
+                                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-start gap-3">
+                                    <span className="text-[11px] font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full uppercase tracking-widest mr-2 shadow-sm border border-gray-200">Share</span>
+                                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent('BREAKING: ' + item.text + ' - ' + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-gradient-to-tr from-green-500 to-emerald-400 text-white flex items-center justify-center shadow-md shadow-green-500/20 hover:-translate-y-1 hover:shadow-green-500/40 transition-all duration-300" title="Share on WhatsApp">
+                                        <FaWhatsapp size={16} />
+                                    </a>
+                                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent('BREAKING: ' + item.text)}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:-translate-y-1 hover:shadow-blue-500/40 transition-all duration-300" title="Share on Facebook">
+                                        <FaFacebookF size={16} />
+                                    </a>
+                                    <button onClick={() => handleInstaShare(item.text)} className="w-9 h-9 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-pink-500/20 hover:-translate-y-1 hover:shadow-pink-500/40 transition-all duration-300" title="Share on Instagram">
+                                        <FaInstagram size={16} />
+                                    </button>
+                                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('BREAKING: ' + item.text)}&url=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-900 to-gray-700 text-white flex items-center justify-center shadow-md shadow-gray-900/20 hover:-translate-y-1 hover:shadow-gray-900/40 transition-all duration-300" title="Share on X (Twitter)">
+                                        <FaXTwitter size={16} />
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>

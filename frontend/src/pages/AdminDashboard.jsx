@@ -198,6 +198,7 @@ export default function AdminDashboard() {
     const [currentView, setCurrentView] = useState('all');
     const [breakingNewsList, setBreakingNewsList] = useState([]);
     const [newBreakingNews, setNewBreakingNews] = useState('');
+    const [editingBreakingNewsId, setEditingBreakingNewsId] = useState(null);
     const [isFetchingBreakingNews, setIsFetchingBreakingNews] = useState(false);
 
     const fetchBreakingNews = async () => {
@@ -222,18 +223,42 @@ export default function AdminDashboard() {
         if (!newBreakingNews.trim()) return;
         try {
             const token = localStorage.getItem('adminToken');
-            const res = await fetch(__API_URL__ + '/api/breaking-news', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ text: newBreakingNews })
-            });
-            if (res.ok) {
-                setNewBreakingNews('');
-                fetchBreakingNews();
+            
+            if (editingBreakingNewsId) {
+                const res = await fetch(__API_URL__ + '/api/breaking-news/' + editingBreakingNewsId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ text: newBreakingNews })
+                });
+                if (res.ok) {
+                    setNewBreakingNews('');
+                    setEditingBreakingNewsId(null);
+                    fetchBreakingNews();
+                }
+            } else {
+                const res = await fetch(__API_URL__ + '/api/breaking-news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ text: newBreakingNews })
+                });
+                if (res.ok) {
+                    setNewBreakingNews('');
+                    fetchBreakingNews();
+                }
             }
         } catch (e) {
             console.error(e);
         }
+    };
+
+    const handleEditBreakingNews = (item) => {
+        setEditingBreakingNewsId(item._id);
+        setNewBreakingNews(item.text);
+    };
+
+    const handleCancelEditBreakingNews = () => {
+        setEditingBreakingNewsId(null);
+        setNewBreakingNews('');
     };
 
     const handleToggleBreakingNews = async (id, currentStatus) => {
@@ -344,7 +369,18 @@ export default function AdminDashboard() {
             },
             defaultHandlerSuccess: function (data) {
                 if (data.files && data.files.length > 0) {
-                    this.selection.insertImage(data.files[0]);
+                    const imageUrl = data.files[0];
+                    const altText = window.prompt("Enter alt text for this image (Important for SEO):", "");
+                    let imgHtml = "";
+                    if (altText && altText.trim() !== "") {
+                        imgHtml = `<figure style="margin: 10px 0; text-align: center;">
+                                    <img src="${imageUrl}" alt="${altText}" title="${altText}" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" />
+                                    <figcaption style="font-size: 14px; color: #666; margin-top: 6px; font-style: italic;">${altText}</figcaption>
+                                   </figure><p><br></p>`;
+                    } else {
+                        imgHtml = `<img src="${imageUrl}" alt="" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px;" /><p><br></p>`;
+                    }
+                    this.selection.insertHTML(imgHtml);
                 }
             },
             defaultHandlerError: function (err) {
@@ -1619,7 +1655,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
                                 <form onSubmit={handleAddBreakingNews} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-4">
-                                    <h3 className="font-bold text-gray-800">Add New Headline</h3>
+                                    <h3 className="font-bold text-gray-800">{editingBreakingNewsId ? 'Edit Headline' : 'Add New Headline'}</h3>
                                     <div className="flex gap-4">
                                         <input
                                             type="text"
@@ -1629,12 +1665,17 @@ export default function AdminDashboard() {
                                             className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:bg-white transition-all"
                                         />
                                         <button type="submit" className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap">
-                                            Add Headline
+                                            {editingBreakingNewsId ? 'Update Headline' : 'Add Headline'}
                                         </button>
+                                        {editingBreakingNewsId && (
+                                            <button type="button" onClick={handleCancelEditBreakingNews} className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors whitespace-nowrap">
+                                                Cancel
+                                            </button>
+                                        )}
                                     </div>
                                 </form>
                                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex-1 flex flex-col">
-                                    <div className="bg-gray-50 p-4 border-b border-gray-200 font-bold text-gray-700 grid grid-cols-[1fr_100px_80px] gap-4">
+                                    <div className="bg-gray-50 p-4 border-b border-gray-200 font-bold text-gray-700 grid grid-cols-[1fr_100px_120px] gap-4">
                                         <div>Headline Text</div>
                                         <div className="text-center">Status</div>
                                         <div className="text-right">Actions</div>
@@ -1646,7 +1687,7 @@ export default function AdminDashboard() {
                                             <div className="p-8 text-center text-gray-500">No breaking news added yet.</div>
                                         ) : (
                                             breakingNewsList.map((item) => (
-                                                <div key={item._id} className="p-4 border-b border-gray-100 flex items-center grid grid-cols-[1fr_100px_80px] gap-4 hover:bg-gray-50">
+                                                <div key={item._id} className="p-4 border-b border-gray-100 flex items-center grid grid-cols-[1fr_100px_120px] gap-4 hover:bg-gray-50">
                                                     <div className="text-gray-800 font-medium truncate" title={item.text}>{item.text}</div>
                                                     <div className="text-center">
                                                         <button
@@ -1656,7 +1697,10 @@ export default function AdminDashboard() {
                                                             {item.isActive ? 'ACTIVE' : 'INACTIVE'}
                                                         </button>
                                                     </div>
-                                                    <div className="text-right">
+                                                    <div className="text-right flex justify-end gap-2">
+                                                        <button onClick={() => handleEditBreakingNews(item)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors">
+                                                            <Pencil size={18} />
+                                                        </button>
                                                         <button onClick={() => handleDeleteBreakingNews(item._id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
                                                             <Trash2 size={18} />
                                                         </button>
