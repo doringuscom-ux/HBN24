@@ -34,6 +34,8 @@ const AboutUs = lazy(() => import('./pages/AboutUs'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
 const EditorialPolicy = lazy(() => import('./pages/EditorialPolicy'));
 const FactCheckPolicy = lazy(() => import('./pages/FactCheckPolicy'));
+const Authors = lazy(() => import('./pages/Authors'));
+const CorrectionsPolicy = lazy(() => import('./pages/CorrectionsPolicy'));
 
 import { Navigate } from 'react-router-dom';
 
@@ -203,6 +205,8 @@ function AppContent() {
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/editorial-policy" element={<EditorialPolicy />} />
             <Route path="/fact-check-policy" element={<FactCheckPolicy />} />
+            <Route path="/authors" element={<Authors />} />
+            <Route path="/corrections-policy" element={<CorrectionsPolicy />} />
             <Route path="/news/:id" element={<SingleArticle />} />
             <Route 
               path="/admin/login" 

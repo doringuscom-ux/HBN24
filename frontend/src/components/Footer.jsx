@@ -17,6 +17,8 @@ const Footer = () => {
         { name: 'Disclaimer', path: '/disclaimer' },
         { name: 'Editorial Policy', path: '/editorial-policy' },
         { name: 'Fact Check Policy', path: '/fact-check-policy' },
+        { name: 'Authors', path: '/authors' },
+        { name: 'Corrections Policy', path: '/corrections-policy' },
     ];
 
     return (

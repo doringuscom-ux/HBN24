@@ -192,7 +192,20 @@ export default function AdminDashboard() {
         { url: '/breaking-news', title: 'Breaking News' },
         { url: '/punjab', title: 'Punjab (पंजाब)' },
         { url: '/haryana', title: 'Haryana (हरियाणा)' },
-        { url: '/delhi', title: 'Delhi (दिल्ली)' }
+        { url: '/delhi', title: 'Delhi (दिल्ली)' },
+        { url: '/jobs', title: 'Jobs' },
+        { url: '/education', title: 'Education' },
+        { url: '/national', title: 'National' },
+        { url: '/international', title: 'International' },
+        { url: '/about', title: 'About Us' },
+        { url: '/contact', title: 'Contact Us' },
+        { url: '/privacy-policy', title: 'Privacy Policy' },
+        { url: '/terms', title: 'Terms & Conditions' },
+        { url: '/disclaimer', title: 'Disclaimer' },
+        { url: '/editorial-policy', title: 'Editorial Policy' },
+        { url: '/fact-check-policy', title: 'Fact Check Policy' },
+        { url: '/authors', title: 'Authors' },
+        { url: '/corrections-policy', title: 'Corrections Policy' }
     ];
 
     const [pageSeoList, setPageSeoList] = useState([]);
