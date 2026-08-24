@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // This script acts as a proxy to inject Open Graph meta tags for WhatsApp/Facebook
 // It serves the Vite React index.html but dynamically adds <meta> tags if the route is a news article.
 
@@ -21,6 +24,7 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
     $apiUrl = "https://hbn24.onrender.com/api/news/article/" . urlencode($slug);
 
     // Setup cURL
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -65,8 +69,77 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
             // Replace the <title> tag
             $html = preg_replace('/<title>.*?<\/title>/i', "<title>$title | HBN24 News</title>", $html);
 
-            // Inject meta tags right before </head>
-            $html = str_replace('</head>', $metaTags . '</head>', $html);
+            // Generate Schema.org JSON-LD for NewsArticle
+            $publishDate = isset($article['createdAt']) ? date('c', strtotime($article['createdAt'])) : date('c');
+            $updateDate = isset($article['updatedAt']) ? date('c', strtotime($article['updatedAt'])) : $publishDate;
+            $authorName = isset($article['author']) ? $article['author'] : 'HBN24 News';
+
+            $schemaJson = [
+                "@context" => "https://schema.org",
+                "@type" => "NewsArticle",
+                "mainEntityOfPage" => [
+                    "@type" => "WebPage",
+                    "@id" => $url
+                ],
+                "headline" => $title,
+                "image" => [$image],
+                "datePublished" => $publishDate,
+                "dateModified" => $updateDate,
+                "author" => [
+                    "@type" => "Person",
+                    "name" => $authorName
+                ],
+                "publisher" => [
+                    "@type" => "Organization",
+                    "name" => "HBN24 News",
+                    "logo" => [
+                        "@type" => "ImageObject",
+                        "url" => "https://hbnnews24.com/favicon.png"
+                    ]
+                ],
+                "description" => $description
+            ];
+
+            // Generate BreadcrumbList Schema
+            $categoryRaw = $article['category'] ?? 'News';
+            if (is_array($categoryRaw)) {
+                $categoryRaw = !empty($categoryRaw) ? $categoryRaw[0] : 'News';
+            }
+            $categoryName = ucfirst(strval($categoryRaw));
+            
+            $categoryUrl = "https://" . $_SERVER['HTTP_HOST'] . "/" . strtolower($categoryName);
+
+            $breadcrumbJson = [
+                "@context" => "https://schema.org",
+                "@type" => "BreadcrumbList",
+                "itemListElement" => [
+                    [
+                        "@type" => "ListItem",
+                        "position" => 1,
+                        "name" => "Home",
+                        "item" => "https://" . $_SERVER['HTTP_HOST'] . "/"
+                    ],
+                    [
+                        "@type" => "ListItem",
+                        "position" => 2,
+                        "name" => $categoryName,
+                        "item" => $categoryUrl
+                    ],
+                    [
+                        "@type" => "ListItem",
+                        "position" => 3,
+                        "name" => $title,
+                        "item" => $url
+                    ]
+                ]
+            ];
+
+            // Combine both schemas into an array
+            $schemas = [$schemaJson, $breadcrumbJson];
+            $schemaHtml = "\n    <script type=\"application/ld+json\">\n    " . json_encode($schemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n    </script>\n";
+
+            // Inject meta tags and schema right before </head>
+            $html = str_replace('</head>', $metaTags . $schemaHtml . '</head>', $html);
 
             // SEO HACK: Inject the article text into the HTML body so Googlebot can read it without JavaScript!
             $articleHtml = $article['content'] ?? '';
@@ -102,6 +175,11 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
     // Inject meta tags right before </head>
     $html = str_replace('</head>', $metaTags . '</head>', $html);
 }
+
+// Global Canonical Tag for EVERY page (removes query strings like ?fbclid)
+$globalCanonicalUrl = "https://" . $_SERVER['HTTP_HOST'] . $requestPath;
+$canonicalHtml = "\n    <link rel=\"canonical\" href=\"$globalCanonicalUrl\" />\n    </head>";
+$html = str_replace('</head>', $canonicalHtml, $html);
 
 // Output the final HTML
 echo $html;

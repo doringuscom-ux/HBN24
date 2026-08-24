@@ -5,4 +5,5 @@ $frontendDomain = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 echo "User-agent: *\n";
 echo "Allow: /\n\n";
 echo "Sitemap: " . $frontendDomain . "/sitemap.xml\n";
+echo "Sitemap: " . $frontendDomain . "/news-sitemap.xml\n";
 ?>
