@@ -16,34 +16,34 @@ $requestPath = explode('?', $requestUri)[0];
 // Check if the route is a news article: e.g. /news/some-article-slug
 if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
     $slug = $matches[1];
-    
+
     // Fetch article data from your backend API
     $apiUrl = "https://hbn24.onrender.com/api/news/article/" . urlencode($slug);
-    
+
     // Setup cURL
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 8); // 8 seconds timeout for serverless cold start
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Increased to 15 seconds for slower Render responses
     $response = curl_exec($ch);
 
     if ($response) {
         $article = json_decode($response, true);
-        
+
         if ($article && !isset($article['message'])) {
             // Found article! Let's build the meta tags
             $rawTitle = trim(preg_replace('/\s+/', ' ', $article['title'] ?? 'HBN24 News'));
             $title = htmlspecialchars($rawTitle, ENT_QUOTES, 'UTF-8');
-            
+
             $rawDesc = strip_tags($article['shortDescription'] ?? $article['content'] ?? '');
             $rawDesc = trim(preg_replace('/\s+/', ' ', $rawDesc));
             $description = htmlspecialchars($rawDesc, ENT_QUOTES, 'UTF-8');
-            
+
             // Truncate description if too long
             if (mb_strlen($description) > 200) {
                 $description = mb_substr($description, 0, 197) . '...';
             }
-            
+
             $rawImage = trim($article['image'] ?? 'https://hbnnews24.com/favicon.png');
             $image = htmlspecialchars($rawImage, ENT_QUOTES, 'UTF-8');
             $url = "https://" . $_SERVER['HTTP_HOST'] . $requestUri;
@@ -64,10 +64,10 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
 
             // Replace the <title> tag
             $html = preg_replace('/<title>.*?<\/title>/i', "<title>$title | HBN24 News</title>", $html);
-            
+
             // Inject meta tags right before </head>
             $html = str_replace('</head>', $metaTags . '</head>', $html);
-            
+
             // SEO HACK: Inject the article text into the HTML body so Googlebot can read it without JavaScript!
             $articleHtml = $article['content'] ?? '';
             // We use position absolute and opacity 0 so normal users don't see a flicker, but Googlebot reads the text.
@@ -98,7 +98,7 @@ if (preg_match('/^\/news\/([^\/]+)\/?$/', $requestPath, $matches)) {
 
     // Replace the <title> tag
     $html = preg_replace('/<title>.*?<\/title>/i', "<title>$title</title>", $html);
-    
+
     // Inject meta tags right before </head>
     $html = str_replace('</head>', $metaTags . '</head>', $html);
 }
