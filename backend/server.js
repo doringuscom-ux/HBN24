@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const webpush = require('web-push');
+const NodeCache = require('node-cache');
+const cache = new NodeCache({ stdTTL: 120 }); // Cache data for 2 minutes
 
 // Configure web-push
 webpush.setVapidDetails(
@@ -196,7 +198,11 @@ app.get('/news-sitemap.xml', async (req, res) => {
 
 app.get('/api/news', async (req, res) => {
     try {
+        const cacheKey = 'all_news';
+        if (cache.has(cacheKey)) return res.json(cache.get(cacheKey));
+
         const newsList = await News.find().sort({ createdAt: -1 });
+        cache.set(cacheKey, newsList);
         res.json(newsList);
     } catch (error) {
         console.error('Error fetching all news:', error);
@@ -204,17 +210,12 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
-// Cache for Homepage API
-let homeCache = { data: null, timestamp: 0 };
-
 // Optimized route for Homepage
 app.get('/api/news/home', async (req, res) => {
     try {
-        // Return from cache if younger than 2 minutes (120,000 ms)
-        const now = Date.now();
-        if (homeCache.data && (now - homeCache.timestamp < 120000)) {
-            return res.json(homeCache.data);
-        }
+        const cacheKey = 'home_news';
+        if (cache.has(cacheKey)) return res.json(cache.get(cacheKey));
+
         const categories = ['sports', 'religion', 'lifestyle', 'technology', 'business', 'entertainment', 'superfast', 'featured'];
         
         // Fire parallel queries for each category + mix news + fallback news
@@ -272,7 +273,7 @@ app.get('/api/news/home', async (req, res) => {
         homeData.latestNews = latestFallback;
 
         // Update cache
-        homeCache = { data: homeData, timestamp: Date.now() };
+        cache.set(cacheKey, homeData);
 
         res.json(homeData);
     } catch (error) {
@@ -341,7 +342,11 @@ app.get('/api/news/author/:authorName', async (req, res) => {
 app.get('/api/news/:category', async (req, res) => {
     try {
         const { category } = req.params;
+        const cacheKey = `category_${category}`;
+        if (cache.has(cacheKey)) return res.json(cache.get(cacheKey));
+
         const newsList = await News.find({ category, status: { $ne: 'draft' } }).sort({ createdAt: -1 });
+        cache.set(cacheKey, newsList);
         res.json(newsList);
     } catch (error) {
         console.error('Error fetching news by category:', error);
@@ -374,6 +379,8 @@ app.get('/api/news/article/:id', async (req, res) => {
 
         if (!article) return res.status(404).json({ message: 'News not found' });
 
+        const cacheKey = `article_${id}`;
+        cache.set(cacheKey, article);
         res.json(article);
     } catch (error) {
         console.error('Error fetching single article:', error);
@@ -538,6 +545,9 @@ app.post('/api/news', authMiddleware, async (req, res) => {
         const articleUrl = `https://hbnnews24.com/news/${savedNews.slug || savedNews._id}`;
         notifyGoogleIndexing(articleUrl, 'URL_UPDATED');
 
+        // Invalidate cache
+        cache.flushAll();
+
         res.status(201).json(savedNews);
     } catch (error) {
         console.error('Error creating news:', error);
@@ -568,6 +578,9 @@ app.put('/api/news/:id', authMiddleware, async (req, res) => {
         const articleUrl = `https://hbnnews24.com/news/${updatedNews.slug || updatedNews._id}`;
         notifyGoogleIndexing(articleUrl, 'URL_UPDATED');
 
+        // Invalidate cache
+        cache.flushAll();
+
         res.json(updatedNews);
     } catch (error) {
         console.error('Error updating news:', error);
@@ -584,6 +597,9 @@ app.delete('/api/news/:id', authMiddleware, async (req, res) => {
         // Notify Google Indexing API
         const articleUrl = `https://hbnnews24.com/news/${deletedNews.slug || deletedNews._id}`;
         notifyGoogleIndexing(articleUrl, 'URL_DELETED');
+
+        // Invalidate cache
+        cache.flushAll();
 
         res.json({ message: 'News deleted successfully' });
     } catch (error) {
