@@ -21,5 +21,16 @@ const newsSchema = new mongoose.Schema({
     status: { type: String, default: 'published' },
     createdAt: { type: Date, default: Date.now }
 });
+newsSchema.set('toJSON', {
+    transform: function (doc, ret, options) {
+        if (ret.image && ret.image.includes('res.cloudinary.com')) {
+            // Apply Cloudinary optimization to reduce image size by 90% (WebP format)
+            if (!ret.image.includes('f_auto') && ret.image.includes('/upload/')) {
+                ret.image = ret.image.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+            }
+        }
+        return ret;
+    }
+});
 
 module.exports = mongoose.model('News', newsSchema);
